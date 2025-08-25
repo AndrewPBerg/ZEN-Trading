@@ -1,0 +1,1 @@
+My role is QA and documentation. I will be writing tests to validate code operation and document how to utilize the code as a first time user. 

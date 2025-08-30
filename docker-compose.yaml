@@ -1,0 +1,15 @@
+# use this file to start the different docker containers (AKA services)
+
+# frontend (next.js) container
+# backend (API, DB, etc.) container
+# QA (testing) container
+# Database (postgres,mongo,redis,etc.) container(s)
+
+# ports to use:
+  # want the ports to be the same for everyones project, so choose high enough ports (8050+ is fine)
+
+# container dependencies:
+  # frontend: backend
+  # backend: database
+  # QA: frontend, backend
+  # database: backend

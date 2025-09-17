@@ -1,15 +1,15 @@
 # python dockerfile for backend
 
-#Uses node 22 as base
-FROM node:22
+#Uses as base
+FROM python:3.11-slim
 
 #Goes to the app directory
 WORKDIR /app
 
-COPY package*.json ./
+COPY requirements.txt ./
 
 #Install dependencies
-RUN npm install
+RUN pip install --no-cache-dir -r requirements.txt
 
 #Copy the application files
 COPY . .

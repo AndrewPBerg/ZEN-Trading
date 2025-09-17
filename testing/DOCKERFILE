@@ -1,1 +1,26 @@
 # dockerfile for testing container
+
+# python dockerfile for backend
+
+#Uses as base
+FROM python:3.13-slim
+
+#Goes to the app directory
+WORKDIR /app
+
+#Copy the application files
+COPY . .
+
+#Install dependencies
+RUN pip install uv
+RUN uv sync
+
+#Set port environment variable
+ENV PORT=42061
+
+#Expose the port
+EXPOSE 42061
+
+# Default command/ overriden by docker compose
+CMD ["uv", "run", "main.py"]
+

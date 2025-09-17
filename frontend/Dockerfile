@@ -1,5 +1,5 @@
 # docker file for next.js TSX frontend
-FROM node:18-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -9,8 +9,7 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
-
-EXPOSE 9669
+ENV PORT=6969
+EXPOSE 6969
 
 CMD ["npm", "run", "dev"]

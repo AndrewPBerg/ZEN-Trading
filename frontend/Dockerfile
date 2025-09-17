@@ -13,4 +13,4 @@ RUN npm run build
 
 EXPOSE 9669
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

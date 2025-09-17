@@ -1,6 +1,8 @@
 # Swing Trading Project
 
+# UV install 
 
+link: https://docs.astral.sh/uv/getting-started/installation/
 
 # Group Details
 > **Group #3**

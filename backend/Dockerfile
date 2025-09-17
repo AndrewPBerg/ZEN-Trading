@@ -1,24 +1,24 @@
 # python dockerfile for backend
 
 #Uses as base
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 #Goes to the app directory
 WORKDIR /app
 
-COPY requirements.txt ./
-
-#Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
 #Copy the application files
 COPY . .
 
+#Install dependencies
+RUN pip install uv
+RUN uv sync
+
 #Set port environment variable
-ENV PORT=9669
+ENV PORT=42069
 
 #Expose the port
-EXPOSE 9669
+EXPOSE 42069
 
-CMD ["npm", "start"]
+# Default command/ overriden by docker compose
+CMD ["uv", "run", "demo-main.py"]
 

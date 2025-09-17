@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-yfinance
-pandas
-sqlalchemy
-psycopg2-binary
-alembic
-python-dotenv
-apscheduler

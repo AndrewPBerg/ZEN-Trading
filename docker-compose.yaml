@@ -1,15 +1,86 @@
-# use this file to start the different docker containers (AKA services)
+services:
+  # Backend service using backend/Dockerfile
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "42069:42069"
+    environment:
+      - PORT=42069
+      - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:42069/health"] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-# frontend (next.js) container
-# backend (API, DB, etc.) container
-# QA (testing) container
-# Database (postgres,mongo,redis,etc.) container(s)
+  # Frontend service using frontend/Dockerfile  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "6969:6969"
+    environment:
+      - PORT=6969
+      - NEXT_PUBLIC_API_URL=http://backend:42069
+    # TODO turn on when backend is ready
+    # depends_on:
+    #   backend:
+    #     condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6969"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-# ports to use:
-  # want the ports to be the same for everyones project, so choose high enough ports (8050+ is fine)
+  # Testing service using testing/DOCKERFILE
+  testing:
+    build:
+      context: ./testing
+      dockerfile: DOCKERFILE
+    ports:
+      - "42061:42061"
+    environment:
+      - PORT=42061
+      - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:42061/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-# container dependencies:
-  # frontend: backend
-  # backend: database
-  # QA: frontend, backend
-  # database: backend
+  # PostgreSQL 18-alpine database
+  pgsql:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=zentrading
+      - POSTGRES_USER=zenuser
+      - POSTGRES_PASSWORD=zenpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zenuser -d zentrading"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_data:

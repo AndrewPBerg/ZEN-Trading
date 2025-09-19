@@ -20,5 +20,5 @@ ENV PORT=42069
 EXPOSE 42069
 
 # Default command/ overriden by docker compose
-CMD ["uv", "run", "demo-main.py"]
+# CMD ["uv", "run", "demo-main.py"]
 

@@ -92,7 +92,7 @@ WSGI_APPLICATION = 'django_app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# TODO can't translate host name to zentrading to address. no servname provided.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

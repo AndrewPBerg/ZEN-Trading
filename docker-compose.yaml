@@ -6,12 +6,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "42069:42069"
+    env_file:
+      - .env
     environment:
-      - PORT=42069
-      - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
+      - POSTGRES_HOST=pgsql
+    command: ["uv", "run", "manage.py", "runserver", "0.0.0.0:42069"]
     depends_on:
       pgsql:
         condition: service_healthy
+      # frontend: #TODO turn on when frontend is ready
+      #   condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:42069/health"] 
       interval: 30s

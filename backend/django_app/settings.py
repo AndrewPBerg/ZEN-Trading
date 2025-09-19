@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt",
 
     "dj_rest_auth",
     "dj_rest_auth.registration",
@@ -96,11 +97,11 @@ WSGI_APPLICATION = 'django_app.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "zentrading"),
-        "USER": os.getenv("POSTGRES_USER", "zenuser"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "zenpass"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
 

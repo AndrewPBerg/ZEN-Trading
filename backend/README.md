@@ -2,6 +2,11 @@ Django can feel like a code firehose at first. Just remember that every file has
 
 # Usage
 To run Django server:
+
+```bash
+docker compose up backend
+```
+> or
 ```bash
 uv run manage.py runserver 42069
 ```

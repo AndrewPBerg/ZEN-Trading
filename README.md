@@ -15,13 +15,13 @@ link: https://docs.astral.sh/uv/getting-started/installation/
 # Running the Codes
 
 ```bash
-docker compose up
+docker compose up frontend backend
 ```
 ## Access
 
 to access the frontend use `http://localhost:6969/`
 
-to access the API use ``http://localhost:42069/`
+to access the API use `http://localhost:42069/`
 
 ## API Testing
 

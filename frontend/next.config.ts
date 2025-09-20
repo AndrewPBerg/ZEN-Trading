@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       {
         // this makes the api url work with trailing slashes!
         source: '/api/:path*',
-        destination: 'http://localhost:42069/api/:path*/',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*/`,
       },
     ];
   },

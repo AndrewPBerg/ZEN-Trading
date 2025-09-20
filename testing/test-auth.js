@@ -38,7 +38,7 @@ async function makeRequest(url, options = {}) {
 // Test functions
 async function testHealthCheck() {
   console.log('\n🏥 Testing Health Check...')
-  const { response, data, error } = await makeRequest('http://localhost:42069/health')
+  const { response, data, error } = await makeRequest('http://localhost:42069/health/')
   
   if (error) {
     console.log('❌ Health check failed:', error.message)

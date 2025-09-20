@@ -10,12 +10,12 @@ services:
       - .env
     environment:
       - POSTGRES_HOST=pgsql
-    command: ["sh", "-c", "uv run manage.py makemigrations && uv run manage.py migrate && uv run manage.py runserver 42069"]
+    command: ["uv", "run", "manage.py", "runserver", "0.0.0.0:42069"]
     depends_on:
       pgsql:
         condition: service_healthy
-      frontend:
-        condition: service_healthy
+    networks:
+      - zen-trading-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:42069/health/"] 
       interval: 30s
@@ -32,11 +32,16 @@ services:
       - "6969:6969"
     environment:
       - PORT=6969
-      - NEXT_PUBLIC_API_URL=http://backend:42069
-    # TODO turn on when backend is ready
-    # depends_on:
-    #   backend:
-    #     condition: service_healthy
+      - NEXT_PUBLIC_API_URL=http://localhost:42069
+      - NODE_ENV= "development"
+      - NEXT_TELEMETRY_DISABLED= "1"
+      - WATCHPACK_POLLING= "true"
+      - CHOKIDAR_USEPOLLING= "true"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - zen-trading-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6969"]
       interval: 30s
@@ -44,29 +49,30 @@ services:
       retries: 3
       start_period: 40s
 
-  # Testing service using testing/DOCKERFILE
-  # testing:
-  #   build:
-  #     context: ./testing
-  #     dockerfile: DOCKERFILE
-  #   ports:
-  #     - "42061:42061"
-  #   environment:
-  #     - PORT=42061
-  #     - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
-  #   depends_on:
-  #     pgsql:
-  #       condition: service_healthy
-  #     backend:
-  #       condition: service_healthy
-  #     frontend:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:42061/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
+  testing:
+    build:
+      context: ./testing
+      dockerfile: DOCKERFILE
+    ports:
+      - "42061:42061"
+    environment:
+      - PORT=42061
+      - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - zen-trading-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:42061/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # PostgreSQL 18-alpine database
   pgsql:
@@ -79,6 +85,8 @@ services:
       - POSTGRES_PASSWORD=zenpass
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zen-trading-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U zenuser -d zentrading"]
       interval: 10s
@@ -88,3 +96,10 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  zen-trading-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

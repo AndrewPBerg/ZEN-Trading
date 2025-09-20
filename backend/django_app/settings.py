@@ -165,6 +165,8 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:42069',
     'http://localhost:6969', 
+    'http://127.0.0.1:6969', 
+    'http://192.168.1.10:6969', 
     'http://localhost:3000',
     'http://192.168.1.10:3000',
     'http://127.0.0.1:3000',
@@ -190,6 +192,9 @@ CORS_ALLOWED_METHODS = [
     'PUT',
 ]
 
+
+# Also add this for development
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # This allows all origins when DEBUG=True
 # allauth config (email login)
 SITE_ID = 1
 

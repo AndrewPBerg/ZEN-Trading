@@ -10,7 +10,13 @@ services:
       - .env
     environment:
       - POSTGRES_HOST=pgsql
-    command: ["uv", "run", "manage.py", "runserver", "0.0.0.0:42069"]
+      - POSTGRES_DB=zentrading
+      - POSTGRES_USER=zenuser
+      - POSTGRES_PASSWORD=zenpass
+      - POSTGRES_PORT=5432
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DJANGO_DEBUG=1
+    command: ["sh", "-c", "uv run manage.py makemigrations && uv run manage.py migrate && uv run manage.py runserver 0.0.0.0:42069"]
     depends_on:
       pgsql:
         condition: service_healthy
@@ -32,8 +38,7 @@ services:
       - "6969:6969"
     environment:
       - PORT=6969
-      - NEXT_PUBLIC_API_URL=http://localhost:42069
-      - NODE_ENV= "development"
+      - NEXT_PUBLIC_API_URL=http://backend:42069
       - NEXT_TELEMETRY_DISABLED= "1"
       - WATCHPACK_POLLING= "true"
       - CHOKIDAR_USEPOLLING= "true"

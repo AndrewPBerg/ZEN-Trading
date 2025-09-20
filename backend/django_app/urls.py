@@ -39,6 +39,7 @@ api_urlpatterns = [
     # Function-based views (alternative endpoints)
     path('profile/', views.user_profile, name='user-profile'),
     path('register/', views.register_user, name='register-user'),
+    path('register', views.register_user, name='register-user-no-slash'),
 ]
 
 urlpatterns = [

@@ -15,18 +15,30 @@ interface User {
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const checkAuth = () => {
       if (isAuthenticated()) {
         const currentUser = getCurrentUser()
         setUser(currentUser)
+      } else {
+        setUser(null)
       }
-      setLoading(false)
+      setIsLoading(false)
     }
 
     checkAuth()
+
+    // Listen for storage changes (e.g., when user logs in/out in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zenTraderUser' || e.key === 'zenTraderTokens') {
+        checkAuth()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   const logout = () => {
@@ -36,8 +48,8 @@ export function useAuth() {
 
   return {
     user,
-    loading,
+    isLoading,
     isAuthenticated: !!user,
-    logout,
+    logout
   }
 }

@@ -170,7 +170,6 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
 ]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
@@ -209,3 +208,6 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
 # Redirect URLs
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+# URL Configuration
+APPEND_SLASH = False

@@ -72,16 +72,27 @@ const setStoredUser = (user: User): void => {
 
 // API functions
 export const login = async (credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> => {
-  const response = await fetch(`${API_BASE_URL}/auth/token/`, {
+  const url = `${API_BASE_URL}/auth/token/`
+  console.log('Logging in at URL:', url)
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(credentials),
   })
+  
+  console.log('Login response status:', response.status)
+  console.log('Login response headers:', Object.fromEntries(response.headers.entries()))
 
   if (!response.ok) {
-    const error = await response.json()
+    let error
+    try {
+      error = await response.json()
+    } catch {
+      error = { detail: 'Network error or server unavailable' }
+    }
     throw new Error(error.detail || 'Login failed')
   }
 
@@ -95,7 +106,13 @@ export const login = async (credentials: LoginCredentials): Promise<{ user: User
   })
 
   if (!userResponse.ok) {
-    throw new Error('Failed to fetch user data')
+    let error
+    try {
+      error = await userResponse.json()
+    } catch {
+      error = { detail: 'Failed to fetch user data' }
+    }
+    throw new Error(error.detail || 'Failed to fetch user data')
   }
 
   const user: User = await userResponse.json()
@@ -108,25 +125,64 @@ export const login = async (credentials: LoginCredentials): Promise<{ user: User
 }
 
 export const register = async (data: RegisterData): Promise<{ user: User; tokens: AuthTokens }> => {
-  const response = await fetch(`${API_BASE_URL}/register/`, {
+  const url = `${API_BASE_URL}/register/`
+  console.log('Registering user at URL:', url)
+  console.log('API_BASE_URL:', API_BASE_URL)
+  console.log('Full constructed URL:', url)
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   })
+  
+  console.log('Register response status:', response.status)
+  console.log('Register response URL:', response.url)
+  console.log('Register response headers:', Object.fromEntries(response.headers.entries()))
 
   if (!response.ok) {
-    const error = await response.json()
+    let error
+    try {
+      error = await response.json()
+    } catch {
+      error = { detail: 'Network error or server unavailable' }
+    }
     throw new Error(error.detail || 'Registration failed')
   }
 
   const user: User = await response.json()
   
   // Auto-login after registration
-  const tokens = await login({ email: data.email, password: data.password })
+  const loginResponse = await fetch(`${API_BASE_URL}/auth/token/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: data.email,
+      password: data.password
+    }),
+  })
+
+  if (!loginResponse.ok) {
+    let error
+    try {
+      error = await loginResponse.json()
+    } catch {
+      error = { detail: 'Registration successful but auto-login failed' }
+    }
+    throw new Error(error.detail || 'Registration successful but auto-login failed')
+  }
+
+  const tokens: AuthTokens = await loginResponse.json()
   
-  return { user, tokens: tokens.tokens }
+  // Store tokens and user data
+  setStoredTokens(tokens)
+  setStoredUser(user)
+  
+  return { user, tokens }
 }
 
 export const logout = (): void => {
@@ -161,7 +217,13 @@ export const refreshToken = async (): Promise<AuthTokens | null> => {
     })
 
     if (!response.ok) {
-      throw new Error('Token refresh failed')
+      let error
+      try {
+        error = await response.json()
+      } catch {
+        error = { detail: 'Token refresh failed' }
+      }
+      throw new Error(error.detail || 'Token refresh failed')
     }
 
     const newTokens: AuthTokens = await response.json()

@@ -3,11 +3,13 @@
 import type React from "react"
 
 import { Navigation } from "@/components/navigation"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/use-auth"
 
 interface Stock {
   ticker: string
@@ -90,8 +92,8 @@ const recommendedStocks: Stock[] = [
   },
 ]
 
-export default function DiscoveryPage() {
-  const [user, setUser] = useState<any>(null)
+function DiscoveryPageContent() {
+  const { user } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedStocks, setLikedStocks] = useState<string[]>([])
   const [dislikedStocks, setDislikedStocks] = useState<string[]>([])
@@ -100,13 +102,6 @@ export default function DiscoveryPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
-
-  useEffect(() => {
-    const userData = localStorage.getItem("zenTraderUser")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-  }, [])
 
   const handleDragStart = (clientX: number, clientY: number) => {
     if (isAnimating) return
@@ -222,12 +217,12 @@ export default function DiscoveryPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
-            <p className="text-sm text-muted-foreground">Curated for {user?.zodiacSign || "Virgo"} ♍</p>
+            <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="bg-accent/20 text-accent border-accent/30">
               <Star className="w-3 h-3 mr-1" />
-              {user?.investingVibe || "Balanced"}
+              {user?.username || "Trader"}
             </Badge>
           </div>
         </div>
@@ -439,5 +434,13 @@ export default function DiscoveryPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function DiscoveryPage() {
+  return (
+    <ProtectedRoute>
+      <DiscoveryPageContent />
+    </ProtectedRoute>
   )
 }

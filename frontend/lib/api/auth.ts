@@ -149,6 +149,7 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
   console.log('Registering user at URL:', url)
   console.log('API_BASE_URL:', API_BASE_URL)
   console.log('Full constructed URL:', url)
+  console.log('Request data:', data)
   
   const response = await fetch(url, {
     method: 'POST',
@@ -166,10 +167,27 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
     let error
     try {
       error = await response.json()
-    } catch {
-      error = { detail: 'Network error or server unavailable' }
+      console.log('Full error response:', error)
+      
+      // Django REST framework validation errors come in this format
+      if (error && typeof error === 'object') {
+        // If it's field validation errors, format them nicely
+        const fieldErrors = Object.entries(error).map(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            return `${field}: ${messages.join(', ')}`
+          }
+          return `${field}: ${messages}`
+        }).join(' | ')
+        
+        throw new Error(fieldErrors || JSON.stringify(error))
+      }
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError)
+      const responseText = await response.text()
+      console.log('Raw response text:', responseText)
+      error = { detail: `Server error (${response.status}): ${responseText || 'Network error'}` }
     }
-    throw new Error(error.detail || 'Registration failed')
+    throw new Error(error.detail || error.message || 'Registration failed')
   }
 
   const user: User = await response.json()

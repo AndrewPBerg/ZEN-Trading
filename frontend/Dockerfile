@@ -1,5 +1,5 @@
 # docker file for next.js TSX frontend
-FROM node:24-alpine AS builder
+FROM node:24-alpine
 
 WORKDIR /app
 

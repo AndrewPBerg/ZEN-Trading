@@ -118,12 +118,14 @@ export default function WelcomeScreen() {
             <Button
               variant="outline"
               className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
+              onClick={() => window.location.href = "/signup"}
             >
               Sign Up
             </Button>
             <Button
               variant="outline"
               className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent"
+              onClick={() => window.location.href = "/login"}
             >
               Log In
             </Button>

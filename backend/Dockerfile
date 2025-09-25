@@ -3,6 +3,9 @@
 #Uses as base
 FROM python:3.13-slim
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 #Goes to the app directory
 WORKDIR /app
 
@@ -20,5 +23,5 @@ ENV PORT=42069
 EXPOSE 42069
 
 # Default command/ overriden by docker compose
-CMD ["uv", "run", "demo-main.py"]
+# CMD ["sh", "-c", "uv run manage.py runserver 0.0.0.0:$PORT"]
 

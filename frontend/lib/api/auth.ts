@@ -1,4 +1,24 @@
-const API_BASE_URL = '/api'
+// API configuration for Docker environment
+const getApiBaseUrl = () => {
+  // For client-side requests (browser), use the exposed port
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL + '/api' || 'http://localhost:42069/api';
+  }
+  
+  // For server-side requests, use internal Docker network
+  return process.env.INTERNAL_API_URL + '/api' || 'http://localhost:42069/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Debug logging for Docker environment
+if (typeof window !== 'undefined') {
+  console.log('Client-side API_BASE_URL:', API_BASE_URL);
+  console.log('Environment:', process.env.NODE_ENV);
+} else {
+  console.log('Server-side API_BASE_URL:', API_BASE_URL);
+}
+
 
 // Types
 interface User {

@@ -1,4 +1,4 @@
-// Test script for auth.ts functions
+  // Test script for auth.ts functions
 // Run with: node test-auth.js
 
 const API_BASE_URL = 'http://localhost:42069/api'

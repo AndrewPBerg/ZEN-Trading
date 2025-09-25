@@ -14,6 +14,24 @@ from .serializers import (
 
 User = get_user_model()
 
+# TODO talk to an external API
+
+# TODO 
+
+class PriceCardView(APIView):
+    """
+    GET: Get price card
+    """
+    def get(self, request):
+        return Response({'message': 'Price card'})
+
+    # TODO decide how to handle third party API
+
+    # if in database for time period get form database
+    # else get from third party API
+    # save to database
+    # return data
+
 
 class UserListCreateView(generics.ListCreateAPIView):
     """

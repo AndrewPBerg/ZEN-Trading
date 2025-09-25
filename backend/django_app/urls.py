@@ -40,6 +40,7 @@ api_urlpatterns = [
     path('profile/', views.user_profile, name='user-profile'),
     path('register/', views.register_user, name='register-user'),
     path('register', views.register_user, name='register-user-no-slash'),
+    path('price-card/', views.PriceCardView.as_view(), name='price-card'),
 ]
 
 urlpatterns = [

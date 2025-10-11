@@ -25,26 +25,33 @@ interface User {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Initialize user state immediately with localStorage data (synchronous)
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null
+    
+    if (isAuthenticated()) {
+      return getCurrentUser()
+    } else if (isDemoMode()) {
+      return getCompleteDemoUser()
+    }
+    return null
+  })
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
-      // First check if authenticated
+      // Re-check auth state (in case of changes)
       if (isAuthenticated()) {
         const currentUser = getCurrentUser()
         setUser(currentUser)
       } 
-      // Then check if in demo mode
       else if (isDemoMode()) {
         const demoUser = getCompleteDemoUser()
         setUser(demoUser)
       } 
-      // No authentication or demo mode
       else {
         setUser(null)
       }
-      setIsLoading(false)
     }
 
     checkAuth()

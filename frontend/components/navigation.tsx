@@ -211,45 +211,22 @@ export function Navigation() {
                   <User size={20} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-purple-950/95 border-purple-500/30">
-                {user ? (
-                  <>
-                    <div className="px-3 py-2">
-                      <p className="font-medium text-foreground">
-                        {user.first_name} {user.last_name}
-                      </p>
-                      {user.profile?.zodiac_sign && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          <span>{user.profile.zodiac_symbol}</span>
-                          <span>{user.profile.zodiac_sign}</span>
-                        </p>
-                      )}
-                    </div>
-                    <DropdownMenuSeparator className="bg-purple-500/20" />
-                    <DropdownMenuItem 
-                      onClick={() => router.push("/settings")}
-                      className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-purple-500/20" />
-                    <DropdownMenuItem 
-                      onClick={handleLogout} 
-                      className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {isDemo ? "Exit Demo" : "Logout"}
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <div className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm text-muted-foreground">Loading...</span>
-                    </div>
-                  </div>
-                )}
+              <DropdownMenuContent align="end" className="w-40 bg-purple-950/95 border-purple-500/30">
+                <DropdownMenuItem 
+                  onClick={() => router.push("/settings")}
+                  className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-purple-500/20" />
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {isDemo ? "Exit Demo" : "Logout"}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}

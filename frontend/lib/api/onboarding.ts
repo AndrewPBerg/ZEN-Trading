@@ -1,4 +1,5 @@
 import { isDemoMode, setDemoUserProfile, getDemoUser, getDemoProfile } from '@/lib/demo-mode'
+import { authenticatedFetch } from '@/lib/api/api-utils'
 
 // API configuration for Docker environment
 const getApiBaseUrl = () => {
@@ -56,19 +57,6 @@ export interface OnboardingStatusResponse {
   user: User
 }
 
-// Helper to get auth token
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  try {
-    const stored = localStorage.getItem('zenTraderTokens')
-    if (!stored) return null
-    const tokens = JSON.parse(stored)
-    return tokens.access || null
-  } catch {
-    return null
-  }
-}
-
 /**
  * Get the current user's onboarding status
  */
@@ -94,17 +82,8 @@ export const getOnboardingStatus = async (): Promise<OnboardingStatusResponse> =
   const url = `${API_BASE_URL}/onboarding/`
   console.log('Fetching onboarding status from:', url)
   
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-  
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
   })
   
   console.log('Onboarding status response:', response.status)
@@ -145,17 +124,8 @@ export const submitOnboarding = async (data: OnboardingData): Promise<Onboarding
   const url = `${API_BASE_URL}/onboarding/`
   console.log('Submitting onboarding data to:', url)
   
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-  
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
     body: JSON.stringify(data),
   })
   

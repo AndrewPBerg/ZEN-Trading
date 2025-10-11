@@ -54,6 +54,28 @@ function DiscoveryPageContent() {
   const [userSign, setUserSign] = useState<string>("")
 
   useEffect(() => {
+    // Clear demo mode if user has real auth tokens
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('zenTraderTokens')
+      if (stored) {
+        try {
+          const tokens = JSON.parse(stored)
+          if (tokens.access) {
+            // User has real tokens, clear demo mode
+            localStorage.removeItem('zenTraderDemoMode')
+            localStorage.removeItem('zenTraderDemoUser')
+            localStorage.removeItem('zenTraderDemoProfile')
+            localStorage.removeItem('zenTraderDemoHoldings')
+            localStorage.removeItem('zenTraderDemoWatchlist')
+            localStorage.removeItem('zenTraderDemoDislikeList')
+            // Clear the zodiac cache to force fresh data
+            localStorage.removeItem('cache_zodiac_matched_stocks')
+          }
+        } catch (e) {
+          console.error('Error checking tokens:', e)
+        }
+      }
+    }
     setIsDemo(isDemoMode())
     fetchStocks()
   }, [])
@@ -62,7 +84,8 @@ function DiscoveryPageContent() {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await getZodiacMatchedStocks()
+      // Force refresh to bypass cache and get fresh data
+      const response = await getZodiacMatchedStocks(true)
       setStocks(response.matched_stocks)
       setUserSign(response.user_sign)
       console.log("Fetched stocks:", response.matched_stocks)

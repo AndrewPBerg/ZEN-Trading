@@ -1,5 +1,6 @@
 import { isDemoMode } from '@/lib/demo-mode'
 import { getCache, setCache } from '@/lib/cache'
+import { authenticatedFetch } from '@/lib/api/api-utils'
 
 // API configuration
 const getApiBaseUrl = () => {
@@ -41,19 +42,6 @@ export interface StockPreference {
   ticker: string
   preference_type: 'watchlist' | 'dislike'
   created_at: string
-}
-
-// Helper to get auth token
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  try {
-    const stored = localStorage.getItem('zenTraderTokens')
-    if (!stored) return null
-    const tokens = JSON.parse(stored)
-    return tokens.access || null
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -185,20 +173,11 @@ export const getZodiacMatchedStocks = async (forceRefresh: boolean = false): Pro
   const url = `${API_BASE_URL}/zodiac/matched-stocks/`
   console.log('Fetching zodiac matched stocks from:', url)
 
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
   })
 
-  console.log('Zodiac matched stocks response:', response.status)
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()))
 
   if (!response.ok) {
     let error
@@ -236,17 +215,8 @@ export const getWatchlist = async (): Promise<StockPreference[]> => {
   }
 
   const url = `${API_BASE_URL}/watchlist/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
   })
 
   if (!response.ok) {
@@ -286,17 +256,8 @@ export const addToWatchlist = async (ticker: string): Promise<{ message: string;
   }
 
   const url = `${API_BASE_URL}/watchlist/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ ticker }),
   })
 
@@ -321,17 +282,8 @@ export const removeFromWatchlist = async (ticker: string): Promise<{ message: st
   }
 
   const url = `${API_BASE_URL}/watchlist/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ ticker }),
   })
 
@@ -353,17 +305,8 @@ export const getDislikeList = async (): Promise<StockPreference[]> => {
   }
 
   const url = `${API_BASE_URL}/dislike-list/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
   })
 
   if (!response.ok) {
@@ -403,17 +346,8 @@ export const addToDislikeList = async (ticker: string): Promise<{ message: strin
   }
 
   const url = `${API_BASE_URL}/dislike-list/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ ticker }),
   })
 
@@ -438,17 +372,8 @@ export const removeFromDislikeList = async (ticker: string): Promise<{ message: 
   }
 
   const url = `${API_BASE_URL}/dislike-list/`
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ ticker }),
   })
 

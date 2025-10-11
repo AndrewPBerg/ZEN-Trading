@@ -1,4 +1,5 @@
 import { isDemoMode } from '@/lib/demo-mode'
+import { authenticatedFetch } from '@/lib/api/api-utils'
 
 // API configuration for Docker environment
 const getApiBaseUrl = () => {
@@ -43,19 +44,6 @@ export interface TradeResponse {
   holdings: UserHoldings
 }
 
-// Helper to get auth token
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  try {
-    const stored = localStorage.getItem('zenTraderTokens')
-    if (!stored) return null
-    const tokens = JSON.parse(stored)
-    return tokens.access || null
-  } catch {
-    return null
-  }
-}
-
 /**
  * Get the current user's holdings (balance and stock positions)
  */
@@ -94,17 +82,8 @@ export const getUserHoldings = async (): Promise<UserHoldings> => {
   const url = `${API_BASE_URL}/holdings/`
   console.log('Fetching user holdings from:', url)
   
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-  
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
   })
   
   console.log('Holdings response:', response.status)
@@ -231,17 +210,8 @@ export const executeTrade = async (trade: TradeRequest): Promise<TradeResponse> 
   const url = `${API_BASE_URL}/holdings/`
   console.log('Executing trade:', trade, 'to:', url)
   
-  const token = getAuthToken()
-  if (!token) {
-    throw new Error('Authentication required. Please log in first.')
-  }
-  
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
     body: JSON.stringify(trade),
   })
   

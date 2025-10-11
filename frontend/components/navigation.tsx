@@ -20,11 +20,18 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout } = useAuth()
-  const [isDark, setIsDark] = useState(false)
+  const { user, logout, isLoading: authLoading } = useAuth()
+  // Initialize theme state with a function to avoid hydration mismatch
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    return savedTheme === 'dark' || (!savedTheme && prefersDark)
+  })
   const [mounted, setMounted] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
   const [marketStatus, setMarketStatus] = useState<MarketStatusResponse | null>(null)
+  const [hasAuth, setHasAuth] = useState(false)
 
   // Hide navigation on specific pages
   const hideNavPages = ["/", "/login", "/signup", "/onboarding"]
@@ -32,17 +39,48 @@ export function Navigation() {
 
   useEffect(() => {
     setMounted(true)
-    const hasDarkClass = document.documentElement.classList.contains("dark")
-    setIsDark(hasDarkClass)
     setIsDemo(isDemoMode())
+    
+    // Check if user has auth tokens immediately
+    const checkAuth = () => {
+      if (typeof window !== 'undefined') {
+        const hasTokens = localStorage.getItem('zenTraderTokens') !== null || localStorage.getItem('zenTraderDemoMode') === 'true'
+        setHasAuth(hasTokens)
+      }
+    }
+    
+    checkAuth()
+    
+    // Listen for storage changes (login/logout events)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zenTraderTokens' || e.key === 'zenTraderDemoMode') {
+        checkAuth()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
     
     // Fetch initial market status
     fetchMarketStatus()
     
     // Refresh market status every 60 seconds
     const interval = setInterval(fetchMarketStatus, 60000)
-    return () => clearInterval(interval)
+    
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
+
+  // Update hasAuth when user state changes
+  useEffect(() => {
+    if (user) {
+      setHasAuth(true)
+    } else if (!authLoading) {
+      // Only set to false if auth loading is complete and there's no user
+      setHasAuth(false)
+    }
+  }, [user, authLoading])
 
   const fetchMarketStatus = async () => {
     try {
@@ -76,6 +114,7 @@ export function Navigation() {
 
   const handleLogout = () => {
     logout()
+    setHasAuth(false) // Immediately update state
     router.push("/")
   }
 
@@ -160,8 +199,8 @@ export function Navigation() {
             </Button>
           )}
 
-          {/* User Menu */}
-          {user && (
+          {/* User Menu - Show immediately if auth exists, populate with user data when loaded */}
+          {mounted && hasAuth && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -173,33 +212,44 @@ export function Navigation() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-purple-950/95 border-purple-500/30">
-                <div className="px-3 py-2">
-                  <p className="font-medium text-foreground">
-                    {user.first_name} {user.last_name}
-                  </p>
-                  {user.profile?.zodiac_sign && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                      <span>{user.profile.zodiac_symbol}</span>
-                      <span>{user.profile.zodiac_sign}</span>
-                    </p>
-                  )}
-                </div>
-                <DropdownMenuSeparator className="bg-purple-500/20" />
-                <DropdownMenuItem 
-                  onClick={() => router.push("/settings")}
-                  className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-purple-500/20" />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
-                  className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {isDemo ? "Exit Demo" : "Logout"}
-                </DropdownMenuItem>
+                {user ? (
+                  <>
+                    <div className="px-3 py-2">
+                      <p className="font-medium text-foreground">
+                        {user.first_name} {user.last_name}
+                      </p>
+                      {user.profile?.zodiac_sign && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <span>{user.profile.zodiac_symbol}</span>
+                          <span>{user.profile.zodiac_sign}</span>
+                        </p>
+                      )}
+                    </div>
+                    <DropdownMenuSeparator className="bg-purple-500/20" />
+                    <DropdownMenuItem 
+                      onClick={() => router.push("/settings")}
+                      className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-purple-500/20" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout} 
+                      className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isDemo ? "Exit Demo" : "Logout"}
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <div className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">Loading...</span>
+                    </div>
+                  </div>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

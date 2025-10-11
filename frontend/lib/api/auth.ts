@@ -21,6 +21,18 @@ if (typeof window !== 'undefined') {
 
 
 // Types
+interface UserProfile {
+  zodiac_sign: string
+  zodiac_symbol: string
+  zodiac_element: string
+  date_of_birth: string
+  investing_style: string
+  onboarding_completed: boolean
+  starting_balance: string
+  created_at: string
+  updated_at: string
+}
+
 interface User {
   id: number
   email: string
@@ -29,6 +41,7 @@ interface User {
   last_name: string
   date_joined: string
   is_active: boolean
+  profile?: UserProfile
 }
 
 interface AuthTokens {

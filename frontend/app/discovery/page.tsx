@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { Navigation } from "@/components/navigation"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -215,15 +214,13 @@ function DiscoveryPageContent() {
   const scale = isDragging ? Math.max(0.95, 1 - Math.abs(dragOffset.x) * 0.0005) : 1
 
   return (
-    <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col">
-      <Navigation />
-
+    <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
       {/* Header */}
       <div className="px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
-            <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p>
+            {/* <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p> */}
           </div>
           <div className="flex items-center gap-2">
             {isDemo && (

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ConstellationGrid } from "@/components/constellation-grid"
 import { AlertCard } from "@/components/alert-card"
-import { Navigation } from "@/components/navigation"
 import { Star, Bell, Filter, Plus, TrendingUp, TrendingDown } from "lucide-react"
 
 // Mock watchlist data
@@ -129,7 +128,7 @@ export default function WatchlistPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative pt-20 pb-8">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -304,8 +303,6 @@ export default function WatchlistPage() {
           )}
         </div>
       </div>
-
-      <Navigation />
     </div>
   )
 }

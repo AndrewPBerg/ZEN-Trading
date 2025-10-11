@@ -1,14 +1,13 @@
 "use client"
 
 import { CustomTarotCard } from "@/components/custom-tarot-card"
-import { Navigation } from "@/components/navigation"
 import { TarotCard, TarotCardContent, TarotCorners } from "@/components/ui/tarot-card"
 import { Badge } from "@/components/ui/badge"
 import { Moon, Star, Sparkles } from "lucide-react"
 
 export default function TarotPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-20 pb-8">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -70,8 +69,6 @@ export default function TarotPage() {
           </TarotCardContent>
         </TarotCard>
       </div>
-
-      <Navigation />
     </div>
   )
 }

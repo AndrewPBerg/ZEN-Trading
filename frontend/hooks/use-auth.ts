@@ -4,6 +4,15 @@ import { useState, useEffect } from "react"
 import { getCurrentUser, isAuthenticated, logout as authLogout } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser, clearDemoMode } from "@/lib/demo-mode"
 
+interface UserProfile {
+  zodiac_sign: string
+  zodiac_symbol: string
+  zodiac_element: string
+  date_of_birth: string
+  investing_style: string
+  onboarding_completed: boolean
+}
+
 interface User {
   id: number
   email: string
@@ -12,6 +21,7 @@ interface User {
   last_name: string
   date_joined: string
   is_active: boolean
+  profile?: UserProfile
 }
 
 export function useAuth() {

@@ -55,6 +55,10 @@ api_urlpatterns = [
     # Zodiac sign matching endpoints
     path('zodiac/matched-stocks/', views.ZodiacMatchedStocksView.as_view(), name='zodiac-matched-stocks'),
     path('zodiac/matching-rules/', views.ZodiacSignMatchingListView.as_view(), name='zodiac-matching-rules'),
+    
+    # User preferences (watchlist and dislike list)
+    path('watchlist/', views.UserWatchlistView.as_view(), name='user-watchlist'),
+    path('dislike-list/', views.UserDislikeListView.as_view(), name='user-dislike-list'),
 ]
 
 urlpatterns = [

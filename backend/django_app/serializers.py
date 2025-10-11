@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import Stock, UserProfile, UserHoldings, StockHolding, ZodiacSignMatching
+from .models import Stock, UserProfile, UserHoldings, StockHolding, ZodiacSignMatching, UserStockPreference
 
 User = get_user_model()
 
@@ -242,3 +242,13 @@ class MatchedStockSerializer(serializers.ModelSerializer):
             'compatibility_score'
         ]
         read_only_fields = ['id', 'last_updated']
+
+
+class UserStockPreferenceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user stock preferences (watchlist and dislike list)
+    """
+    class Meta:
+        model = UserStockPreference
+        fields = ['id', 'ticker', 'preference_type', 'created_at']
+        read_only_fields = ['id', 'created_at']

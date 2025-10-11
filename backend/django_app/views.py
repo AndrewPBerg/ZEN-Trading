@@ -13,9 +13,10 @@ from .serializers import (
     PasswordChangeSerializer,
     OnboardingSerializer,
     UserHoldingsSerializer,
-    ZodiacSignMatchingSerializer
+    ZodiacSignMatchingSerializer,
+    UserStockPreferenceSerializer
 )
-from .models import Stock, UserHoldings, ZodiacSignMatching
+from .models import Stock, UserHoldings, ZodiacSignMatching, UserStockPreference, get_element_from_zodiac
 
 User = get_user_model()
 
@@ -400,6 +401,7 @@ class ZodiacMatchedStocksView(APIView):
     def get(self, request):
         """
         Get stocks that are compatible with the user's zodiac sign
+        Excludes disliked stocks and orders by: same sign, positive, neutral, negative
         """
         try:
             # Get user's zodiac sign from profile
@@ -415,6 +417,12 @@ class ZodiacMatchedStocksView(APIView):
             # Get query parameters
             match_type_filter = request.GET.get('match_type', None)
             limit = request.GET.get('limit', None)
+            
+            # Get user's disliked stocks to exclude them
+            disliked_tickers = UserStockPreference.objects.filter(
+                user=request.user,
+                preference_type='dislike'
+            ).values_list('ticker', flat=True)
             
             # Query zodiac matching data
             matching_query = ZodiacSignMatching.objects.filter(user_sign=user_sign)
@@ -441,9 +449,9 @@ class ZodiacMatchedStocksView(APIView):
                     'element': match['element']
                 }
             
-            # Get stocks with matching zodiac signs
+            # Get stocks with matching zodiac signs, excluding disliked ones
             stock_signs = list(sign_to_match.keys())
-            stocks = Stock.objects.filter(zodiac_sign__in=stock_signs)
+            stocks = Stock.objects.filter(zodiac_sign__in=stock_signs).exclude(ticker__in=disliked_tickers)
             
             # Add match information to each stock
             matched_stocks = []
@@ -452,9 +460,18 @@ class ZodiacMatchedStocksView(APIView):
                 match_info = sign_to_match.get(stock.zodiac_sign, {})
                 stock_data['match_type'] = match_info.get('match_type')
                 
-                # Calculate compatibility score
+                # Check if it's the same sign as user
+                is_same_sign = stock.zodiac_sign == user_sign
+                stock_data['is_same_sign'] = is_same_sign
+                
+                # Add element derived from zodiac sign
+                stock_data['element'] = get_element_from_zodiac(stock.zodiac_sign)
+                
+                # Calculate compatibility score with same sign being highest
                 match_type = match_info.get('match_type')
-                if match_type == 'positive':
+                if is_same_sign:
+                    stock_data['compatibility_score'] = 4  # Highest priority
+                elif match_type == 'positive':
                     stock_data['compatibility_score'] = 3
                 elif match_type == 'neutral':
                     stock_data['compatibility_score'] = 2
@@ -512,3 +529,215 @@ class ZodiacSignMatchingListView(generics.ListAPIView):
             queryset = queryset.filter(match_type=match_type)
         
         return queryset
+
+
+class UserWatchlistView(APIView):
+    """
+    GET: List user's watchlist stocks
+    POST: Add a stock to watchlist
+    DELETE: Remove a stock from watchlist
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get all stocks in the user's watchlist
+        """
+        try:
+            watchlist = UserStockPreference.objects.filter(
+                user=request.user,
+                preference_type='watchlist'
+            )
+            serializer = UserStockPreferenceSerializer(watchlist, many=True)
+            return Response({
+                'watchlist': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch watchlist',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """
+        Add a stock to the watchlist
+        Request body: { "ticker": "AAPL" }
+        """
+        try:
+            ticker = request.data.get('ticker', '').upper().strip()
+            if not ticker:
+                return Response({
+                    'error': 'Invalid data',
+                    'detail': 'Ticker is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if stock exists in database
+            try:
+                Stock.objects.get(ticker=ticker)
+            except Stock.DoesNotExist:
+                return Response({
+                    'error': 'Stock not found',
+                    'detail': f'Stock with ticker {ticker} does not exist'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Create or update preference
+            preference, created = UserStockPreference.objects.update_or_create(
+                user=request.user,
+                ticker=ticker,
+                defaults={'preference_type': 'watchlist'}
+            )
+            
+            serializer = UserStockPreferenceSerializer(preference)
+            message = 'Added to watchlist' if created else 'Updated to watchlist'
+            
+            return Response({
+                'message': message,
+                'preference': serializer.data
+            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to add to watchlist',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def delete(self, request):
+        """
+        Remove a stock from the watchlist
+        Request body: { "ticker": "AAPL" }
+        """
+        try:
+            ticker = request.data.get('ticker', '').upper().strip()
+            if not ticker:
+                return Response({
+                    'error': 'Invalid data',
+                    'detail': 'Ticker is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            deleted_count, _ = UserStockPreference.objects.filter(
+                user=request.user,
+                ticker=ticker,
+                preference_type='watchlist'
+            ).delete()
+            
+            if deleted_count == 0:
+                return Response({
+                    'error': 'Not found',
+                    'detail': f'{ticker} is not in your watchlist'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            return Response({
+                'message': f'Removed {ticker} from watchlist'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to remove from watchlist',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UserDislikeListView(APIView):
+    """
+    GET: List user's disliked stocks
+    POST: Add a stock to dislike list
+    DELETE: Remove a stock from dislike list
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get all stocks in the user's dislike list
+        """
+        try:
+            dislike_list = UserStockPreference.objects.filter(
+                user=request.user,
+                preference_type='dislike'
+            )
+            serializer = UserStockPreferenceSerializer(dislike_list, many=True)
+            return Response({
+                'dislike_list': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch dislike list',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """
+        Add a stock to the dislike list
+        Request body: { "ticker": "AAPL" }
+        """
+        try:
+            ticker = request.data.get('ticker', '').upper().strip()
+            if not ticker:
+                return Response({
+                    'error': 'Invalid data',
+                    'detail': 'Ticker is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if stock exists in database
+            try:
+                Stock.objects.get(ticker=ticker)
+            except Stock.DoesNotExist:
+                return Response({
+                    'error': 'Stock not found',
+                    'detail': f'Stock with ticker {ticker} does not exist'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Create or update preference
+            preference, created = UserStockPreference.objects.update_or_create(
+                user=request.user,
+                ticker=ticker,
+                defaults={'preference_type': 'dislike'}
+            )
+            
+            serializer = UserStockPreferenceSerializer(preference)
+            message = 'Added to dislike list' if created else 'Updated to dislike list'
+            
+            return Response({
+                'message': message,
+                'preference': serializer.data
+            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to add to dislike list',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def delete(self, request):
+        """
+        Remove a stock from the dislike list
+        Request body: { "ticker": "AAPL" }
+        """
+        try:
+            ticker = request.data.get('ticker', '').upper().strip()
+            if not ticker:
+                return Response({
+                    'error': 'Invalid data',
+                    'detail': 'Ticker is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            deleted_count, _ = UserStockPreference.objects.filter(
+                user=request.user,
+                ticker=ticker,
+                preference_type='dislike'
+            ).delete()
+            
+            if deleted_count == 0:
+                return Response({
+                    'error': 'Not found',
+                    'detail': f'{ticker} is not in your dislike list'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            return Response({
+                'message': f'Removed {ticker} from dislike list'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to remove from dislike list',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

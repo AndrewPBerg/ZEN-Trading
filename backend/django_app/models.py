@@ -161,3 +161,49 @@ class ZodiacSignMatching(models.Model):
         verbose_name_plural = "Zodiac Sign Matchings"
         unique_together = ['user_sign', 'stock_sign']
         ordering = ['user_sign', 'match_type']
+
+
+class UserStockPreference(models.Model):
+    """
+    Track user's stock preferences (watchlist or dislike list)
+    """
+    PREFERENCE_TYPES = [
+        ('watchlist', 'Watchlist'),
+        ('dislike', 'Dislike'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stock_preferences')
+    ticker = models.CharField(max_length=10)
+    preference_type = models.CharField(max_length=20, choices=PREFERENCE_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.ticker} ({self.preference_type})"
+    
+    class Meta:
+        verbose_name = "User Stock Preference"
+        verbose_name_plural = "User Stock Preferences"
+        unique_together = ['user', 'ticker']
+        ordering = ['-created_at']
+
+
+# Utility function to get element from zodiac sign
+def get_element_from_zodiac(zodiac_sign):
+    """
+    Returns the element (Fire, Earth, Air, Water) for a given zodiac sign
+    """
+    ZODIAC_ELEMENTS = {
+        'Aries': 'Fire',
+        'Leo': 'Fire',
+        'Sagittarius': 'Fire',
+        'Taurus': 'Earth',
+        'Virgo': 'Earth',
+        'Capricorn': 'Earth',
+        'Gemini': 'Air',
+        'Libra': 'Air',
+        'Aquarius': 'Air',
+        'Cancer': 'Water',
+        'Scorpio': 'Water',
+        'Pisces': 'Water',
+    }
+    return ZODIAC_ELEMENTS.get(zodiac_sign, 'Unknown')

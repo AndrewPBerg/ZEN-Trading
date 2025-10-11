@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
 import { isDemoMode } from "@/lib/demo-mode"
+import { getMarketStatus, type MarketStatusResponse } from "@/lib/api/market"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const navItems = [
   { href: "/discovery", icon: TrendingUp, label: "Discovery" },
-  { href: "/portfolio", icon: Star, label: "Portfolio" },
   { href: "/watchlist", icon: Eye, label: "Watchlist" },
+  { href: "/portfolio", icon: Star, label: "Portfolio" },
   { href: "/horoscope", icon: Sparkles, label: "Horoscope" },
 ]
 
@@ -23,6 +25,7 @@ export function Navigation() {
   const [isDark, setIsDark] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
+  const [marketStatus, setMarketStatus] = useState<MarketStatusResponse | null>(null)
 
   // Hide navigation on specific pages
   const hideNavPages = ["/", "/login", "/signup", "/onboarding"]
@@ -33,7 +36,26 @@ export function Navigation() {
     const hasDarkClass = document.documentElement.classList.contains("dark")
     setIsDark(hasDarkClass)
     setIsDemo(isDemoMode())
+    
+    // Fetch initial market status
+    fetchMarketStatus()
+    
+    // Refresh market status every 60 seconds
+    const interval = setInterval(fetchMarketStatus, 60000)
+    return () => clearInterval(interval)
   }, [])
+
+  const fetchMarketStatus = async () => {
+    try {
+      const status = await getMarketStatus()
+      setMarketStatus(status)
+    } catch (error) {
+      console.error('Failed to fetch market status:', error)
+      // Silently fail - don't show market status if backend is unavailable
+      // This prevents the navigation from breaking if backend is down
+      setMarketStatus(null)
+    }
+  }
 
   // Don't render navigation on excluded pages
   if (shouldHideNav) {
@@ -94,8 +116,41 @@ export function Navigation() {
           })}
         </div>
 
-        {/* Right Side: Theme Toggle & User Menu */}
+        {/* Right Side: Market Status, Theme Toggle & User Menu */}
         <div className="flex items-center gap-2">
+          {/* Market Status Indicator */}
+          {mounted && marketStatus && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-800/30 border border-purple-500/20">
+                    <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                    <span className="text-xs text-purple-300 font-medium">
+                      {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-purple-950/95 border-purple-500/30">
+                  <div className="text-sm">
+                    <p className="font-medium">
+                      {marketStatus.is_open ? 'Closes' : 'Opens'} at:
+                    </p>
+                    <p className="text-purple-300">
+                      {new Date(marketStatus.next_event_time).toLocaleString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                      })}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
           {/* Theme Toggle */}
           {mounted && (
             <Button

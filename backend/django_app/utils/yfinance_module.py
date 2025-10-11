@@ -85,15 +85,20 @@ def get_next_market_open():
     eastern = pytz.timezone('US/Eastern')
     now = datetime.now(eastern)
     
-    # Start with tomorrow
-    next_day = now + timedelta(days=1)
-    
-    # Skip weekends (5=Saturday, 6=Sunday)
-    while next_day.weekday() >= 5:
-        next_day += timedelta(days=1)
-    
-    # Set to market open time (9:30 AM)
-    next_open = next_day.replace(hour=9, minute=30, second=0, microsecond=0)
+    # Check if today is a weekday and market hasn't opened yet
+    if now.weekday() < 5 and now.hour < 9 or (now.hour == 9 and now.minute < 30):
+        # Market opens today
+        next_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+    else:
+        # Start with tomorrow
+        next_day = now + timedelta(days=1)
+        
+        # Skip weekends (5=Saturday, 6=Sunday)
+        while next_day.weekday() >= 5:
+            next_day += timedelta(days=1)
+        
+        # Set to market open time (9:30 AM)
+        next_open = next_day.replace(hour=9, minute=30, second=0, microsecond=0)
     
     return next_open.strftime("%Y-%m-%d %H:%M:%S %Z")
 

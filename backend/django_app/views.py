@@ -171,6 +171,50 @@ def health_check(request):
     return JsonResponse({'status': 'ok', 'message': 'Django server is running'})
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def market_status(request):
+    """
+    Get current market status (open/closed) and next market event time
+    Public endpoint - no authentication required
+    """
+    try:
+        from .utils.yfinance_module import is_market_open, get_next_market_open
+        from datetime import datetime
+        import pytz
+        
+        # Check if market is currently open
+        market_open = is_market_open()
+        
+        # Get current time in Eastern timezone
+        eastern = pytz.timezone('US/Eastern')
+        now = datetime.now(eastern)
+        current_time = now.strftime("%Y-%m-%d %H:%M:%S %Z")
+        
+        if market_open:
+            # Market is open, calculate when it closes (4:00 PM ET)
+            market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+            next_event_time = market_close.strftime("%Y-%m-%d %H:%M:%S %Z")
+            next_event = "close"
+        else:
+            # Market is closed, get next open time
+            next_event_time = get_next_market_open()
+            next_event = "open"
+        
+        return Response({
+            'is_open': market_open,
+            'current_time': current_time,
+            'next_event': next_event,
+            'next_event_time': next_event_time
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to fetch market status',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class OnboardingView(APIView):
     """
     POST: Submit onboarding data (date of birth, zodiac sign, investing style, starting balance)

@@ -9,7 +9,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useEffect, useState } from "react"
 import { isDemoMode } from "@/lib/demo-mode"
 import { getMarketStatus, type MarketStatusResponse } from "@/lib/api/market"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const navItems = [
   { href: "/discovery", icon: TrendingUp, label: "Discovery" },
@@ -120,35 +119,28 @@ export function Navigation() {
         <div className="flex items-center gap-2">
           {/* Market Status Indicator */}
           {mounted && marketStatus && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-800/30 border border-purple-500/20">
-                    <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                    <span className="text-xs text-purple-300 font-medium">
-                      {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-purple-950/95 border-purple-500/30">
-                  <div className="text-sm">
-                    <p className="font-medium">
-                      {marketStatus.is_open ? 'Closes' : 'Opens'} at:
-                    </p>
-                    <p className="text-purple-300">
-                      {new Date(marketStatus.next_event_time).toLocaleString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        timeZoneName: 'short'
-                      })}
-                    </p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-800/30 border border-purple-500/20">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className="text-xs text-purple-300 font-medium">
+                  {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
+                </span>
+              </div>
+              <div className="border-l border-purple-500/20 pl-3">
+                <div className="text-xs">
+                  <span className="text-purple-400 font-medium">
+                    {marketStatus.is_open ? 'Closes' : 'Opens'}:
+                  </span>
+                  <span className="text-purple-300 ml-1">
+                    {new Date(marketStatus.next_event_time).toLocaleString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      timeZoneName: 'short'
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
           
           {/* Theme Toggle */}

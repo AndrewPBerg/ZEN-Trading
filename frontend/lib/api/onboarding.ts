@@ -20,6 +20,7 @@ export interface OnboardingData {
   zodiac_symbol?: string
   zodiac_element?: string
   investing_style: string
+  starting_balance: number
 }
 
 export interface UserProfile {
@@ -28,6 +29,7 @@ export interface UserProfile {
   zodiac_symbol: string | null
   zodiac_element: string | null
   investing_style: string | null
+  starting_balance: number | null
   onboarding_completed: boolean
   created_at: string
   updated_at: string

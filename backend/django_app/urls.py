@@ -44,6 +44,9 @@ api_urlpatterns = [
     
     # Onboarding endpoint
     path('onboarding/', views.OnboardingView.as_view(), name='onboarding'),
+    
+    # Holdings endpoint
+    path('holdings/', views.UserHoldingsView.as_view(), name='user-holdings'),
 ]
 
 urlpatterns = [

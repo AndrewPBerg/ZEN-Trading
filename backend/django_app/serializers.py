@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import UserProfile
+from .models import UserProfile, UserHoldings, StockHolding
 
 User = get_user_model()
 
@@ -18,6 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'zodiac_symbol', 
             'zodiac_element', 
             'investing_style',
+            'starting_balance',
             'onboarding_completed',
             'created_at',
             'updated_at'
@@ -110,6 +111,7 @@ class OnboardingSerializer(serializers.Serializer):
     zodiac_symbol = serializers.CharField(max_length=10, required=False, allow_blank=True)
     zodiac_element = serializers.CharField(max_length=50, required=False, allow_blank=True)
     investing_style = serializers.CharField(max_length=50, required=True)
+    starting_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=True)
 
     def validate_investing_style(self, value):
         """Validate that investing_style is one of the allowed values"""
@@ -132,9 +134,17 @@ class OnboardingSerializer(serializers.Serializer):
             )
         return value
     
+    def validate_starting_balance(self, value):
+        """Validate that starting_balance is between 10,000 and 1,000,000"""
+        if value < 10000 or value > 1000000:
+            raise serializers.ValidationError(
+                "Starting balance must be between $10,000 and $1,000,000"
+            )
+        return value
+    
     def save_to_profile(self, user):
         """
-        Save validated onboarding data to the user's profile
+        Save validated onboarding data to the user's profile and create holdings
         """
         profile, created = UserProfile.objects.get_or_create(user=user)
         
@@ -143,7 +153,35 @@ class OnboardingSerializer(serializers.Serializer):
         profile.zodiac_symbol = self.validated_data.get('zodiac_symbol', '')
         profile.zodiac_element = self.validated_data.get('zodiac_element', '')
         profile.investing_style = self.validated_data['investing_style']
+        profile.starting_balance = self.validated_data['starting_balance']
         profile.onboarding_completed = True
         profile.save()
         
+        # Create or update UserHoldings with the starting balance
+        holdings, created = UserHoldings.objects.get_or_create(user=user)
+        holdings.balance = self.validated_data['starting_balance']
+        holdings.save()
+        
         return profile
+
+
+class StockHoldingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for individual stock holdings
+    """
+    class Meta:
+        model = StockHolding
+        fields = ['id', 'ticker', 'quantity', 'total_value', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class UserHoldingsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user holdings with nested stock positions
+    """
+    positions = StockHoldingSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = UserHoldings
+        fields = ['id', 'balance', 'positions', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']

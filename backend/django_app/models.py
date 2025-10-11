@@ -46,6 +46,7 @@ class UserProfile(models.Model):
     zodiac_symbol = models.CharField(max_length=10, null=True, blank=True)
     zodiac_element = models.CharField(max_length=50, null=True, blank=True)
     investing_style = models.CharField(max_length=50, choices=INVESTING_STYLES, null=True, blank=True)
+    starting_balance = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     onboarding_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -56,6 +57,43 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
+
+
+class UserHoldings(models.Model):
+    """
+    Track user's current balance and overall portfolio
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='holdings')
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.email} - Holdings (Balance: ${self.balance})"
+    
+    class Meta:
+        verbose_name = "User Holdings"
+        verbose_name_plural = "User Holdings"
+
+
+class StockHolding(models.Model):
+    """
+    Individual stock positions within a user's holdings
+    """
+    user_holdings = models.ForeignKey(UserHoldings, on_delete=models.CASCADE, related_name='positions')
+    ticker = models.CharField(max_length=10)
+    quantity = models.DecimalField(max_digits=12, decimal_places=4)
+    total_value = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user_holdings.user.email} - {self.ticker}: {self.quantity} shares (${self.total_value})"
+    
+    class Meta:
+        verbose_name = "Stock Holding"
+        verbose_name_plural = "Stock Holdings"
+        unique_together = ['user_holdings', 'ticker']
 
 
 @receiver(post_save, sender=User)

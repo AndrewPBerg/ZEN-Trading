@@ -9,8 +9,9 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
 import { ZodiacDetector } from "@/components/zodiac-detector"
-import { ArrowRight, Sparkles, Star } from "lucide-react"
+import { ArrowRight, Sparkles, Star, DollarSign } from "lucide-react"
 import { submitOnboarding } from "@/lib/api/onboarding"
 import type { OnboardingData } from "@/lib/api/onboarding"
 import { createDemoUser, isDemoMode, setDemoMode } from "@/lib/demo-mode"
@@ -29,6 +30,7 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState({
     birthDate: "",
     investingVibe: "",
+    startingBalance: 100000,
   })
   const [detectedZodiac, setDetectedZodiac] = useState<{
     sign: string
@@ -64,6 +66,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
+          starting_balance: formData.startingBalance,
         })
         
         console.log("Demo onboarding complete:", demoData)
@@ -78,6 +81,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
+          starting_balance: formData.startingBalance,
         }
 
         const result = await submitOnboarding(onboardingData)
@@ -183,6 +187,33 @@ export default function OnboardingPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Starting Balance Selection */}
+          <Card className="p-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-primary/20 dark:border-primary/30">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium text-foreground">Starting Account Balance</Label>
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 px-3 py-1.5 rounded-lg border border-primary/20 dark:border-primary/30">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  <span className="text-lg font-bold text-foreground">
+                    {formData.startingBalance.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <Slider
+                value={[formData.startingBalance]}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, startingBalance: value[0] }))}
+                min={10000}
+                max={1000000}
+                step={10000}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>$10,000</span>
+                <span>$1,000,000</span>
               </div>
             </div>
           </Card>

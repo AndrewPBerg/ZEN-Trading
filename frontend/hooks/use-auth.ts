@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getCurrentUser, isAuthenticated, logout as authLogout } from "@/lib/api/auth"
+import { isDemoMode, getCompleteDemoUser, clearDemoMode } from "@/lib/demo-mode"
 
 interface User {
   id: number
@@ -19,10 +20,18 @@ export function useAuth() {
 
   useEffect(() => {
     const checkAuth = () => {
+      // First check if authenticated
       if (isAuthenticated()) {
         const currentUser = getCurrentUser()
         setUser(currentUser)
-      } else {
+      } 
+      // Then check if in demo mode
+      else if (isDemoMode()) {
+        const demoUser = getCompleteDemoUser()
+        setUser(demoUser)
+      } 
+      // No authentication or demo mode
+      else {
         setUser(null)
       }
       setIsLoading(false)
@@ -32,7 +41,8 @@ export function useAuth() {
 
     // Listen for storage changes (e.g., when user logs in/out in another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'zenTraderUser' || e.key === 'zenTraderTokens') {
+      if (e.key === 'zenTraderUser' || e.key === 'zenTraderTokens' || 
+          e.key === 'zenTraderDemoMode' || e.key === 'zenTraderDemoUser') {
         checkAuth()
       }
     }
@@ -42,7 +52,9 @@ export function useAuth() {
   }, [])
 
   const logout = () => {
+    // Clear both auth and demo mode
     authLogout()
+    clearDemoMode()
     setUser(null)
   }
 

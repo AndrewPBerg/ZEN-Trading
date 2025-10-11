@@ -1,3 +1,5 @@
+import { isDemoMode, setDemoUserProfile, getDemoUser, getDemoProfile } from '@/lib/demo-mode'
+
 // API configuration for Docker environment
 const getApiBaseUrl = () => {
   // For client-side requests (browser), use the exposed port
@@ -69,6 +71,24 @@ const getAuthToken = (): string | null => {
  * Get the current user's onboarding status
  */
 export const getOnboardingStatus = async (): Promise<OnboardingStatusResponse> => {
+  // Check if in demo mode first
+  if (isDemoMode()) {
+    const demoUser = getDemoUser()
+    const demoProfile = getDemoProfile()
+    
+    if (!demoUser || !demoProfile) {
+      throw new Error('Demo mode data not found')
+    }
+    
+    return {
+      onboarding_completed: demoProfile.onboarding_completed,
+      user: {
+        ...demoUser,
+        profile: demoProfile,
+      },
+    }
+  }
+  
   const url = `${API_BASE_URL}/onboarding/`
   console.log('Fetching onboarding status from:', url)
   
@@ -112,9 +132,14 @@ export const getOnboardingStatus = async (): Promise<OnboardingStatusResponse> =
 
 /**
  * Submit onboarding data to the backend
- * Requires user to be authenticated
+ * Requires user to be authenticated (or demo mode)
  */
 export const submitOnboarding = async (data: OnboardingData): Promise<OnboardingResponse> => {
+  // Check if in demo mode first
+  if (isDemoMode()) {
+    return submitOnboardingDemo(data)
+  }
+  
   const url = `${API_BASE_URL}/onboarding/`
   console.log('Submitting onboarding data to:', url)
   
@@ -170,5 +195,41 @@ export const submitOnboarding = async (data: OnboardingData): Promise<Onboarding
   console.log('Onboarding successful:', result)
   
   return result
+}
+
+/**
+ * Submit onboarding data in demo mode (no API call)
+ */
+export const submitOnboardingDemo = async (data: OnboardingData): Promise<OnboardingResponse> => {
+  console.log('Submitting onboarding data in demo mode:', data)
+  
+  const demoUser = getDemoUser()
+  if (!demoUser) {
+    throw new Error('Demo user not found')
+  }
+  
+  // Store profile data in localStorage
+  setDemoUserProfile({
+    date_of_birth: data.date_of_birth,
+    zodiac_sign: data.zodiac_sign,
+    zodiac_symbol: data.zodiac_symbol || '',
+    zodiac_element: data.zodiac_element || '',
+    investing_style: data.investing_style,
+    onboarding_completed: true,
+  })
+  
+  const profile = getDemoProfile()
+  if (!profile) {
+    throw new Error('Failed to create demo profile')
+  }
+  
+  // Return mock response matching OnboardingResponse format
+  return {
+    message: 'Demo onboarding completed successfully',
+    user: {
+      ...demoUser,
+      profile,
+    },
+  }
 }
 

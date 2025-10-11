@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,7 @@ import { ZodiacDetector } from "@/components/zodiac-detector"
 import { ArrowRight, Sparkles, Star } from "lucide-react"
 import { submitOnboarding } from "@/lib/api/onboarding"
 import type { OnboardingData } from "@/lib/api/onboarding"
+import { createDemoUser, isDemoMode, setDemoMode } from "@/lib/demo-mode"
 
 const investingVibes = [
   { value: "casual", label: "Casual Explorer", description: "I'm just getting started" },
@@ -23,6 +24,8 @@ const investingVibes = [
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [isDemo, setIsDemo] = useState(false)
   const [formData, setFormData] = useState({
     birthDate: "",
     investingVibe: "",
@@ -35,6 +38,17 @@ export default function OnboardingPage() {
   } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  useEffect(() => {
+    // Check if we're in demo mode from URL params or localStorage
+    const demoParam = searchParams.get('mode') === 'demo'
+    const demoModeActive = isDemoMode()
+    
+    if (demoParam || demoModeActive) {
+      setIsDemo(true)
+      setDemoMode(true)
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.birthDate || !formData.investingVibe || !detectedZodiac) return
@@ -42,21 +56,36 @@ export default function OnboardingPage() {
     setIsSubmitting(true)
     
     try {
-      // Prepare onboarding data
-      const onboardingData: OnboardingData = {
-        date_of_birth: formData.birthDate,
-        zodiac_sign: detectedZodiac.sign,
-        zodiac_symbol: detectedZodiac.symbol,
-        zodiac_element: detectedZodiac.element,
-        investing_style: formData.investingVibe,
-      }
+      if (isDemo) {
+        // Demo mode: Create local demo user without API call
+        const demoData = createDemoUser({
+          date_of_birth: formData.birthDate,
+          zodiac_sign: detectedZodiac.sign,
+          zodiac_symbol: detectedZodiac.symbol,
+          zodiac_element: detectedZodiac.element,
+          investing_style: formData.investingVibe,
+        })
+        
+        console.log("Demo onboarding complete:", demoData)
+        
+        // Navigate to discovery page
+        router.push("/discovery")
+      } else {
+        // Authenticated mode: Submit to backend
+        const onboardingData: OnboardingData = {
+          date_of_birth: formData.birthDate,
+          zodiac_sign: detectedZodiac.sign,
+          zodiac_symbol: detectedZodiac.symbol,
+          zodiac_element: detectedZodiac.element,
+          investing_style: formData.investingVibe,
+        }
 
-      // Submit to backend
-      const result = await submitOnboarding(onboardingData)
-      console.log("Onboarding complete:", result)
-      
-      // Navigate to discovery page
-      router.push("/discovery")
+        const result = await submitOnboarding(onboardingData)
+        console.log("Onboarding complete:", result)
+        
+        // Navigate to discovery page
+        router.push("/discovery")
+      }
     } catch (error) {
       console.error("Onboarding error:", error)
       // You might want to show an error message to the user here
@@ -86,6 +115,13 @@ export default function OnboardingPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to Your Cosmic Journey</h1>
           <p className="text-muted-foreground">Let's align your trading with the stars</p>
+          {isDemo && (
+            <div className="mt-3">
+              <span className="text-xs bg-accent/20 text-accent px-3 py-1 rounded-full border border-accent/30">
+                Demo Mode
+              </span>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

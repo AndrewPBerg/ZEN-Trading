@@ -15,17 +15,9 @@ export default function WelcomeScreen() {
 
   const handleDemoMode = () => {
     setIsAnimating(true)
-    // Set default user data in localStorage for demo
-    localStorage.setItem(
-      "zenTraderUser",
-      JSON.stringify({
-        name: "Demo User",
-        birthDate: "1990-09-15", // Virgo date
-        zodiacSign: "Virgo",
-        investingVibe: "Balanced",
-      }),
-    )
-    window.location.href = "/discovery"
+    // Enable demo mode and redirect to onboarding
+    localStorage.setItem("zenTraderDemoMode", "true")
+    window.location.href = "/onboarding?mode=demo"
   }
 
   return (
@@ -89,7 +81,7 @@ export default function WelcomeScreen() {
 
         {/* Action Buttons */}
         <div className="space-y-4">
-          <Button
+          {/* <Button
             onClick={handleGetStarted}
             className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold py-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
             disabled={isAnimating}
@@ -102,7 +94,7 @@ export default function WelcomeScreen() {
             ) : (
               "Begin Your Cosmic Journey"
             )}
-          </Button>
+          </Button> */}
 
           <Button
             onClick={handleDemoMode}

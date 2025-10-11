@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import { isDemoMode } from "@/lib/demo-mode"
 
 interface Stock {
   ticker: string
@@ -94,6 +95,7 @@ const recommendedStocks: Stock[] = [
 
 function DiscoveryPageContent() {
   const { user } = useAuth()
+  const [isDemo, setIsDemo] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedStocks, setLikedStocks] = useState<string[]>([])
   const [dislikedStocks, setDislikedStocks] = useState<string[]>([])
@@ -102,6 +104,10 @@ function DiscoveryPageContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    setIsDemo(isDemoMode())
+  }, [])
 
   const handleDragStart = (clientX: number, clientY: number) => {
     if (isAnimating) return
@@ -220,6 +226,11 @@ function DiscoveryPageContent() {
             <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p>
           </div>
           <div className="flex items-center gap-2">
+            {isDemo && (
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/40 text-xs">
+                Demo
+              </Badge>
+            )}
             <Badge variant="secondary" className="bg-accent/20 text-accent border-accent/30">
               <Star className="w-3 h-3 mr-1" />
               {user?.username || "Trader"}

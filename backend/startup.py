@@ -53,21 +53,35 @@ def run_migrations():
     run_command(['makemigrations'], 'Make migrations')
     run_command(['migrate'], 'Apply migrations')
 
-def populate_stocks_if_needed():
-    """Populate stocks from JSON if database is empty"""
+def populate_stocks_and_prices():
+    """Populate stocks from JSON and fetch initial prices if needed"""
     try:
         stock_count = Stock.objects.count()
         log(f"Current stock count: {stock_count}", BLUE)
         
-        if stock_count == 0:
-            log("Stock table is empty - populating from JSON", YELLOW)
-            run_command(['populate_stocks'], 'Populate stocks')
-        else:
-            log(f"Stock table already has {stock_count} stocks - skipping population", GREEN)
-    except Exception as e:
-        log(f"Error checking stock count: {str(e)}", RED)
-        log("Attempting to populate stocks anyway...", YELLOW)
+        # Always run populate_stocks to ensure data is up to date
+        log("Running populate_stocks to ensure latest data...", YELLOW)
         run_command(['populate_stocks'], 'Populate stocks')
+        
+        # Check how many stocks need prices
+        stocks_without_prices = Stock.objects.filter(previous_close__isnull=True).count()
+        
+        if stocks_without_prices > 0:
+            log(f"{stocks_without_prices} stocks missing price data", YELLOW)
+            
+            # Check if market is open
+            from django_app.utils.yfinance_module import is_market_open
+            
+            if is_market_open():
+                log("Market is open - prices will be fetched by qcluster soon", GREEN)
+            else:
+                log("Market is closed - fetching last known prices from yfinance...", YELLOW)
+                run_command(['fetch_initial_prices'], 'Fetch initial prices')
+        else:
+            log("All stocks have price data", GREEN)
+            
+    except Exception as e:
+        log(f"Error in populate_stocks_and_prices: {str(e)}", RED)
 
 def setup_price_updates():
     """Set up Django-Q2 scheduled task for price updates"""
@@ -146,8 +160,8 @@ def main():
         # Step 2: Run migrations
         run_migrations()
         
-        # Step 3: Populate stocks if database is empty
-        populate_stocks_if_needed()
+        # Step 3: Populate stocks and fetch prices if needed
+        populate_stocks_and_prices()
         
         # Step 4: Set up price update schedule
         setup_price_updates()

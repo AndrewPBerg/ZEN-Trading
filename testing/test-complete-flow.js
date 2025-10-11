@@ -33,12 +33,16 @@ let stats = {
 // Helper function to make requests
 async function makeRequest(url, options = {}) {
   try {
+    // Properly merge headers
+    const { headers: optionsHeaders, ...restOptions } = options
+    const mergedHeaders = {
+      'Content-Type': 'application/json',
+      ...optionsHeaders
+    }
+    
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
+      ...restOptions,
+      headers: mergedHeaders
     })
     
     let data

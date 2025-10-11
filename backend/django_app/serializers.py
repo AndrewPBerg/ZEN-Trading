@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import Stock, UserProfile, UserHoldings, StockHolding
+from .models import Stock, UserProfile, UserHoldings, StockHolding, ZodiacSignMatching
 
 User = get_user_model()
 
@@ -206,3 +206,39 @@ class UserHoldingsSerializer(serializers.ModelSerializer):
         model = UserHoldings
         fields = ['id', 'balance', 'positions', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ZodiacSignMatchingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for zodiac sign matching compatibility
+    """
+    class Meta:
+        model = ZodiacSignMatching
+        fields = ['id', 'user_sign', 'stock_sign', 'match_type', 'element']
+        read_only_fields = ['id']
+
+
+class MatchedStockSerializer(serializers.ModelSerializer):
+    """
+    Extended stock serializer that includes match information
+    """
+    match_type = serializers.CharField(read_only=True)
+    compatibility_score = serializers.IntegerField(read_only=True)
+    
+    class Meta:
+        model = Stock
+        fields = [
+            'id',
+            'ticker',
+            'company_name',
+            'current_price',
+            'previous_close',
+            'market_state',
+            'last_updated',
+            'description',
+            'date_founded',
+            'zodiac_sign',
+            'match_type',
+            'compatibility_score'
+        ]
+        read_only_fields = ['id', 'last_updated']

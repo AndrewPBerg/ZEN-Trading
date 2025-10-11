@@ -12,9 +12,10 @@ from .serializers import (
     UserUpdateSerializer, 
     PasswordChangeSerializer,
     OnboardingSerializer,
-    UserHoldingsSerializer
+    UserHoldingsSerializer,
+    ZodiacSignMatchingSerializer
 )
-from .models import Stock, UserHoldings
+from .models import Stock, UserHoldings, ZodiacSignMatching
 
 User = get_user_model()
 
@@ -385,3 +386,129 @@ class UserHoldingsView(APIView):
                 'error': 'Failed to process transaction',
                 'detail': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ZodiacMatchedStocksView(APIView):
+    """
+    GET: Retrieve stocks matched to the authenticated user's zodiac sign
+    Query parameters:
+        - match_type: Filter by match type (positive, neutral, negative)
+        - limit: Limit the number of results (default: no limit)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get stocks that are compatible with the user's zodiac sign
+        """
+        try:
+            # Get user's zodiac sign from profile
+            profile = request.user.profile
+            if not profile.zodiac_sign:
+                return Response({
+                    'error': 'Zodiac sign not set',
+                    'detail': 'Please complete onboarding to set your zodiac sign'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            user_sign = profile.zodiac_sign
+            
+            # Get query parameters
+            match_type_filter = request.GET.get('match_type', None)
+            limit = request.GET.get('limit', None)
+            
+            # Query zodiac matching data
+            matching_query = ZodiacSignMatching.objects.filter(user_sign=user_sign)
+            
+            # Filter by match type if specified
+            if match_type_filter and match_type_filter in ['positive', 'neutral', 'negative']:
+                matching_query = matching_query.filter(match_type=match_type_filter)
+            
+            # Get all matching stock signs
+            matches = matching_query.values('stock_sign', 'match_type', 'element')
+            
+            if not matches:
+                return Response({
+                    'user_sign': user_sign,
+                    'matched_stocks': [],
+                    'message': 'No matching data found. Please populate zodiac matching data.'
+                }, status=status.HTTP_200_OK)
+            
+            # Create a mapping of stock sign to match info
+            sign_to_match = {}
+            for match in matches:
+                sign_to_match[match['stock_sign']] = {
+                    'match_type': match['match_type'],
+                    'element': match['element']
+                }
+            
+            # Get stocks with matching zodiac signs
+            stock_signs = list(sign_to_match.keys())
+            stocks = Stock.objects.filter(zodiac_sign__in=stock_signs)
+            
+            # Add match information to each stock
+            matched_stocks = []
+            for stock in stocks:
+                stock_data = StockSerializer(stock).data
+                match_info = sign_to_match.get(stock.zodiac_sign, {})
+                stock_data['match_type'] = match_info.get('match_type')
+                
+                # Calculate compatibility score
+                match_type = match_info.get('match_type')
+                if match_type == 'positive':
+                    stock_data['compatibility_score'] = 3
+                elif match_type == 'neutral':
+                    stock_data['compatibility_score'] = 2
+                else:  # negative
+                    stock_data['compatibility_score'] = 1
+                
+                matched_stocks.append(stock_data)
+            
+            # Sort by compatibility score (highest first), then by ticker
+            matched_stocks.sort(key=lambda x: (-x['compatibility_score'], x['ticker']))
+            
+            # Apply limit if specified
+            if limit:
+                try:
+                    limit = int(limit)
+                    matched_stocks = matched_stocks[:limit]
+                except (ValueError, TypeError):
+                    pass
+            
+            return Response({
+                'user_sign': user_sign,
+                'user_element': profile.zodiac_element,
+                'total_matches': len(matched_stocks),
+                'matched_stocks': matched_stocks
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch matched stocks',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ZodiacSignMatchingListView(generics.ListAPIView):
+    """
+    GET: List all zodiac sign matching rules
+    Query parameters:
+        - user_sign: Filter by user zodiac sign
+        - match_type: Filter by match type (positive, neutral, negative)
+    """
+    queryset = ZodiacSignMatching.objects.all()
+    serializer_class = ZodiacSignMatchingSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        user_sign = self.request.GET.get('user_sign', None)
+        match_type = self.request.GET.get('match_type', None)
+        
+        if user_sign:
+            queryset = queryset.filter(user_sign=user_sign)
+        
+        if match_type and match_type in ['positive', 'neutral', 'negative']:
+            queryset = queryset.filter(match_type=match_type)
+        
+        return queryset

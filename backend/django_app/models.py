@@ -136,3 +136,28 @@ def save_user_profile(sender, instance, **kwargs):
     """
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
+
+class ZodiacSignMatching(models.Model):
+    """
+    Model to store zodiac sign compatibility data for stock matching
+    """
+    MATCH_TYPES = [
+        ('positive', 'Positive Match'),
+        ('neutral', 'Neutral Match'),
+        ('negative', 'Negative Match'),
+    ]
+    
+    user_sign = models.CharField(max_length=50)
+    stock_sign = models.CharField(max_length=50)
+    match_type = models.CharField(max_length=20, choices=MATCH_TYPES)
+    element = models.CharField(max_length=50)
+    
+    def __str__(self):
+        return f"{self.user_sign} → {self.stock_sign} ({self.match_type})"
+    
+    class Meta:
+        verbose_name = "Zodiac Sign Matching"
+        verbose_name_plural = "Zodiac Sign Matchings"
+        unique_together = ['user_sign', 'stock_sign']
+        ordering = ['user_sign', 'match_type']

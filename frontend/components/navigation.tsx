@@ -6,8 +6,8 @@ import { TrendingUp, Star, Eye, Sparkles, Moon, Sun, User, Settings, LogOut } fr
 import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useEffect, useState } from "react"
+import { isDemoMode } from "@/lib/demo-mode"
 
 const navItems = [
   { href: "/discovery", icon: TrendingUp, label: "Discovery" },
@@ -22,6 +22,7 @@ export function Navigation() {
   const { user, logout } = useAuth()
   const [isDark, setIsDark] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
 
   // Hide navigation on specific pages
   const hideNavPages = ["/", "/login", "/signup", "/onboarding"]
@@ -31,6 +32,7 @@ export function Navigation() {
     setMounted(true)
     const hasDarkClass = document.documentElement.classList.contains("dark")
     setIsDark(hasDarkClass)
+    setIsDemo(isDemoMode())
   }, [])
 
   // Don't render navigation on excluded pages
@@ -64,35 +66,30 @@ export function Navigation() {
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
-              <Tooltip key={href}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={href}
-                    className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
-                      isActive
-                        ? "text-gold-400 bg-purple-800/50"
-                        : "text-purple-300 hover:text-gold-300 hover:bg-purple-800/30"
-                    }`}
-                  >
-                    <Icon 
-                      size={20} 
-                      className={`transition-all duration-300 ${
-                        isActive ? "drop-shadow-lg scale-110" : "group-hover:scale-125"
-                      }`} 
-                    />
-                    <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
-                      isActive 
-                        ? "max-w-20 ml-2 opacity-100" 
-                        : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
-                    }`}>
-                      {label}
-                    </span>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-purple-950/95 text-purple-100 border-purple-500/30">
-                  <p>{label}</p>
-                </TooltipContent>
-              </Tooltip>
+              <Link
+                key={href}
+                href={href}
+                className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
+                  isActive
+                    ? "bg-purple-300/50"
+                    : "text-purple-300 hover:text-gold-300 hover:bg-purple-800/30"
+
+                }`}
+              >
+                <Icon 
+                  size={20} 
+                  className={`transition-all duration-300 ${
+                    isActive ? "drop-shadow-lg scale-110" : "group-hover:scale-125"
+                  }`} 
+                />
+                <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
+                  isActive 
+                    ? "max-w-20 ml-2 opacity-100 text-gold-400" 
+                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
+                }`}>
+                  {label}
+                </span>
+              </Link>
             )
           })}
         </div>
@@ -101,26 +98,19 @@ export function Navigation() {
         <div className="flex items-center gap-2">
           {/* Theme Toggle */}
           {mounted && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={toggleTheme}
-                  variant="ghost"
-                  size="sm"
-                  className="text-purple-300 hover:text-gold-300 hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
-                  aria-label="Toggle theme"
-                >
-                  {isDark ? (
-                    <Sun className="h-5 w-5" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-purple-950/95 text-purple-100 border-purple-500/30">
-                <p>Toggle {isDark ? "light" : "dark"} mode</p>
-              </TooltipContent>
-            </Tooltip>
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="sm"
+              className="text-purple-300 hover:text-gold-300 hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
           )}
 
           {/* User Menu */}
@@ -161,7 +151,7 @@ export function Navigation() {
                   className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {isDemo ? "Exit Demo" : "Logout"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

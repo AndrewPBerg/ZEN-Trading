@@ -23,11 +23,20 @@ export function Navigation() {
   const [isDark, setIsDark] = useState(false)
   const [mounted, setMounted] = useState(false)
 
+  // Hide navigation on specific pages
+  const hideNavPages = ["/", "/login", "/signup", "/onboarding"]
+  const shouldHideNav = hideNavPages.includes(pathname)
+
   useEffect(() => {
     setMounted(true)
     const hasDarkClass = document.documentElement.classList.contains("dark")
     setIsDark(hasDarkClass)
   }, [])
+
+  // Don't render navigation on excluded pages
+  if (shouldHideNav) {
+    return null
+  }
 
   const toggleTheme = () => {
     const newIsDark = !isDark

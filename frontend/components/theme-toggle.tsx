@@ -5,16 +5,13 @@ import { useEffect, useState } from "react"
 
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Check for saved theme preference or default to light mode
-    const savedTheme = localStorage.getItem("theme")
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-
-    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
-      setIsDark(true)
-      document.documentElement.classList.add("dark")
-    }
+    setMounted(true)
+    // Sync state with the already-applied theme from the blocking script
+    const hasDarkClass = document.documentElement.classList.contains("dark")
+    setIsDark(hasDarkClass)
   }, [])
 
   const toggleTheme = () => {
@@ -28,6 +25,15 @@ export function ThemeToggle() {
       document.documentElement.classList.remove("dark")
       localStorage.setItem("theme", "light")
     }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="fixed top-4 right-4 z-50 p-3 rounded-full bg-card/80 backdrop-blur-sm border border-border/50">
+        <div className="h-5 w-5" />
+      </div>
+    )
   }
 
   return (

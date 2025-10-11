@@ -179,16 +179,10 @@ function DiscoveryPageContent() {
   }
 
   const nextCard = () => {
-    if (currentIndex < stocks.length - 1) {
-      setCurrentIndex((prev) => prev + 1)
-      setIsAnimating(false)
-      setSwipeDirection(null)
-      setDragOffset({ x: 0, y: 0 })
-    } else {
-      setIsAnimating(false)
-      setSwipeDirection(null)
-      setDragOffset({ x: 0, y: 0 })
-    }
+    setCurrentIndex((prev) => prev + 1)
+    setIsAnimating(false)
+    setSwipeDirection(null)
+    setDragOffset({ x: 0, y: 0 })
   }
 
   const currentStock = stocks[currentIndex]
@@ -202,27 +196,27 @@ function DiscoveryPageContent() {
   const getMatchBadge = (stock: Stock) => {
     if (stock.is_same_sign) {
       return (
-        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm">
           ✨ Same Sign
         </Badge>
       )
     }
     if (stock.match_type === "positive") {
       return (
-        <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm">
           ⭐ Positive Match
         </Badge>
       )
     }
     if (stock.match_type === "neutral") {
       return (
-        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-sm">
           ◯ Neutral Match
         </Badge>
       )
     }
     return (
-      <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-sm">
         ⚠ Negative Match
       </Badge>
     )
@@ -306,44 +300,9 @@ function DiscoveryPageContent() {
         </div>
       </div>
 
-      {/* Cosmic Insight Card */}
-      <div className="px-6 py-2 flex-shrink-0">
-        <Card className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground mb-1 text-sm">Today's Cosmic Insight</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Swipe right to add to watchlist, swipe left to pass. Matches are ordered by cosmic alignment!
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       <div className="flex-1 px-6 flex items-center justify-center overflow-hidden">
         {!isFinished && currentStock ? (
           <div className="w-full max-w-lg">
-            {/* Progress indicator */}
-            <div className="flex items-center justify-center mb-4">
-              <div className="flex gap-2">
-                {stocks.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? "bg-accent scale-125"
-                        : index < currentIndex
-                          ? "bg-primary/50"
-                          : "bg-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Stock Card with Swipe Animation */}
             <div className="relative">
               <Card
@@ -375,11 +334,6 @@ function DiscoveryPageContent() {
                 </div>
 
                 <div className="text-center mb-4">
-                  <div className="flex items-center justify-center gap-3 mb-3">
-                    <div className="text-4xl">
-                      {ZODIAC_EMOJIS[currentStock.zodiac_sign || ""] || "⭐"}
-                    </div>
-                  </div>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <h2 className="text-xl font-bold text-foreground">{currentStock.ticker}</h2>
                     {currentStock.element && ELEMENT_COLORS[currentStock.element] && (
@@ -419,19 +373,19 @@ function DiscoveryPageContent() {
                 )}
 
                 {/* Founding Date */}
-                <div className="mb-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
-                  <span>Founded: {formatFoundingDate(currentStock.date_founded)}</span>
+                <div className="mb-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-medium">Founded: {formatFoundingDate(currentStock.date_founded)}</span>
                 </div>
 
                 {/* Description */}
                 {currentStock.description && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-2">
-                      <Info className="w-4 h-4 text-muted-foreground" />
-                      <p className="text-xs font-semibold text-foreground">About</p>
+                      <Info className="w-5 h-5 text-muted-foreground" />
+                      <p className="text-sm font-semibold text-foreground">About</p>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
                       {currentStock.description}
                     </p>
                   </div>

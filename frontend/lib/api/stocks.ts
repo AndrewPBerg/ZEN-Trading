@@ -385,3 +385,93 @@ export const removeFromDislikeList = async (ticker: string): Promise<{ message: 
   return await response.json()
 }
 
+/**
+ * Get a single stock by ticker
+ */
+export const getStockByTicker = async (ticker: string): Promise<Stock> => {
+  const url = `${API_BASE_URL}/stocks/${ticker}/`
+  const response = await authenticatedFetch(url, {
+    method: 'GET',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to fetch stock' }))
+    throw new Error(error.detail || 'Failed to fetch stock')
+  }
+
+  return await response.json()
+}
+
+/**
+ * Extended stock preference with full stock details
+ */
+export interface StockPreferenceWithDetails extends StockPreference {
+  stock: Stock
+}
+
+/**
+ * Get watchlist and dislike list with full stock details
+ * Returns an object with separate arrays for watchlist and disliked stocks
+ */
+export const getWatchlistWithDetails = async (): Promise<{
+  watchlist: StockPreferenceWithDetails[]
+  disliked: StockPreferenceWithDetails[]
+}> => {
+  try {
+    // Fetch both preference lists
+    const [watchlistPrefs, dislikeListPrefs] = await Promise.all([
+      getWatchlist(),
+      getDislikeList(),
+    ])
+
+    // Fetch stock details for all tickers
+    const allTickers = [
+      ...watchlistPrefs.map(p => p.ticker),
+      ...dislikeListPrefs.map(p => p.ticker),
+    ]
+
+    // Fetch stock details in parallel
+    const stockDetailsPromises = allTickers.map(ticker =>
+      getStockByTicker(ticker).catch(error => {
+        console.error(`Failed to fetch details for ${ticker}:`, error)
+        return null
+      })
+    )
+
+    const stockDetails = await Promise.all(stockDetailsPromises)
+
+    // Create a map of ticker to stock details
+    const stockMap = new Map<string, Stock>()
+    stockDetails.forEach((stock, index) => {
+      if (stock) {
+        stockMap.set(allTickers[index], stock)
+      }
+    })
+
+    // Combine preferences with stock details
+    const watchlistWithDetails: StockPreferenceWithDetails[] = watchlistPrefs
+      .map(pref => {
+        const stock = stockMap.get(pref.ticker)
+        if (!stock) return null
+        return { ...pref, stock }
+      })
+      .filter((item): item is StockPreferenceWithDetails => item !== null)
+
+    const dislikedWithDetails: StockPreferenceWithDetails[] = dislikeListPrefs
+      .map(pref => {
+        const stock = stockMap.get(pref.ticker)
+        if (!stock) return null
+        return { ...pref, stock }
+      })
+      .filter((item): item is StockPreferenceWithDetails => item !== null)
+
+    return {
+      watchlist: watchlistWithDetails,
+      disliked: dislikedWithDetails,
+    }
+  } catch (error) {
+    console.error('Failed to fetch watchlist with details:', error)
+    throw error
+  }
+}
+

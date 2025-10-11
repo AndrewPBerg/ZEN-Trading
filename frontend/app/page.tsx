@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Star, Sparkles, Moon, Sun } from "lucide-react"
 import { useState } from "react"
 
@@ -22,6 +23,9 @@ export default function WelcomeScreen() {
 
   return (
     <div className="h-screen bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Theme Toggle */}
+      <ThemeToggle />
+      
       {/* Cosmic Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-2 h-2 bg-accent rounded-full animate-pulse" />

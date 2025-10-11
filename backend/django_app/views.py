@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .serializers import (
+    StockSerializer,
     UserSerializer, 
     UserCreateSerializer, 
     UserUpdateSerializer, 
@@ -13,13 +14,33 @@ from .serializers import (
     OnboardingSerializer,
     UserHoldingsSerializer
 )
-from .models import UserHoldings
+from .models import Stock, UserHoldings
 
 User = get_user_model()
 
 # TODO talk to an external API
 
 # TODO 
+
+class StockListView(generics.ListAPIView):
+    """
+    GET: List all stocks with real-time prices
+    """
+    queryset = Stock.objects.all()
+    serializer_class = StockSerializer
+    permission_classes = [permissions.AllowAny]  # Public access to stock data
+
+
+class StockDetailView(generics.RetrieveAPIView):
+    """
+    GET: Retrieve a single stock by ticker
+    """
+    queryset = Stock.objects.all()
+    serializer_class = StockSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'ticker'  # Use ticker instead of pk
+    lookup_url_kwarg = 'ticker'
+
 
 class PriceCardView(APIView):
     """

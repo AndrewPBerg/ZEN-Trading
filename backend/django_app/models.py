@@ -4,6 +4,30 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class Stock(models.Model):
+    """
+    Stock model for storing real-time market data
+    """
+    ticker = models.CharField(max_length=10, unique=True, db_index=True)
+    company_name = models.CharField(max_length=255)
+    current_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    previous_close = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    market_state = models.CharField(max_length=20, null=True, blank=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    # Additional metadata from stocks.json
+    description = models.TextField(blank=True)
+    date_founded = models.DateTimeField(null=True, blank=True)
+    zodiac_sign = models.CharField(max_length=50, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.ticker} - {self.company_name}"
+    
+    class Meta:
+        verbose_name = "Stock"
+        verbose_name_plural = "Stocks"
+        ordering = ['ticker']
+
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
 

@@ -30,6 +30,10 @@ api_urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
+    # Stock endpoints (real-time market data)
+    path('stocks/', views.StockListView.as_view(), name='stock-list'),
+    path('stocks/<str:ticker>/', views.StockDetailView.as_view(), name='stock-detail'),
+    
     # Class-based views
     path('users/', views.UserListCreateView.as_view(), name='user-list-create'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),

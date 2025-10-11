@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
 
     "corsheaders",
+    "django_q",
     "django_app",
 ]
 
@@ -216,3 +217,16 @@ LOGOUT_REDIRECT_URL = "/"
 
 # URL Configuration
 APPEND_SLASH = False
+
+# Django-Q2 Configuration
+Q_CLUSTER = {
+    'name': 'ZEN_Trading',
+    'workers': 1,
+    'recycle': 500,
+    'timeout': 60,
+    'retry': 120,
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',  # Use Django ORM as broker (no Redis needed)
+    'catch_up': False,  # Don't execute missed schedules
+}

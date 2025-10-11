@@ -242,6 +242,14 @@ export const addToWatchlist = async (ticker: string): Promise<{ message: string;
       return { message: 'Already in watchlist', preference: existing }
     }
     
+    // Remove from dislike list if it exists there (for moving between lists)
+    const dislikeList = localStorage.getItem('zenTraderDemoDislikeList')
+    if (dislikeList) {
+      const dislikeListParsed: StockPreference[] = JSON.parse(dislikeList)
+      const filteredDislikeList = dislikeListParsed.filter(p => p.ticker !== ticker)
+      localStorage.setItem('zenTraderDemoDislikeList', JSON.stringify(filteredDislikeList))
+    }
+    
     const newPref: StockPreference = {
       id: list.length + 1,
       ticker,
@@ -338,6 +346,14 @@ export const addToDislikeList = async (ticker: string): Promise<{ message: strin
       return { message: 'Already in dislike list', preference: existing }
     }
     
+    // Remove from watchlist if it exists there (for moving between lists)
+    const watchlist = localStorage.getItem('zenTraderDemoWatchlist')
+    if (watchlist) {
+      const watchlistParsed: StockPreference[] = JSON.parse(watchlist)
+      const filteredWatchlist = watchlistParsed.filter(p => p.ticker !== ticker)
+      localStorage.setItem('zenTraderDemoWatchlist', JSON.stringify(filteredWatchlist))
+    }
+    
     const newPref: StockPreference = {
       id: list.length + 1,
       ticker,
@@ -401,6 +417,179 @@ export const removeFromDislikeList = async (ticker: string): Promise<{ message: 
  * Get a single stock by ticker
  */
 export const getStockByTicker = async (ticker: string): Promise<Stock> => {
+  if (isDemoMode()) {
+    // Return demo stock data based on ticker
+    const demoStocks: Record<string, Stock> = {
+      'AAPL': {
+        id: 1,
+        ticker: 'AAPL',
+        company_name: 'Apple Inc.',
+        current_price: 189.25,
+        previous_close: 186.8,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.',
+        date_founded: '1976-04-01T00:00:00Z',
+        zodiac_sign: 'Virgo',
+        match_type: 'positive',
+        compatibility_score: 4,
+        is_same_sign: true,
+        element: 'Earth',
+      },
+      'MSFT': {
+        id: 2,
+        ticker: 'MSFT',
+        company_name: 'Microsoft Corporation',
+        current_price: 378.85,
+        previous_close: 380.05,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.',
+        date_founded: '1975-04-04T00:00:00Z',
+        zodiac_sign: 'Taurus',
+        match_type: 'positive',
+        compatibility_score: 3,
+        is_same_sign: false,
+        element: 'Earth',
+      },
+      'GOOGL': {
+        id: 3,
+        ticker: 'GOOGL',
+        company_name: 'Alphabet Inc.',
+        current_price: 142.56,
+        previous_close: 138.78,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Alphabet Inc. provides various products and platforms in the United States, Europe, the Middle East, Africa, the Asia-Pacific, Canada, and Latin America.',
+        date_founded: '1998-09-04T00:00:00Z',
+        zodiac_sign: 'Virgo',
+        match_type: 'positive',
+        compatibility_score: 4,
+        is_same_sign: true,
+        element: 'Earth',
+      },
+      'NVDA': {
+        id: 4,
+        ticker: 'NVDA',
+        company_name: 'NVIDIA Corporation',
+        current_price: 875.3,
+        previous_close: 859.7,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'NVIDIA Corporation provides graphics, and compute and networking solutions in the United States, Taiwan, China, and internationally.',
+        date_founded: '1993-01-01T00:00:00Z',
+        zodiac_sign: 'Capricorn',
+        match_type: 'positive',
+        compatibility_score: 3,
+        is_same_sign: false,
+        element: 'Earth',
+      },
+      'TSLA': {
+        id: 5,
+        ticker: 'TSLA',
+        company_name: 'Tesla, Inc.',
+        current_price: 248.42,
+        previous_close: 252.75,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally.',
+        date_founded: '2003-07-01T00:00:00Z',
+        zodiac_sign: 'Cancer',
+        match_type: 'neutral',
+        compatibility_score: 2,
+        is_same_sign: false,
+        element: 'Water',
+      },
+      'META': {
+        id: 6,
+        ticker: 'META',
+        company_name: 'Meta Platforms, Inc.',
+        current_price: 484.2,
+        previous_close: 475.3,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Meta Platforms, Inc. engages in the development of products that enable people to connect and share with friends and family through mobile devices, personal computers, virtual reality headsets, and wearables worldwide.',
+        date_founded: '2004-02-04T00:00:00Z',
+        zodiac_sign: 'Aquarius',
+        match_type: 'neutral',
+        compatibility_score: 2,
+        is_same_sign: false,
+        element: 'Air',
+      },
+      'AMZN': {
+        id: 7,
+        ticker: 'AMZN',
+        company_name: 'Amazon.com, Inc.',
+        current_price: 178.35,
+        previous_close: 175.80,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally.',
+        date_founded: '1994-07-05T00:00:00Z',
+        zodiac_sign: 'Cancer',
+        match_type: 'neutral',
+        compatibility_score: 2,
+        is_same_sign: false,
+        element: 'Water',
+      },
+      'NFLX': {
+        id: 8,
+        ticker: 'NFLX',
+        company_name: 'Netflix, Inc.',
+        current_price: 645.28,
+        previous_close: 638.15,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Netflix, Inc. provides entertainment services. It offers TV series, documentaries, feature films, and mobile games across various genres and languages.',
+        date_founded: '1997-08-29T00:00:00Z',
+        zodiac_sign: 'Virgo',
+        match_type: 'positive',
+        compatibility_score: 4,
+        is_same_sign: true,
+        element: 'Earth',
+      },
+      'AMD': {
+        id: 9,
+        ticker: 'AMD',
+        company_name: 'Advanced Micro Devices, Inc.',
+        current_price: 156.78,
+        previous_close: 152.34,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Advanced Micro Devices, Inc. operates as a semiconductor company worldwide.',
+        date_founded: '1969-05-01T00:00:00Z',
+        zodiac_sign: 'Taurus',
+        match_type: 'positive',
+        compatibility_score: 3,
+        is_same_sign: false,
+        element: 'Earth',
+      },
+      'INTC': {
+        id: 10,
+        ticker: 'INTC',
+        company_name: 'Intel Corporation',
+        current_price: 42.35,
+        previous_close: 43.12,
+        market_state: 'REGULAR',
+        last_updated: new Date().toISOString(),
+        description: 'Intel Corporation engages in the design, manufacture, and sale of computer products and technologies worldwide.',
+        date_founded: '1968-07-18T00:00:00Z',
+        zodiac_sign: 'Cancer',
+        match_type: 'neutral',
+        compatibility_score: 2,
+        is_same_sign: false,
+        element: 'Water',
+      },
+    }
+    
+    const stock = demoStocks[ticker.toUpperCase()]
+    if (!stock) {
+      throw new Error(`Stock ${ticker} not found in demo data`)
+    }
+    
+    return stock
+  }
+
   const url = `${API_BASE_URL}/stocks/${ticker}/`
   const response = await authenticatedFetch(url, {
     method: 'GET',

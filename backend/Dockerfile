@@ -16,6 +16,9 @@ COPY . .
 RUN pip install uv
 RUN uv sync
 
+# Make startup script executable
+RUN chmod +x startup.py
+
 #Set port environment variable
 ENV PORT=42069
 

@@ -9,7 +9,8 @@ from .serializers import (
     UserSerializer, 
     UserCreateSerializer, 
     UserUpdateSerializer, 
-    PasswordChangeSerializer
+    PasswordChangeSerializer,
+    OnboardingSerializer
 )
 
 User = get_user_model()
@@ -143,3 +144,53 @@ def health_check(request):
     Simple health check endpoint
     """
     return JsonResponse({'status': 'ok', 'message': 'Django server is running'})
+
+
+class OnboardingView(APIView):
+    """
+    POST: Submit onboarding data (date of birth, zodiac sign, investing style)
+    GET: Retrieve user's onboarding status and data
+    """
+    permission_classes = [permissions.IsAuthenticated]  # Require authentication
+    
+    def get(self, request):
+        """
+        Get the user's current onboarding data and status
+        """
+        try:
+            profile = request.user.profile
+            serializer = UserSerializer(request.user)
+            return Response({
+                'onboarding_completed': profile.onboarding_completed,
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'error': 'Failed to retrieve onboarding data',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+        """
+        Save onboarding data to the authenticated user's profile
+        """
+        serializer = OnboardingSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                # Save the onboarding data to the user's profile
+                serializer.save_to_profile(request.user)
+                
+                # Return the updated user data with profile
+                user_serializer = UserSerializer(request.user)
+                
+                return Response({
+                    'message': 'Onboarding completed successfully',
+                    'user': user_serializer.data
+                }, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({
+                    'error': 'Failed to save onboarding data',
+                    'detail': str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

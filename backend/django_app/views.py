@@ -524,22 +524,49 @@ class ZodiacMatchedStocksView(APIView):
                 
                 matched_stocks.append(stock_data)
             
-            # Sort by compatibility score (highest first), then by ticker
-            matched_stocks.sort(key=lambda x: (-x['compatibility_score'], x['ticker']))
+            # Group stocks by match type for better variety
+            same_sign_stocks = [s for s in matched_stocks if s.get('is_same_sign')]
+            positive_stocks = [s for s in matched_stocks if not s.get('is_same_sign') and s.get('match_type') == 'positive']
+            neutral_stocks = [s for s in matched_stocks if s.get('match_type') == 'neutral']
+            negative_stocks = [s for s in matched_stocks if s.get('match_type') == 'negative']
+            
+            # Sort each group by ticker for consistency
+            same_sign_stocks.sort(key=lambda x: x['ticker'])
+            positive_stocks.sort(key=lambda x: x['ticker'])
+            neutral_stocks.sort(key=lambda x: x['ticker'])
+            negative_stocks.sort(key=lambda x: x['ticker'])
+            
+            # Interleave stocks to provide variety: 2 same/positive, 1 neutral, 1 negative pattern
+            mixed_stocks = []
+            max_length = max(len(same_sign_stocks), len(positive_stocks), len(neutral_stocks), len(negative_stocks))
+            
+            for i in range(max_length):
+                # Add same sign stock
+                if i < len(same_sign_stocks):
+                    mixed_stocks.append(same_sign_stocks[i])
+                # Add positive match
+                if i < len(positive_stocks):
+                    mixed_stocks.append(positive_stocks[i])
+                # Add neutral match (for variety)
+                if i < len(neutral_stocks):
+                    mixed_stocks.append(neutral_stocks[i])
+                # Add negative match occasionally (every other iteration)
+                if i % 2 == 0 and i < len(negative_stocks):
+                    mixed_stocks.append(negative_stocks[i])
             
             # Apply limit if specified
             if limit:
                 try:
                     limit = int(limit)
-                    matched_stocks = matched_stocks[:limit]
+                    mixed_stocks = mixed_stocks[:limit]
                 except (ValueError, TypeError):
                     pass
             
             return Response({
                 'user_sign': user_sign,
                 'user_element': profile.zodiac_element,
-                'total_matches': len(matched_stocks),
-                'matched_stocks': matched_stocks
+                'total_matches': len(mixed_stocks),
+                'matched_stocks': mixed_stocks
             }, status=status.HTTP_200_OK)
             
         except Exception as e:

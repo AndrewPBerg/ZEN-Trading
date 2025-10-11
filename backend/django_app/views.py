@@ -462,10 +462,10 @@ class ZodiacMatchedStocksView(APIView):
             match_type_filter = request.GET.get('match_type', None)
             limit = request.GET.get('limit', None)
             
-            # Get user's disliked stocks to exclude them
-            disliked_tickers = UserStockPreference.objects.filter(
+            # Get user's disliked AND watchlist stocks to exclude them from discovery
+            excluded_tickers = UserStockPreference.objects.filter(
                 user=request.user,
-                preference_type='dislike'
+                preference_type__in=['dislike', 'watchlist']
             ).values_list('ticker', flat=True)
             
             # Query zodiac matching data
@@ -493,9 +493,9 @@ class ZodiacMatchedStocksView(APIView):
                     'element': match['element']
                 }
             
-            # Get stocks with matching zodiac signs, excluding disliked ones
+            # Get stocks with matching zodiac signs, excluding disliked and watchlist stocks
             stock_signs = list(sign_to_match.keys())
-            stocks = Stock.objects.filter(zodiac_sign__in=stock_signs).exclude(ticker__in=disliked_tickers)
+            stocks = Stock.objects.filter(zodiac_sign__in=stock_signs).exclude(ticker__in=excluded_tickers)
             
             # Add match information to each stock
             matched_stocks = []

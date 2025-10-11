@@ -252,6 +252,9 @@ export const addToWatchlist = async (ticker: string): Promise<{ message: string;
     list.push(newPref)
     localStorage.setItem('zenTraderDemoWatchlist', JSON.stringify(list))
     
+    // Clear zodiac matched stocks cache so discovery page gets updated list
+    localStorage.removeItem('cache_zodiac_matched_stocks')
+    
     return { message: 'Added to watchlist', preference: newPref }
   }
 
@@ -265,6 +268,9 @@ export const addToWatchlist = async (ticker: string): Promise<{ message: string;
     const error = await response.json().catch(() => ({ detail: 'Failed to add to watchlist' }))
     throw new Error(error.detail || error.error || 'Failed to add to watchlist')
   }
+
+  // Clear zodiac matched stocks cache so discovery page gets updated list
+  localStorage.removeItem('cache_zodiac_matched_stocks')
 
   return await response.json()
 }
@@ -342,6 +348,9 @@ export const addToDislikeList = async (ticker: string): Promise<{ message: strin
     list.push(newPref)
     localStorage.setItem('zenTraderDemoDislikeList', JSON.stringify(list))
     
+    // Clear zodiac matched stocks cache so discovery page gets updated list
+    localStorage.removeItem('cache_zodiac_matched_stocks')
+    
     return { message: 'Added to dislike list', preference: newPref }
   }
 
@@ -355,6 +364,9 @@ export const addToDislikeList = async (ticker: string): Promise<{ message: strin
     const error = await response.json().catch(() => ({ detail: 'Failed to add to dislike list' }))
     throw new Error(error.detail || error.error || 'Failed to add to dislike list')
   }
+
+  // Clear zodiac matched stocks cache so discovery page gets updated list
+  localStorage.removeItem('cache_zodiac_matched_stocks')
 
   return await response.json()
 }

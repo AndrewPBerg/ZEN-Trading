@@ -170,13 +170,24 @@ function DiscoveryPageContent() {
       await addToWatchlist(currentStock.ticker)
       toast.success(`Added ${currentStock.ticker} to watchlist`)
       setLikedStocks((prev) => [...prev, currentStock.ticker])
+      
+      // Remove the stock from the stocks array so it won't appear again
+      setStocks((prev) => prev.filter((_, idx) => idx !== currentIndex))
     } catch (err) {
       console.error("Failed to add to watchlist:", err)
       toast.error("Failed to add to watchlist")
+      // Still move to next card even if API fails
+      setTimeout(() => {
+        nextCard()
+      }, 300)
+      return
     }
 
     setTimeout(() => {
-      nextCard()
+      setIsAnimating(false)
+      setSwipeDirection(null)
+      setDragOffset({ x: 0, y: 0 })
+      // Don't increment currentIndex since we removed the item from the array
     }, 300)
   }
 
@@ -191,13 +202,24 @@ function DiscoveryPageContent() {
       await addToDislikeList(currentStock.ticker)
       toast.success(`Added ${currentStock.ticker} to dislike list`)
       setDislikedStocks((prev) => [...prev, currentStock.ticker])
+      
+      // Remove the stock from the stocks array so it won't appear again
+      setStocks((prev) => prev.filter((_, idx) => idx !== currentIndex))
     } catch (err) {
       console.error("Failed to add to dislike list:", err)
       toast.error("Failed to add to dislike list")
+      // Still move to next card even if API fails
+      setTimeout(() => {
+        nextCard()
+      }, 300)
+      return
     }
 
     setTimeout(() => {
-      nextCard()
+      setIsAnimating(false)
+      setSwipeDirection(null)
+      setDragOffset({ x: 0, y: 0 })
+      // Don't increment currentIndex since we removed the item from the array
     }, 300)
   }
 

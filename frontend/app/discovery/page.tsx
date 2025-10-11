@@ -259,8 +259,14 @@ function DiscoveryPageContent() {
   // Calculate price change percentage
   const getPriceChange = (stock: Stock) => {
     if (!stock.current_price || !stock.previous_close) return null
-    const change = stock.current_price - stock.previous_close
-    const changePercent = (change / stock.previous_close) * 100
+    // Ensure prices are numbers (in case they come as strings from API)
+    const currentPrice = typeof stock.current_price === 'string' ? parseFloat(stock.current_price) : stock.current_price
+    const previousClose = typeof stock.previous_close === 'string' ? parseFloat(stock.previous_close) : stock.previous_close
+    
+    if (isNaN(currentPrice) || isNaN(previousClose)) return null
+    
+    const change = currentPrice - previousClose
+    const changePercent = (change / previousClose) * 100
     return { change, changePercent }
   }
 
@@ -376,7 +382,11 @@ function DiscoveryPageContent() {
                 {/* Price Section */}
                 {currentStock.current_price && (
                   <div className="text-center mb-4 pb-4 border-b border-border/50">
-                    <p className="text-2xl font-bold text-foreground">${currentStock.current_price.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      ${(typeof currentStock.current_price === 'string' 
+                        ? parseFloat(currentStock.current_price) 
+                        : currentStock.current_price).toFixed(2)}
+                    </p>
                     {getPriceChange(currentStock) && (
                       <div
                         className={`flex items-center justify-center gap-1 text-sm ${

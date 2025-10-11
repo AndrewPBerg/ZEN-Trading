@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_app.settings')
 django.setup()
 
 from django.core.management import call_command
-from django_app.models import Stock
+from django_app.models import Stock, ZodiacSignMatching
 
 # Color codes for output
 GREEN = '\033[92m'
@@ -52,6 +52,22 @@ def run_migrations():
     """Run Django migrations"""
     run_command(['makemigrations'], 'Make migrations')
     run_command(['migrate'], 'Apply migrations')
+
+def populate_zodiac_matching():
+    """Populate zodiac sign matching data if not already populated"""
+    try:
+        matching_count = ZodiacSignMatching.objects.count()
+        log(f"Current zodiac matching records: {matching_count}", BLUE)
+        
+        # If we have no matching data, populate it
+        if matching_count == 0:
+            log("No zodiac matching data found - populating...", YELLOW)
+            run_command(['populate_zodiac_matching'], 'Populate zodiac matching')
+        else:
+            log(f"Zodiac matching data already populated ({matching_count} records)", GREEN)
+            
+    except Exception as e:
+        log(f"Error in populate_zodiac_matching: {str(e)}", RED)
 
 def populate_stocks_and_prices():
     """Populate stocks from JSON and fetch initial prices if needed"""
@@ -163,17 +179,20 @@ def main():
         # Step 3: Populate stocks and fetch prices if needed
         populate_stocks_and_prices()
         
-        # Step 4: Set up price update schedule
+        # Step 4: Populate zodiac sign matching data
+        populate_zodiac_matching()
+        
+        # Step 5: Set up price update schedule
         setup_price_updates()
         
-        # Step 5: Start qcluster worker
+        # Step 6: Start qcluster worker
         qcluster_process = start_qcluster()
         
         if qcluster_process is None:
             log("Failed to start qcluster - exiting", RED)
             sys.exit(1)
         
-        # Step 6: Start Gunicorn (blocking)
+        # Step 7: Start Gunicorn (blocking)
         log("=" * 60, GREEN)
         log("All services started successfully!", GREEN)
         log("=" * 60, GREEN)

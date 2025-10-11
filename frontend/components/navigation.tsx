@@ -71,7 +71,7 @@ export function Navigation() {
                 href={href}
                 className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
                   isActive
-                    ? "bg-purple-300/50"
+                    ? "text-gold-400 bg-purple-300/50"
                     : "text-purple-300 hover:text-gold-300 hover:bg-purple-800/30"
 
                 }`}
@@ -125,7 +125,7 @@ export function Navigation() {
                   <User size={20} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-purple-950/95 border-purple-200 dark:border-purple-500/30">
+              <DropdownMenuContent align="end" className="w-56 bg-purple-950/95 border-purple-500/30">
                 <div className="px-3 py-2">
                   <p className="font-medium text-foreground">
                     {user.first_name} {user.last_name}
@@ -137,18 +137,18 @@ export function Navigation() {
                     </p>
                   )}
                 </div>
-                <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                <DropdownMenuSeparator className="bg-purple-500/20" />
                 <DropdownMenuItem 
                   onClick={() => router.push("/settings")}
-                  className="cursor-pointer focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                  className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                <DropdownMenuSeparator className="bg-purple-500/20" />
                 <DropdownMenuItem 
                   onClick={handleLogout} 
-                  className="text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 cursor-pointer focus:bg-red-50 dark:focus:bg-purple-800/30"
+                  className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   {isDemo ? "Exit Demo" : "Logout"}

@@ -227,18 +227,28 @@ async function testMatchedStocks(tokens) {
     return false
   }
   
-  console.log('✅ Get matched stocks successful')
+  console.log('✅ Get matched stocks request successful')
   console.log(`   User sign: ${data.user_sign}`)
   console.log(`   User element: ${data.user_element}`)
   console.log(`   Total matched stocks: ${data.total_matches}`)
   
-  if (data.matched_stocks && data.matched_stocks.length > 0) {
-    console.log('\n   Sample matched stocks:')
-    data.matched_stocks.slice(0, 5).forEach(stock => {
-      console.log(`   - ${stock.ticker} (${stock.company_name})`)
-      console.log(`     Zodiac: ${stock.zodiac_sign}, Match: ${stock.match_type}, Score: ${stock.compatibility_score}`)
-    })
+  // Check if we actually have stocks
+  if (!data.matched_stocks || data.matched_stocks.length === 0) {
+    console.log('❌ No matched stocks returned!')
+    if (data.message) {
+      console.log(`   Message: ${data.message}`)
+    }
+    console.log('   This indicates the zodiac matching data is not populated in the database.')
+    console.log('   Run: python manage.py populate_zodiac_matching')
+    return false
   }
+  
+  console.log('✅ Matched stocks found!')
+  console.log('\n   Sample matched stocks:')
+  data.matched_stocks.slice(0, 5).forEach(stock => {
+    console.log(`   - ${stock.ticker} (${stock.company_name})`)
+    console.log(`     Zodiac: ${stock.zodiac_sign}, Match: ${stock.match_type}, Score: ${stock.compatibility_score}`)
+  })
   
   return true
 }
@@ -264,17 +274,22 @@ async function testMatchedStocksPositiveOnly(tokens) {
     return false
   }
   
-  console.log('✅ Get positive matched stocks successful')
+  console.log('✅ Get positive matched stocks request successful')
   console.log(`   Total positive matches: ${data.total_matches}`)
   
+  // Check if we have stocks
+  if (!data.matched_stocks || data.matched_stocks.length === 0) {
+    console.log('⚠️  No positive matched stocks returned (this may be expected if user has no positive matches)')
+    return true
+  }
+  
   // Verify all are positive matches
-  if (data.matched_stocks && data.matched_stocks.length > 0) {
-    const allPositive = data.matched_stocks.every(stock => stock.match_type === 'positive')
-    if (allPositive) {
-      console.log('   ✅ All stocks are positive matches')
-    } else {
-      console.log('   ❌ Some stocks are not positive matches')
-    }
+  const allPositive = data.matched_stocks.every(stock => stock.match_type === 'positive')
+  if (allPositive) {
+    console.log('   ✅ All stocks are positive matches')
+  } else {
+    console.log('   ❌ Some stocks are not positive matches')
+    return false
   }
   
   return true

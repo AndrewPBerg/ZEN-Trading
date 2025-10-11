@@ -14,7 +14,6 @@ const navItems = [
   { href: "/portfolio", icon: Star, label: "Portfolio" },
   { href: "/watchlist", icon: Eye, label: "Watchlist" },
   { href: "/horoscope", icon: Sparkles, label: "Horoscope" },
-  { href: "/tarot", icon: Moon, label: "Tarot" },
 ]
 
 export function Navigation() {

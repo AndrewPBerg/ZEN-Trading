@@ -12,7 +12,7 @@
 stagewise.json
 # testing
 /coverage
-
+TODO.md
 # next.js
 /.next/
 /out/

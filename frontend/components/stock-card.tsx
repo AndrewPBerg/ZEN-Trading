@@ -1,6 +1,6 @@
 "use client"
 
-import { TarotCard, TarotCardContent, TarotCorners } from "@/components/ui/tarot-card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, Star, Plus, Eye } from "lucide-react"
@@ -38,14 +38,13 @@ export function StockCard({ stock, isSelected, onSelect }: StockCardProps) {
   }
 
   return (
-    <TarotCard
-      className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
+    <Card
+      className={`p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
         isSelected ? "ring-2 ring-primary shadow-lg scale-[1.02]" : ""
-      } bg-gradient-to-br ${elementColors[stock.element as keyof typeof elementColors]} backdrop-blur-sm`}
+      } bg-gradient-to-br ${elementColors[stock.element as keyof typeof elementColors]} backdrop-blur-sm border-2`}
       onClick={onSelect}
     >
-      <TarotCorners />
-      <TarotCardContent className="space-y-3">
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -105,7 +104,7 @@ export function StockCard({ stock, isSelected, onSelect }: StockCardProps) {
             </Button>
           </div>
         )}
-      </TarotCardContent>
-    </TarotCard>
+      </div>
+    </Card>
   )
 }

@@ -2,11 +2,11 @@
 const getApiBaseUrl = () => {
   // For client-side requests (browser), use the exposed port
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_API_URL + '/api' || 'http://localhost:42069/api';
+    return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:42069') + '/api';
   }
   
   // For server-side requests, use internal Docker network
-  return process.env.INTERNAL_API_URL + '/api' || 'http://localhost:42069/api';
+  return (process.env.INTERNAL_API_URL || 'http://localhost:42069') + '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -62,7 +62,7 @@ const getStoredTokens = (): AuthTokens | null => {
   } catch {
     return null
   }
-}
+} 
 
 const setStoredTokens = (tokens: AuthTokens): void => {
   if (typeof window === 'undefined') return
@@ -121,7 +121,7 @@ export const login = async (credentials: LoginCredentials): Promise<{ user: User
   // Get user data
   const userResponse = await fetch(`${API_BASE_URL}/users/me/`, {
     headers: {
-      'Authorization': `Bearer ${tokens.access}`,
+      'Authorization': `Bearer ${tokens.access}`
     },
   })
 
@@ -183,9 +183,7 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
       }
     } catch (parseError) {
       console.error('Failed to parse error response:', parseError)
-      const responseText = await response.text()
-      console.log('Raw response text:', responseText)
-      error = { detail: `Server error (${response.status}): ${responseText || 'Network error'}` }
+      error = { detail: `Server error (${response.status}): Network error or server unavailable` }
     }
     throw new Error(error.detail || error.message || 'Registration failed')
   }

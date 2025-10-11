@@ -145,25 +145,25 @@ export function ZodiacDetector({ birthDate, onZodiacDetected }: ZodiacDetectorPr
   if (!birthDate) return null
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/30 backdrop-blur-sm">
+    <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 border-primary/30 dark:border-primary/40 backdrop-blur-sm">
       <div className="text-center space-y-4">
         {isAnimating ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center animate-pulse">
-              <Sparkles className="w-6 h-6 text-white animate-spin" />
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center animate-pulse shadow-lg dark:shadow-primary/30">
+              <Sparkles className="w-6 h-6 text-primary-foreground animate-spin" />
             </div>
             <p className="text-sm text-muted-foreground">Consulting the stars...</p>
           </div>
         ) : zodiac ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                <span className="text-2xl text-white">{zodiac.symbol}</span>
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg dark:shadow-primary/30 animate-bounce">
+                <span className="text-2xl text-primary-foreground">{zodiac.symbol}</span>
               </div>
               <div className="text-left">
                 <h3 className="text-lg font-bold text-foreground">{zodiac.sign}</h3>
                 <p className="text-sm text-muted-foreground">{zodiac.dateRange}</p>
-                <p className="text-xs text-accent font-medium">{zodiac.element} Element</p>
+                <p className="text-xs text-accent dark:text-accent font-medium">{zodiac.element} Element</p>
               </div>
             </div>
 
@@ -173,7 +173,7 @@ export function ZodiacDetector({ birthDate, onZodiacDetected }: ZodiacDetectorPr
                 {zodiac.traits.map((trait, index) => (
                   <span
                     key={trait}
-                    className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full border border-primary/20"
+                    className="px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-xs rounded-full border border-primary/20 dark:border-primary/30"
                     style={{ animationDelay: `${index * 200}ms` }}
                   >
                     {trait}
@@ -182,7 +182,7 @@ export function ZodiacDetector({ birthDate, onZodiacDetected }: ZodiacDetectorPr
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1 text-accent">
+            <div className="flex items-center justify-center gap-1 text-accent dark:text-accent">
               <Star className="w-3 h-3 fill-current" />
               <span className="text-xs">Your trading destiny awaits</span>
               <Star className="w-3 h-3 fill-current" />

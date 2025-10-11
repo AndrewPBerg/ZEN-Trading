@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Navigation } from "@/components/navigation"
 import { Share2, Star, Moon, Sun, TrendingUp, Sparkles, Calendar } from "lucide-react"
 
 // Mock horoscope data for different zodiac signs
@@ -130,7 +129,7 @@ export default function HoroscopePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-20 pb-8">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -300,9 +299,6 @@ export default function HoroscopePage() {
           )}
         </Button>
       </div>
-
-      {/* Navigation Component */}
-      <Navigation />
     </div>
   )
 }

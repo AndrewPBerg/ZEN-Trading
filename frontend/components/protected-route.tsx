@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { isDemoMode } from "@/lib/demo-mode"
 import { Sparkles } from "lucide-react"
 
 interface ProtectedRouteProps {
@@ -16,7 +17,8 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login")
+      // Redirect to home page if not authenticated and not in demo mode
+      router.push("/")
     }
   }, [user, isLoading, router])
 

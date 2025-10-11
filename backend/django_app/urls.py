@@ -41,6 +41,9 @@ api_urlpatterns = [
     path('register/', views.register_user, name='register-user'),
     path('register', views.register_user, name='register-user-no-slash'),
     path('price-card/', views.PriceCardView.as_view(), name='price-card'),
+    
+    # Onboarding endpoint
+    path('onboarding/', views.OnboardingView.as_view(), name='onboarding'),
 ]
 
 urlpatterns = [

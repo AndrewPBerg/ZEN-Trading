@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { Navigation } from "@/components/navigation"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import { isDemoMode } from "@/lib/demo-mode"
 
 interface Stock {
   ticker: string
@@ -94,6 +94,7 @@ const recommendedStocks: Stock[] = [
 
 function DiscoveryPageContent() {
   const { user } = useAuth()
+  const [isDemo, setIsDemo] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedStocks, setLikedStocks] = useState<string[]>([])
   const [dislikedStocks, setDislikedStocks] = useState<string[]>([])
@@ -102,6 +103,10 @@ function DiscoveryPageContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    setIsDemo(isDemoMode())
+  }, [])
 
   const handleDragStart = (clientX: number, clientY: number) => {
     if (isAnimating) return
@@ -209,17 +214,20 @@ function DiscoveryPageContent() {
   const scale = isDragging ? Math.max(0.95, 1 - Math.abs(dragOffset.x) * 0.0005) : 1
 
   return (
-    <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col">
-      <Navigation />
-
+    <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
       {/* Header */}
       <div className="px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
-            <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p>
+            {/* <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p> */}
           </div>
           <div className="flex items-center gap-2">
+            {isDemo && (
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/40 text-xs">
+                Demo
+              </Badge>
+            )}
             <Badge variant="secondary" className="bg-accent/20 text-accent border-accent/30">
               <Star className="w-3 h-3 mr-1" />
               {user?.username || "Trader"}

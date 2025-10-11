@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { PortfolioChart } from "@/components/portfolio-chart"
-import { Navigation } from "@/components/navigation"
 import { TrendingUp, TrendingDown, Star, Sparkles, Eye, MoreHorizontal } from "lucide-react"
 
 // Mock portfolio data
@@ -118,7 +117,7 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-8">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -293,8 +292,6 @@ export default function PortfolioPage() {
           </Card>
         </div>
       </div>
-
-      <Navigation />
     </div>
   )
 }

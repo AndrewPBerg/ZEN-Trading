@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { getCurrentUser, isAuthenticated, logout as authLogout } from "@/lib/api/auth"
+import { isDemoMode, getCompleteDemoUser, clearDemoMode } from "@/lib/demo-mode"
+
+interface UserProfile {
+  zodiac_sign: string
+  zodiac_symbol: string
+  zodiac_element: string
+  date_of_birth: string
+  investing_style: string
+  onboarding_completed: boolean
+}
 
 interface User {
   id: number
@@ -11,6 +21,7 @@ interface User {
   last_name: string
   date_joined: string
   is_active: boolean
+  profile?: UserProfile
 }
 
 export function useAuth() {
@@ -19,10 +30,18 @@ export function useAuth() {
 
   useEffect(() => {
     const checkAuth = () => {
+      // First check if authenticated
       if (isAuthenticated()) {
         const currentUser = getCurrentUser()
         setUser(currentUser)
-      } else {
+      } 
+      // Then check if in demo mode
+      else if (isDemoMode()) {
+        const demoUser = getCompleteDemoUser()
+        setUser(demoUser)
+      } 
+      // No authentication or demo mode
+      else {
         setUser(null)
       }
       setIsLoading(false)
@@ -32,7 +51,8 @@ export function useAuth() {
 
     // Listen for storage changes (e.g., when user logs in/out in another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'zenTraderUser' || e.key === 'zenTraderTokens') {
+      if (e.key === 'zenTraderUser' || e.key === 'zenTraderTokens' || 
+          e.key === 'zenTraderDemoMode' || e.key === 'zenTraderDemoUser') {
         checkAuth()
       }
     }
@@ -42,7 +62,9 @@ export function useAuth() {
   }, [])
 
   const logout = () => {
+    // Clear both auth and demo mode
     authLogout()
+    clearDemoMode()
     setUser(null)
   }
 

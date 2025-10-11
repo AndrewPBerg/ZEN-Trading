@@ -1,17 +1,39 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from .models import UserProfile
 
 User = get_user_model()
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserProfile model
+    """
+    class Meta:
+        model = UserProfile
+        fields = [
+            'date_of_birth', 
+            'zodiac_sign', 
+            'zodiac_symbol', 
+            'zodiac_element', 
+            'investing_style',
+            'onboarding_completed',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for User model - used for retrieving user data
     """
+    profile = UserProfileSerializer(read_only=True)
+    
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'date_joined', 'is_active']
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'date_joined', 'is_active', 'profile']
         read_only_fields = ['id', 'date_joined']
 
 
@@ -77,3 +99,51 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class OnboardingSerializer(serializers.Serializer):
+    """
+    Serializer for onboarding data
+    """
+    date_of_birth = serializers.DateField(required=True)
+    zodiac_sign = serializers.CharField(max_length=50, required=True)
+    zodiac_symbol = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    zodiac_element = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    investing_style = serializers.CharField(max_length=50, required=True)
+
+    def validate_investing_style(self, value):
+        """Validate that investing_style is one of the allowed values"""
+        allowed_styles = ['casual', 'balanced', 'profit-seeking', 'playful']
+        if value not in allowed_styles:
+            raise serializers.ValidationError(
+                f"Invalid investing style. Must be one of: {', '.join(allowed_styles)}"
+            )
+        return value
+
+    def validate_zodiac_sign(self, value):
+        """Validate that zodiac_sign is a valid zodiac sign"""
+        allowed_signs = [
+            'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+            'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+        ]
+        if value not in allowed_signs:
+            raise serializers.ValidationError(
+                f"Invalid zodiac sign. Must be one of: {', '.join(allowed_signs)}"
+            )
+        return value
+    
+    def save_to_profile(self, user):
+        """
+        Save validated onboarding data to the user's profile
+        """
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        profile.date_of_birth = self.validated_data['date_of_birth']
+        profile.zodiac_sign = self.validated_data['zodiac_sign']
+        profile.zodiac_symbol = self.validated_data.get('zodiac_symbol', '')
+        profile.zodiac_element = self.validated_data.get('zodiac_element', '')
+        profile.investing_style = self.validated_data['investing_style']
+        profile.onboarding_completed = True
+        profile.save()
+        
+        return profile

@@ -35,15 +35,70 @@ class StockListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]  # Public access to stock data
 
 
-class StockDetailView(generics.RetrieveAPIView):
+class StockDetailView(APIView):
     """
-    GET: Retrieve a single stock by ticker
+    GET: Retrieve a single stock by ticker with zodiac matching info (if authenticated)
     """
-    queryset = Stock.objects.all()
-    serializer_class = StockSerializer
     permission_classes = [permissions.AllowAny]
-    lookup_field = 'ticker'  # Use ticker instead of pk
-    lookup_url_kwarg = 'ticker'
+    
+    def get(self, request, ticker):
+        """
+        Get stock details with zodiac matching information if user is authenticated
+        """
+        try:
+            # Get the stock
+            stock = get_object_or_404(Stock, ticker=ticker.upper())
+            stock_data = StockSerializer(stock).data
+            
+            # If user is authenticated, add zodiac matching information
+            if request.user.is_authenticated:
+                try:
+                    profile = request.user.profile
+                    if profile.zodiac_sign:
+                        user_sign = profile.zodiac_sign
+                        
+                        # Check if it's the same sign as user
+                        is_same_sign = stock.zodiac_sign == user_sign
+                        stock_data['is_same_sign'] = is_same_sign
+                        
+                        # Get match type from zodiac matching table
+                        if is_same_sign:
+                            stock_data['match_type'] = 'positive'
+                            stock_data['compatibility_score'] = 4
+                        else:
+                            try:
+                                matching = ZodiacSignMatching.objects.get(
+                                    user_sign=user_sign,
+                                    stock_sign=stock.zodiac_sign
+                                )
+                                stock_data['match_type'] = matching.match_type
+                                
+                                # Assign compatibility scores based on match type
+                                if matching.match_type == 'positive':
+                                    stock_data['compatibility_score'] = 3
+                                elif matching.match_type == 'neutral':
+                                    stock_data['compatibility_score'] = 2
+                                else:  # negative
+                                    stock_data['compatibility_score'] = 1
+                            except ZodiacSignMatching.DoesNotExist:
+                                # Default to neutral if no matching data
+                                stock_data['match_type'] = 'neutral'
+                                stock_data['compatibility_score'] = 2
+                        
+                        # Add element
+                        stock_data['element'] = get_element_from_zodiac(stock.zodiac_sign)
+                except Exception as e:
+                    # If there's an error getting zodiac info, just return basic stock data
+                    print(f"Error adding zodiac matching info: {e}")
+                    pass
+            
+            return Response(stock_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch stock',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PriceCardView(APIView):

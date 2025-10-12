@@ -48,7 +48,7 @@ export default function WelcomeScreen() {
                 />
               </div>
             </div>
-            <div className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-xl -z-10" />
+            <div />
           </div>
 
           <div className="space-y-2">
@@ -128,10 +128,6 @@ export default function WelcomeScreen() {
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="text-xs text-muted-foreground/70 mt-8">
-          Discover your trading destiny through the wisdom of the stars
-        </p>
       </div>
     </div>
   )

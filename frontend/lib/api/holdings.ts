@@ -128,7 +128,7 @@ export const getUserHoldings = async (): Promise<UserHoldings> => {
       const profile = JSON.parse(demoProfile)
       return {
         id: 1,
-        balance: profile.starting_balance || 100000,
+        balance: parseFloat(profile.starting_balance) || 100000,
         positions: [],
         created_at: profile.created_at || new Date().toISOString(),
         updated_at: profile.updated_at || new Date().toISOString(),
@@ -199,7 +199,7 @@ export const executeTrade = async (trade: TradeRequest): Promise<TradeResponse> 
       const profile = JSON.parse(demoProfile)
       holdings = {
         id: 1,
-        balance: profile.starting_balance || 100000,
+        balance: parseFloat(profile.starting_balance) || 100000,
         positions: [],
         created_at: profile.created_at || new Date().toISOString(),
         updated_at: profile.updated_at || new Date().toISOString(),
@@ -385,7 +385,7 @@ export const getPortfolioSummary = async (): Promise<PortfolioSummary> => {
       ? JSON.parse(demoHoldings) 
       : { 
           id: 1, 
-          balance: profile.starting_balance || 100000, 
+          balance: parseFloat(profile.starting_balance) || 100000, 
           positions: [], 
           created_at: new Date().toISOString(), 
           updated_at: new Date().toISOString() 

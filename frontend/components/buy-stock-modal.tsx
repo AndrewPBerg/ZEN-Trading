@@ -36,6 +36,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
   // State management
   const [buyMethod, setBuyMethod] = useState<BuyMethod>("dollars")
   const [amount, setAmount] = useState("")
+  const [displayAmount, setDisplayAmount] = useState("") // Formatted display value with commas
   const [stockData, setStockData] = useState<Stock | undefined>(initialStockData)
   const [balance, setBalance] = useState<number>(0)
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
@@ -117,6 +118,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
     if (open) {
       setError(null)
       setAmount("")
+      setDisplayAmount("")
       fetchStockPrice()
       fetchBalance()
     }
@@ -173,6 +175,45 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
     return date.toLocaleTimeString()
   }
 
+  // Format number with commas for readability
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  // Format number with commas for input display
+  const formatInputNumber = (value: string, decimals: number = 2): string => {
+    // Remove all non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '')
+    
+    // Handle empty or invalid input
+    if (!cleanValue || cleanValue === '.') return cleanValue
+    
+    // Split into integer and decimal parts
+    const parts = cleanValue.split('.')
+    const integerPart = parts[0]
+    const decimalPart = parts[1]
+    
+    // Format integer part with commas
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    
+    // Reconstruct with decimal part if present
+    if (decimalPart !== undefined) {
+      return `${formattedInteger}.${decimalPart.slice(0, decimals)}`
+    }
+    
+    return formattedInteger
+  }
+
+  // Handle amount input change
+  const handleAmountChange = (value: string) => {
+    // Remove commas and store the clean numeric value
+    const cleanValue = value.replace(/,/g, '')
+    
+    // Update both the actual value and display value
+    setAmount(cleanValue)
+    setDisplayAmount(formatInputNumber(value, buyMethod === "dollars" ? 2 : 4))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200">
@@ -206,7 +247,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-3xl font-bold text-foreground">
-                  ${currentPrice.toFixed(2)}
+                  ${formatCurrency(currentPrice)}
                 </p>
                 {priceChange !== 0 && (
                   <div className={cn(
@@ -222,7 +263,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                     )}
                     <span>
                       {isPricePositive ? "+" : ""}
-                      ${Math.abs(priceChange).toFixed(2)} ({isPricePositive ? "+" : ""}
+                      ${formatCurrency(Math.abs(priceChange))} ({isPricePositive ? "+" : ""}
                       {priceChangePercent.toFixed(2)}%)
                     </span>
                   </div>
@@ -275,6 +316,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                 onClick={() => {
                   setBuyMethod("dollars")
                   setAmount("")
+                  setDisplayAmount("")
                 }}
                 className={cn(
                   buyMethod === "dollars" && "bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary"
@@ -289,6 +331,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                 onClick={() => {
                   setBuyMethod("shares")
                   setAmount("")
+                  setDisplayAmount("")
                 }}
                 className={cn(
                   buyMethod === "shares" && "bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary"
@@ -308,12 +351,11 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
             <div className="relative">
               <Input
                 id="amount"
-                type="number"
-                step={buyMethod === "dollars" ? "0.01" : "0.0001"}
-                min="0"
+                type="text"
+                inputMode="decimal"
                 placeholder={buyMethod === "dollars" ? "0.00" : "0.0000"}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={displayAmount}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 className={cn(
                   "text-lg font-semibold bg-background dark:bg-muted/10 text-foreground border-border",
                   buyMethod === "dollars" && "pl-6"
@@ -329,7 +371,11 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => setAmount(Number(balance).toFixed(2))}
+                onClick={() => {
+                  const maxValue = Number(balance).toFixed(2)
+                  setAmount(maxValue)
+                  setDisplayAmount(formatInputNumber(maxValue, 2))
+                }}
                 disabled={isSubmitting || balance <= 0}
                 className="text-xs hover:bg-background dark:hover:bg-card"
               >
@@ -349,18 +395,18 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shares</span>
                     <span className="font-semibold text-foreground">
-                      {calculatedShares.toFixed(4)} {ticker}
+                      {calculatedShares.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })} {ticker}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Price per Share</span>
-                    <span className="font-semibold text-foreground">${currentPrice.toFixed(2)}</span>
+                    <span className="font-semibold text-foreground">${formatCurrency(currentPrice)}</span>
                   </div>
                   <Separator className="my-2 bg-border" />
                   <div className="flex justify-between text-base">
                     <span className="font-semibold text-foreground">Estimated Total</span>
                     <span className="font-bold text-foreground">
-                      ${estimatedTotal.toFixed(2)}
+                      ${formatCurrency(estimatedTotal)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -371,7 +417,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                         ? "text-red-500 dark:text-red-400" 
                         : "text-green-600 dark:text-green-400"
                     )}>
-                      ${remainingBalance.toFixed(2)}
+                      ${formatCurrency(remainingBalance)}
                     </span>
                   </div>
                 </div>
@@ -398,7 +444,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
                 <div className="flex-1">
                   <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Insufficient Balance</p>
                   <p className="text-xs text-yellow-600 dark:text-yellow-300">
-                    You need ${(estimatedTotal - Number(balance)).toFixed(2)} more to complete this purchase.
+                    You need ${formatCurrency(estimatedTotal - Number(balance))} more to complete this purchase.
                   </p>
                 </div>
               </div>

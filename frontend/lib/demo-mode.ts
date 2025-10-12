@@ -23,7 +23,7 @@ export interface DemoProfile {
   zodiac_symbol: string
   zodiac_element: string
   investing_style: string
-  starting_balance: number
+  starting_balance: string
   onboarding_completed: boolean
   created_at: string
   updated_at: string
@@ -106,7 +106,7 @@ export const setDemoUserProfile = (profile: Partial<DemoProfile>): void => {
     zodiac_symbol: profile.zodiac_symbol || '',
     zodiac_element: profile.zodiac_element || '',
     investing_style: profile.investing_style || '',
-    starting_balance: profile.starting_balance || 100000,
+    starting_balance: profile.starting_balance || '100000.00',
     onboarding_completed: profile.onboarding_completed ?? true,
     created_at: existingProfile?.created_at || now,
     updated_at: now,
@@ -137,7 +137,7 @@ export const createDemoUser = (profileData: Partial<DemoProfile>): { user: DemoU
     zodiac_symbol: profileData.zodiac_symbol || '',
     zodiac_element: profileData.zodiac_element || '',
     investing_style: profileData.investing_style || '',
-    starting_balance: profileData.starting_balance || 100000,
+    starting_balance: profileData.starting_balance || '100000.00',
     onboarding_completed: true,
     created_at: now,
     updated_at: now,

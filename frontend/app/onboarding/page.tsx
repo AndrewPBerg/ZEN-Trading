@@ -66,7 +66,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
-          starting_balance: formData.startingBalance,
+          starting_balance: formData.startingBalance.toFixed(2),
         })
         
         console.log("Demo onboarding complete:", demoData)
@@ -136,19 +136,15 @@ export default function OnboardingPage() {
               <div className="space-y-2">
                 <Label htmlFor="birthDate" className="text-sm font-medium text-foreground">
                   Date of Birth
+                  <span className="text-xs text-muted-foreground">Must be at least 18 years old</span>
                 </Label>
                 <Input
                   id="birthDate"
                   type="date"
                   value={formData.birthDate}
                   min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split("T")[0]}
-                  max={new Date().toISOString().split("T")[0]}
-                  onFocus={e => {
-                    if (!e.target.value) {
-                      // Set default value to earliest selectable date if empty
-                      e.target.value = new Date(new Date().setFullYear(new Date().getFullYear() - 20)).toISOString().split("T")[0]
-                    }
-                  }}
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}
+                  
                   onChange={e => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
                   className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground dark:text-foreground [&::-webkit-calendar-picker-indicator]:dark:invert [&::-webkit-calendar-picker-indicator]:dark:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:border-primary/70 dark:hover:border-primary/80"
                 />
@@ -179,9 +175,9 @@ export default function OnboardingPage() {
                         value={vibe.value}
                         className="focus:bg-primary/10 dark:focus:bg-primary/20 focus:text-foreground"
                       >
-                        <div className="flex flex-col items-center text-center">
-                          <span className="font-medium text-foreground">{vibe.label}</span>
-                          <span className="text-xs text-muted-foreground">{vibe.description}</span>
+                        <div className="w-full flex flex-col items-center justify-center text-center">
+                          <span className="w-full font-medium text-foreground flex center">{vibe.label}</span>
+                          <span className="w-full text-xs text-muted-foreground flex center">{vibe.description}</span>
                         </div>
                       </SelectItem>
                     ))}

@@ -13,6 +13,7 @@ import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
 import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { getCurrentUser, type User } from "@/lib/api/auth"
+import { isDemoMode, getCompleteDemoUser } from "@/lib/demo-mode"
 
 const elementColors = {
   Fire: "from-red-500/20 to-orange-500/20 border-red-500/30",
@@ -50,10 +51,22 @@ export default function PortfolioPage() {
       
       // Fetch user data for account start date
       try {
-        const userData = await getCurrentUser()
-        setUser(userData)
-        // Use profile created_at or user date_joined
-        setAccountStartDate(userData.profile?.created_at || userData.date_joined)
+        // Check if in demo mode first
+        if (isDemoMode()) {
+          const demoUser = getCompleteDemoUser()
+          if (demoUser) {
+            setUser(demoUser)
+            // Use profile created_at or user date_joined
+            setAccountStartDate(demoUser.profile?.created_at || demoUser.date_joined)
+          }
+        } else {
+          const userData = getCurrentUser()
+          if (userData) {
+            setUser(userData)
+            // Use profile created_at or user date_joined
+            setAccountStartDate(userData.profile?.created_at || userData.date_joined)
+          }
+        }
       } catch (userErr) {
         console.error('Failed to fetch user data:', userErr)
       }

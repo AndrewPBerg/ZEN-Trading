@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BuyStockModal } from "@/components/buy-stock-modal"
+import { useAuth } from "@/hooks/use-auth"
 import {
   Star,
   TrendingUp,
@@ -59,6 +60,7 @@ type TabType = "liked" | "disliked" | "all"
 
 function WatchlistPageContent() {
   const router = useRouter()
+  const { user } = useAuth()
   const [selectedTabs, setSelectedTabs] = useState<TabType[]>(["liked"])
   const [watchlist, setWatchlist] = useState<StockPreferenceWithDetails[]>([])
   const [disliked, setDisliked] = useState<StockPreferenceWithDetails[]>([])
@@ -66,6 +68,15 @@ function WatchlistPageContent() {
   const [error, setError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
   const [selectedStock, setSelectedStock] = useState<{ ticker: string; stock?: Stock } | null>(null)
+  const [userSign, setUserSign] = useState<string>("")
+
+  // Set user sign when user data is available
+  useEffect(() => {
+    if (user?.profile?.zodiac_sign) {
+      setUserSign(user.profile.zodiac_sign)
+      console.log("User zodiac sign:", user.profile.zodiac_sign)
+    }
+  }, [user])
 
   // Fetch data
   const fetchData = async () => {
@@ -73,6 +84,7 @@ function WatchlistPageContent() {
     setError(null)
     try {
       const data = await getWatchlistWithDetails()
+      console.log("Fetched watchlist data:", data)
       setWatchlist(data.watchlist)
       setDisliked(data.disliked)
     } catch (err) {
@@ -220,9 +232,52 @@ function WatchlistPageContent() {
     return ZODIAC_ELEMENTS[zodiacSign] || null
   }
 
+  // Get match type badge (same as discovery page)
+  const getMatchBadge = (stock: Stock) => {
+    if (stock.is_same_sign) {
+      return (
+        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+          ✨ Same Sign
+        </Badge>
+      )
+    }
+    if (stock.match_type === "positive") {
+      return (
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+          ⭐ Positive Match
+        </Badge>
+      )
+    }
+    if (stock.match_type === "neutral") {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+          ◯ Neutral Match
+        </Badge>
+      )
+    }
+    if (stock.match_type === "negative") {
+      return (
+        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+          ⚠ Negative Match
+        </Badge>
+      )
+    }
+    return null
+  }
+
   // Render stock card
   const renderStockCard = (item: StockPreferenceWithDetails, preferenceType: "watchlist" | "dislike") => {
     const { stock } = item
+    
+    // Debug logging to see what data we have
+    console.log(`Stock ${stock.ticker} data:`, {
+      match_type: stock.match_type,
+      is_same_sign: stock.is_same_sign,
+      compatibility_score: stock.compatibility_score,
+      element: stock.element,
+      zodiac_sign: stock.zodiac_sign
+    })
+    
     const priceChange = getPriceChange(stock)
     const isPositive = priceChange ? priceChange.change >= 0 : false
     const element = getElementFromZodiac(stock.zodiac_sign)
@@ -267,6 +322,7 @@ function WatchlistPageContent() {
 
           {/* Badges */}
           <div className="flex items-center gap-2 flex-wrap">
+            {getMatchBadge(stock)}
             {stock.zodiac_sign && (
               <Badge variant="outline" className="text-xs">
                 {ZODIAC_EMOJIS[stock.zodiac_sign] || ""} {stock.zodiac_sign}
@@ -385,7 +441,10 @@ function WatchlistPageContent() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">Watchlist</h1>
-              <p className="text-sm text-muted-foreground">Track and manage your cosmic stock selections</p>
+              <p className="text-sm text-muted-foreground">
+                {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} | `}
+                Track and manage your cosmic stock selections
+              </p>
             </div>
             {isLoading && (watchlist.length > 0 || disliked.length > 0) && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

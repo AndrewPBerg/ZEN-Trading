@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BuyStockModal } from "@/components/buy-stock-modal"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
 import { useAuth } from "@/hooks/use-auth"
 import {
   Star,
@@ -20,6 +21,7 @@ import {
   Heart,
   X as XIcon,
   Sparkles,
+  Info,
 } from "lucide-react"
 import {
   getWatchlistWithDetails,
@@ -30,6 +32,7 @@ import {
   type StockPreferenceWithDetails,
   type Stock,
 } from "@/lib/api/stocks"
+import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { toast } from "sonner"
 
 // Element colors
@@ -69,6 +72,8 @@ function WatchlistPageContent() {
   const [buyModalOpen, setBuyModalOpen] = useState(false)
   const [selectedStock, setSelectedStock] = useState<{ ticker: string; stock?: Stock } | null>(null)
   const [userSign, setUserSign] = useState<string>("")
+  const [showInfoModal, setShowInfoModal] = useState(false)
+  const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null)
 
   // Set user sign when user data is available
   useEffect(() => {
@@ -77,6 +82,17 @@ function WatchlistPageContent() {
       console.log("User zodiac sign:", user.profile.zodiac_sign)
     }
   }, [user])
+
+  // Fetch portfolio data
+  const fetchPortfolio = async () => {
+    try {
+      const portfolioData = await getPortfolioSummary()
+      setPortfolio(portfolioData)
+    } catch (err) {
+      console.error("Failed to fetch portfolio:", err)
+      // Don't show error toast for portfolio fetch failure, it's not critical
+    }
+  }
 
   // Fetch data
   const fetchData = async () => {
@@ -87,6 +103,9 @@ function WatchlistPageContent() {
       console.log("Fetched watchlist data:", data)
       setWatchlist(data.watchlist)
       setDisliked(data.disliked)
+      
+      // Also fetch portfolio data for cosmic impact calculations
+      await fetchPortfolio()
     } catch (err) {
       console.error("Failed to fetch watchlist:", err)
       setError(err instanceof Error ? err.message : "Failed to load watchlist")
@@ -466,12 +485,24 @@ function WatchlistPageContent() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Watchlist</h1>
-              <p className="text-sm text-muted-foreground">
-                {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} | `}
-                Track and manage your cosmic stock selections
-              </p>
+            <div className="flex items-center gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold text-foreground mb-2">Watchlist</h1>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-transparent mb-2"
+                    onClick={() => setShowInfoModal(true)}
+                  >
+                    <Info className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} | `}
+                  Track and manage your cosmic stock selections
+                </p>
+              </div>
             </div>
             {isLoading && (watchlist.length > 0 || disliked.length > 0) && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -601,6 +632,9 @@ function WatchlistPageContent() {
         )}
       </div>
 
+      {/* Alignment Info Modal */}
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
+
       {/* Buy stock modal */}
       <BuyStockModal
         open={buyModalOpen}
@@ -608,6 +642,15 @@ function WatchlistPageContent() {
         ticker={selectedStock?.ticker || ""}
         stockData={selectedStock?.stock}
         onPurchaseSuccess={handlePurchaseSuccess}
+        currentPortfolio={portfolio ? {
+          overall_alignment_score: portfolio.overall_alignment_score,
+          cosmic_vibe_index: portfolio.cosmic_vibe_index,
+          element_distribution: portfolio.element_distribution,
+          total_portfolio_value: portfolio.total_portfolio_value,
+          cash_balance: portfolio.cash_balance,
+          stocks_value: portfolio.stocks_value,
+        } : undefined}
+        allHoldings={portfolio?.holdings}
       />
     </div>
   )

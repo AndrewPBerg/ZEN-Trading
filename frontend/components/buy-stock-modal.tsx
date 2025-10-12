@@ -18,9 +18,13 @@ import {
   CheckCircle2,
   RefreshCcw,
   Wallet,
-  ShoppingCart
+  ShoppingCart,
+  Star,
+  Sparkles,
+  ArrowRight
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { PortfolioHolding } from "@/lib/api/holdings"
 
 interface BuyStockModalProps {
   open: boolean
@@ -28,11 +32,28 @@ interface BuyStockModalProps {
   ticker: string
   stockData?: Stock
   onPurchaseSuccess?: () => void
+  currentPortfolio?: {
+    overall_alignment_score: number
+    cosmic_vibe_index: number
+    element_distribution: { Fire: number; Earth: number; Air: number; Water: number }
+    total_portfolio_value: number
+    cash_balance: number
+    stocks_value: number
+  }
+  allHoldings?: PortfolioHolding[]
 }
 
 type BuyMethod = "dollars" | "shares"
 
-export function BuyStockModal({ open, onClose, ticker, stockData: initialStockData, onPurchaseSuccess }: BuyStockModalProps) {
+export function BuyStockModal({ 
+  open, 
+  onClose, 
+  ticker, 
+  stockData: initialStockData, 
+  onPurchaseSuccess,
+  currentPortfolio,
+  allHoldings
+}: BuyStockModalProps) {
   // State management
   const [buyMethod, setBuyMethod] = useState<BuyMethod>("dollars")
   const [amount, setAmount] = useState("")
@@ -75,6 +96,117 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
   const isInsufficientBalance = estimatedTotal > Number(balance)
   const isInvalidAmount = parsedAmount <= 0 || isNaN(parsedAmount)
   const canSubmit = !isInvalidAmount && !isInsufficientBalance && !isSubmitting && currentPrice > 0
+
+  // Calculate alignment score for the stock being purchased
+  const getAlignmentScore = (matchType?: string, isSameSign?: boolean): number => {
+    if (isSameSign) return 100
+    if (matchType === 'positive') return 85
+    if (matchType === 'neutral') return 65
+    if (matchType === 'negative') return 40
+    return 65 // Default neutral
+  }
+
+  // Calculate cosmic impact of purchase
+  const calculateCosmicImpact = useCallback(() => {
+    if (!currentPortfolio || !allHoldings || !stockData || isInvalidAmount || isInsufficientBalance) {
+      return {
+        newAlignment: currentPortfolio?.overall_alignment_score || 0,
+        alignmentChange: 0,
+        newVibeIndex: currentPortfolio?.cosmic_vibe_index || 0,
+        vibeChange: 0,
+        newElementDistribution: currentPortfolio?.element_distribution || { Fire: 0, Earth: 0, Air: 0, Water: 0 }
+      }
+    }
+
+    // Calculate the value of shares being purchased
+    const purchaseValue = buyMethod === "dollars" ? parsedAmount : parsedAmount * currentPrice
+    
+    // Get alignment score for the stock being purchased
+    const stockAlignmentScore = getAlignmentScore(stockData.match_type, stockData.is_same_sign)
+    
+    // Get stock element
+    const stockElement = stockData.element || 'Fire'
+    
+    // Recalculate alignment score with new purchase
+    let totalWeightedAlignment = 0
+    let newStocksValue = 0
+    const newElementValues = { Fire: 0, Earth: 0, Air: 0, Water: 0 }
+
+    // Add existing holdings
+    allHoldings.forEach((h) => {
+      const holdingValue = h.current_value
+      newStocksValue += holdingValue
+      totalWeightedAlignment += h.alignment_score * holdingValue
+      
+      // Track element distribution
+      const element = h.element as keyof typeof newElementValues
+      if (element in newElementValues) {
+        newElementValues[element] += holdingValue
+      }
+    })
+
+    // Check if we already own this stock
+    const existingHolding = allHoldings.find(h => h.ticker === ticker)
+    if (existingHolding) {
+      // We're adding to an existing position, so we need to adjust the weighted alignment
+      // The existing holding is already counted above, so just add the new purchase
+      newStocksValue += purchaseValue
+      totalWeightedAlignment += stockAlignmentScore * purchaseValue
+      
+      // Add to element distribution
+      const element = stockElement as keyof typeof newElementValues
+      if (element in newElementValues) {
+        newElementValues[element] += purchaseValue
+      }
+    } else {
+      // New position
+      newStocksValue += purchaseValue
+      totalWeightedAlignment += stockAlignmentScore * purchaseValue
+      
+      // Add to element distribution
+      const element = stockElement as keyof typeof newElementValues
+      if (element in newElementValues) {
+        newElementValues[element] += purchaseValue
+      }
+    }
+
+    const newAlignment = newStocksValue > 0 
+      ? Math.round(totalWeightedAlignment / newStocksValue) 
+      : currentPortfolio.overall_alignment_score
+
+    // Calculate element distribution percentages
+    const newElementDistribution: typeof currentPortfolio.element_distribution = { 
+      Fire: 0, Earth: 0, Air: 0, Water: 0 
+    }
+    if (newStocksValue > 0) {
+      Object.keys(newElementValues).forEach((element) => {
+        const key = element as keyof typeof newElementValues
+        newElementDistribution[key] = Math.round((newElementValues[key] / newStocksValue) * 100)
+      })
+    }
+
+    // Calculate diversity bonus
+    const elementsWithHoldings = Object.values(newElementValues).filter(v => v > 0).length
+    const diversityBonus = Math.min(elementsWithHoldings * 3, 15)
+    const newVibeIndex = Math.min(newAlignment + diversityBonus, 100)
+
+    return {
+      newAlignment,
+      alignmentChange: newAlignment - currentPortfolio.overall_alignment_score,
+      newVibeIndex,
+      vibeChange: newVibeIndex - currentPortfolio.cosmic_vibe_index,
+      newElementDistribution
+    }
+  }, [calculatedShares, parsedAmount, isInvalidAmount, isInsufficientBalance, currentPrice, ticker, stockData, allHoldings, currentPortfolio, buyMethod])
+
+  const cosmicImpact = currentPortfolio && allHoldings ? calculateCosmicImpact() : null
+
+  const getAlignmentColor = (score: number) => {
+    if (score >= 85) return "text-green-500"
+    if (score >= 70) return "text-blue-500"
+    if (score >= 50) return "text-yellow-500"
+    return "text-orange-500"
+  }
 
   // Fetch stock price
   const fetchStockPrice = useCallback(async () => {
@@ -216,7 +348,7 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200">
+      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <ShoppingCart className="w-5 h-5" />
@@ -424,6 +556,74 @@ export function BuyStockModal({ open, onClose, ticker, stockData: initialStockDa
               </div>
             )}
           </div>
+
+          {/* Cosmic Impact Preview */}
+          {cosmicImpact && parsedAmount > 0 && !isNaN(parsedAmount) && !isInsufficientBalance && (
+            <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-4 space-y-3 border border-primary/20 dark:border-primary/30 animate-in fade-in duration-300">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-accent" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Cosmic Impact
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                {/* Alignment Score Change */}
+                {currentPortfolio && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Alignment Score</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-sm font-semibold", getAlignmentColor(currentPortfolio.overall_alignment_score))}>
+                        {currentPortfolio.overall_alignment_score}%
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                      <span className={cn("text-sm font-semibold", getAlignmentColor(cosmicImpact.newAlignment))}>
+                        {cosmicImpact.newAlignment}%
+                      </span>
+                      <span className={cn(
+                        "text-xs font-medium",
+                        cosmicImpact.alignmentChange > 0 ? "text-green-500" : cosmicImpact.alignmentChange < 0 ? "text-red-500" : "text-muted-foreground"
+                      )}>
+                        ({cosmicImpact.alignmentChange > 0 ? "+" : ""}{cosmicImpact.alignmentChange})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Vibe Index Change */}
+                {currentPortfolio && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 text-accent" fill="currentColor" />
+                      <span className="text-sm text-muted-foreground">Cosmic Vibe</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-sm font-semibold", getAlignmentColor(currentPortfolio.cosmic_vibe_index))}>
+                        {currentPortfolio.cosmic_vibe_index}%
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                      <span className={cn("text-sm font-semibold", getAlignmentColor(cosmicImpact.newVibeIndex))}>
+                        {cosmicImpact.newVibeIndex}%
+                      </span>
+                      <span className={cn(
+                        "text-xs font-medium",
+                        cosmicImpact.vibeChange > 0 ? "text-green-500" : cosmicImpact.vibeChange < 0 ? "text-red-500" : "text-muted-foreground"
+                      )}>
+                        ({cosmicImpact.vibeChange > 0 ? "+" : ""}{cosmicImpact.vibeChange})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Element Impact Note */}
+                {stockData?.element && (
+                  <div className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                    Adding {ticker} will {allHoldings?.find(h => h.ticker === ticker) ? 'increase' : 'add'} {stockData.element} influence {allHoldings?.find(h => h.ticker === ticker) ? 'in' : 'to'} your portfolio
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Error and Validation Messages - Reserved space for smooth transitions */}
           <div className="min-h-[60px] transition-all duration-300">

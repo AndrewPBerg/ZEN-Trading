@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
 import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles, Calendar, Info } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
@@ -52,6 +53,7 @@ function DiscoveryPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userSign, setUserSign] = useState<string>("")
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   useEffect(() => {
     // Clear demo mode if user has real auth tokens
@@ -331,11 +333,23 @@ function DiscoveryPageContent() {
       {/* Header */}
       <div className="px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
-            <p className="text-sm text-muted-foreground">
-              {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} matches`}
-            </p>
+          <div className="flex items-center gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-transparent"
+                  onClick={() => setShowInfoModal(true)}
+                >
+                  <Info className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} matches`}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {isDemo && (
@@ -545,6 +559,9 @@ function DiscoveryPageContent() {
           </div>
         )}
       </div>
+
+      {/* Alignment Info Modal */}
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
     </div>
   )
 }

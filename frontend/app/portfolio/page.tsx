@@ -8,14 +8,8 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { ProtectedRoute } from "@/components/protected-route"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import { StockSparkline } from "@/components/stock-sparkline"
 import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
@@ -575,56 +569,7 @@ function PortfolioPageContent() {
       </div>
 
       {/* Alignment Info Modal */}
-      <Dialog open={showInfoModal} onOpenChange={setShowInfoModal}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-accent" />
-              How Cosmic Alignment is Calculated
-            </DialogTitle>
-            <DialogDescription>
-              Understanding your portfolio's cosmic energy
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Alignment Scoring</h4>
-              <p className="text-muted-foreground mb-2">
-                Each stock in your portfolio receives an alignment score based on zodiac compatibility:
-              </p>
-              <ul className="space-y-1 text-muted-foreground ml-4">
-                <li>• <span className="text-purple-400 font-medium">Same Sign (100%):</span> Stock matches your zodiac sign exactly</li>
-                <li>• <span className="text-green-400 font-medium">Positive Match (85%):</span> Highly compatible zodiac pairing</li>
-                <li>• <span className="text-yellow-400 font-medium">Neutral Match (65%):</span> Moderate compatibility</li>
-                <li>• <span className="text-orange-400 font-medium">Negative Match (40%):</span> Challenging cosmic aspects</li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Overall Alignment Score</h4>
-              <p className="text-muted-foreground">
-                Your portfolio's overall alignment is calculated as a weighted average based on the current value of each position. 
-                Larger positions have more influence on your overall cosmic energy.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Cosmic Vibe Index</h4>
-              <p className="text-muted-foreground">
-                The Cosmic Vibe Index combines your alignment score with a diversity bonus (up to +15 points) 
-                for having stocks across multiple elements (Fire, Earth, Air, Water), promoting balance in your cosmic portfolio.
-              </p>
-            </div>
-
-            <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-accent">Pro Tip:</span> Diversifying across compatible zodiac signs 
-                and elements can maximize your Cosmic Vibe Index while maintaining strong alignment.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
 
       {/* Sell Stock Modal */}
       {selectedHoldingForSale && portfolio && (

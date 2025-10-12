@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StockChart } from "@/components/stock-chart"
-import { ArrowLeft, Star, TrendingUp, TrendingDown, Plus, ShoppingCart, Share2, Heart } from "lucide-react"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
+import { ArrowLeft, Star, TrendingUp, TrendingDown, Plus, ShoppingCart, Share2, Heart, Info } from "lucide-react"
 
 // Mock stock detail data
 const stockDetails = {
@@ -63,6 +64,7 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
   const [activeTab, setActiveTab] = useState("market")
   const [isWatchlisted, setIsWatchlisted] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   const ticker = params.ticker.toUpperCase()
   const stock = stockDetails[ticker as keyof typeof stockDetails] || stockDetails.AAPL
@@ -147,6 +149,14 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
                 <div className="flex items-center gap-2">
                   <Star className="w-4 h-4 text-accent" fill="currentColor" />
                   <span className="text-sm font-medium text-accent">{stock.alignment}% Cosmic Alignment</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 hover:bg-transparent"
+                    onClick={() => setShowInfoModal(true)}
+                  >
+                    <Info className="w-3 h-3 text-muted-foreground hover:text-accent transition-colors" />
+                  </Button>
                 </div>
                 <span className="text-xs text-muted-foreground">{stock.sector}</span>
               </div>
@@ -292,6 +302,9 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
           </div>
         </div>
       </div>
+
+      {/* Alignment Info Modal */}
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
     </div>
   )
 }

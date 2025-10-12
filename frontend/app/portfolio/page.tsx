@@ -19,7 +19,8 @@ import { PortfolioChart } from "@/components/portfolio-chart"
 import { StockSparkline } from "@/components/stock-sparkline"
 import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
 import { CombinedHoldingsChart } from "@/components/combined-holdings-chart"
-import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw, Info } from "lucide-react"
+import { SellStockModal } from "@/components/sell-stock-modal"
+import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw, Info, ShoppingBag } from "lucide-react"
 import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { getCurrentUser, type User } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser } from "@/lib/demo-mode"
@@ -55,6 +56,10 @@ export default function PortfolioPage() {
 
   // Info modal state
   const [showInfoModal, setShowInfoModal] = useState(false)
+
+  // Sell modal state
+  const [sellModalOpen, setSellModalOpen] = useState(false)
+  const [selectedHoldingForSale, setSelectedHoldingForSale] = useState<any | null>(null)
 
   const fetchPortfolio = async () => {
     setLoading(true)
@@ -178,6 +183,24 @@ export default function PortfolioPage() {
 
   const hasSelections = selectedHoldings.size > 0
   const selectedHoldingsData = portfolio?.holdings.filter(h => selectedHoldings.has(h.ticker)) || []
+
+  // Handle opening sell modal
+  const handleOpenSellModal = (holding: any) => {
+    setSelectedHoldingForSale(holding)
+    setSellModalOpen(true)
+  }
+
+  // Handle closing sell modal
+  const handleCloseSellModal = () => {
+    setSellModalOpen(false)
+    setSelectedHoldingForSale(null)
+  }
+
+  // Handle successful sell
+  const handleSellSuccess = () => {
+    // Refresh portfolio data after successful sell
+    fetchPortfolio()
+  }
 
   if (loading && !portfolio) {
     return (
@@ -377,14 +400,16 @@ export default function PortfolioPage() {
                       <Card
                         key={holding.ticker}
                         className={cn(
-                          "p-3 cursor-pointer transition-all duration-300",
-                          "hover:shadow-lg hover:scale-[1.01]",
-                          isSelected && "ring-2 ring-primary shadow-lg scale-[1.01]",
+                          "p-3 transition-all duration-300 group relative",
+                          "hover:shadow-lg",
+                          isSelected && "ring-2 ring-primary shadow-lg",
                           `bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`
                         )}
-                        onClick={() => toggleHolding(holding.ticker)}
                       >
-                        <div className="space-y-2">
+                        <div 
+                          className="space-y-2 cursor-pointer"
+                          onClick={() => toggleHolding(holding.ticker)}
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-background/80 rounded-full flex items-center justify-center text-lg">
@@ -447,6 +472,24 @@ export default function PortfolioPage() {
                             </div>
                           )}
                         </div>
+
+                        {/* Sell Button - Always visible on mobile, hover on desktop */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenSellModal(holding)
+                          }}
+                          className={cn(
+                            "absolute bottom-2 right-2 h-7 px-2 text-xs",
+                            "bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500",
+                            "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
+                          )}
+                        >
+                          <ShoppingBag className="w-3 h-3 mr-1" />
+                          Sell
+                        </Button>
                       </Card>
                     )
                   })}
@@ -581,6 +624,25 @@ export default function PortfolioPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sell Stock Modal */}
+      {selectedHoldingForSale && portfolio && (
+        <SellStockModal
+          open={sellModalOpen}
+          onClose={handleCloseSellModal}
+          holding={selectedHoldingForSale}
+          currentPortfolio={{
+            overall_alignment_score: portfolio.overall_alignment_score,
+            cosmic_vibe_index: portfolio.cosmic_vibe_index,
+            element_distribution: portfolio.element_distribution,
+            total_portfolio_value: portfolio.total_portfolio_value,
+            cash_balance: portfolio.cash_balance,
+            stocks_value: portfolio.stocks_value,
+          }}
+          allHoldings={portfolio.holdings}
+          onSellSuccess={handleSellSuccess}
+        />
+      )}
     </div>
   )
 }

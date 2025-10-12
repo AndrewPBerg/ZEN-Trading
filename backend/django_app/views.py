@@ -481,6 +481,13 @@ class UserHoldingsView(APIView):
                 if stock_holding.quantity <= 0:
                     # Remove position if fully sold
                     stock_holding.delete()
+                    
+                    # Remove from watchlist so it can appear in discovery again
+                    UserStockPreference.objects.filter(
+                        user=request.user,
+                        ticker=ticker,
+                        preference_type='watchlist'
+                    ).delete()
                 else:
                     stock_holding.save()
                 

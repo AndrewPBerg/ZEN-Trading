@@ -360,6 +360,199 @@ async function testVerifyOnboardingStatus(tokens) {
   return true
 }
 
+async function testBuyStock(tokens, ticker, quantity, pricePerShare) {
+  testStart(`Buy Stock: ${ticker}`)
+  
+  const totalValue = quantity * pricePerShare
+  
+  const { response, data, error } = await makeRequest(`${API_BASE_URL}/holdings/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${tokens.access}`
+    },
+    body: JSON.stringify({
+      ticker,
+      quantity,
+      total_value: totalValue,
+      action: 'buy'
+    })
+  })
+  
+  if (error) {
+    testFail(`Buy stock failed: ${error.message}`)
+    return false
+  }
+  
+  if (!response.ok) {
+    testFail('Buy stock returned non-OK status', data)
+    return false
+  }
+  
+  if (!data.holdings || !data.holdings.positions) {
+    testFail('Buy stock response missing holdings data', data)
+    return false
+  }
+  
+  // Find the position
+  const position = data.holdings.positions.find(p => p.ticker === ticker)
+  if (!position) {
+    testFail(`Position for ${ticker} not found after purchase`, data)
+    return false
+  }
+  
+  testPass(`Purchased ${quantity} shares of ${ticker}`, {
+    ticker,
+    quantity: position.quantity,
+    total_value: position.total_value,
+    remaining_balance: data.holdings.balance
+  })
+  
+  return { holdings: data.holdings }
+}
+
+async function testSellStock(tokens, ticker, quantity, totalValue) {
+  testStart(`Sell Stock: ${ticker}`)
+  
+  const { response, data, error } = await makeRequest(`${API_BASE_URL}/holdings/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${tokens.access}`
+    },
+    body: JSON.stringify({
+      ticker,
+      quantity,
+      total_value: totalValue,
+      action: 'sell'
+    })
+  })
+  
+  if (error) {
+    testFail(`Sell stock failed: ${error.message}`)
+    return false
+  }
+  
+  if (!response.ok) {
+    testFail('Sell stock returned non-OK status', data)
+    return false
+  }
+  
+  if (!data.holdings) {
+    testFail('Sell stock response missing holdings data', data)
+    return false
+  }
+  
+  // Calculate profit/loss
+  const purchasePrice = totalValue / quantity
+  const profit = totalValue - (quantity * purchasePrice)
+  
+  testPass(`Sold ${quantity} shares of ${ticker}`, {
+    ticker,
+    quantity,
+    proceeds: totalValue,
+    remaining_balance: data.holdings.balance,
+    positions_count: data.holdings.positions.length
+  })
+  
+  return { holdings: data.holdings }
+}
+
+async function testGetPortfolioSummary(tokens) {
+  testStart('Get Portfolio Summary')
+  
+  const { response, data, error } = await makeRequest(`${API_BASE_URL}/portfolio/`, {
+    headers: {
+      'Authorization': `Bearer ${tokens.access}`
+    }
+  })
+  
+  if (error) {
+    testFail(`Get portfolio summary failed: ${error.message}`)
+    return false
+  }
+  
+  if (!response.ok) {
+    testFail('Get portfolio summary returned non-OK status', data)
+    return false
+  }
+  
+  if (data.total_portfolio_value === undefined) {
+    testFail('Portfolio summary missing total_portfolio_value', data)
+    return false
+  }
+  
+  testPass('Retrieved portfolio summary', {
+    total_portfolio_value: data.total_portfolio_value,
+    cash_balance: data.cash_balance,
+    stocks_value: data.stocks_value,
+    overall_alignment_score: data.overall_alignment_score,
+    cosmic_vibe_index: data.cosmic_vibe_index,
+    holdings_count: data.holdings ? data.holdings.length : 0
+  })
+  
+  return { portfolio: data }
+}
+
+async function testCompleteBuySellCycle(tokens) {
+  testStart('Complete Buy-Sell Cycle')
+  
+  // Step 1: Buy AAPL
+  const buyResult = await testBuyStock(tokens, 'AAPL', 10, 175.00)
+  if (!buyResult) {
+    testFail('Buy phase failed')
+    return false
+  }
+  
+  const balanceAfterBuy = parseFloat(buyResult.holdings.balance)
+  
+  // Step 2: Hold and get portfolio summary
+  const portfolioResult = await testGetPortfolioSummary(tokens)
+  if (!portfolioResult) {
+    testFail('Portfolio summary failed')
+    return false
+  }
+  
+  // Step 3: Sell partial position
+  const sellResult = await testSellStock(tokens, 'AAPL', 5, 900.00)
+  if (!sellResult) {
+    testFail('Sell phase failed')
+    return false
+  }
+  
+  const balanceAfterSell = parseFloat(sellResult.holdings.balance)
+  
+  // Verify balance increased by sale proceeds
+  const expectedIncrease = 900.00
+  const actualIncrease = balanceAfterSell - balanceAfterBuy
+  
+  if (Math.abs(actualIncrease - expectedIncrease) > 0.01) {
+    testFail(`Balance increase mismatch: expected ${expectedIncrease}, got ${actualIncrease}`)
+    return false
+  }
+  
+  // Step 4: Sell remaining shares
+  const finalSellResult = await testSellStock(tokens, 'AAPL', 5, 920.00)
+  if (!finalSellResult) {
+    testFail('Final sell phase failed')
+    return false
+  }
+  
+  // Verify position was removed
+  const applePosition = finalSellResult.holdings.positions.find(p => p.ticker === 'AAPL')
+  if (applePosition) {
+    testFail('AAPL position should be removed after selling all shares')
+    return false
+  }
+  
+  testPass('Complete buy-sell cycle successful', {
+    balance_after_buy: balanceAfterBuy,
+    balance_after_partial_sell: balanceAfterSell,
+    balance_after_full_sell: finalSellResult.holdings.balance,
+    total_proceeds: 900.00 + 920.00
+  })
+  
+  return true
+}
+
 // Main test runner
 async function runTests() {
   console.log('\n' + '█'.repeat(70))
@@ -417,6 +610,12 @@ async function runTests() {
   
   // Test 9: Verify onboarding status
   await testVerifyOnboardingStatus(tokens)
+  
+  // Test 10: Complete buy-sell cycle
+  await testCompleteBuySellCycle(tokens)
+  
+  // Test 11: Final portfolio summary
+  await testGetPortfolioSummary(tokens)
   
   printSummary()
 }

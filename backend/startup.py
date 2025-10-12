@@ -9,6 +9,20 @@ import subprocess
 import time
 import django
 
+# Force UTF-8 encoding for Windows compatibility
+if sys.platform == 'win32':
+    # Try to set console to UTF-8 mode
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleCP(65001)
+        kernel32.SetConsoleOutputCP(65001)
+    except:
+        pass
+    # Also set stdout encoding
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
 # Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_app.settings')
 django.setup()
@@ -23,6 +37,14 @@ RED = '\033[91m'
 BLUE = '\033[94m'
 RESET = '\033[0m'
 
+# Unicode symbols with ASCII fallbacks for Windows
+if sys.platform == 'win32':
+    CHECK_MARK = '[OK]'
+    X_MARK = '[ERROR]'
+else:
+    CHECK_MARK = '✓'
+    X_MARK = '✗'
+
 def log(message, color=RESET):
     """Print colored log message"""
     print(f"{color}[STARTUP] {message}{RESET}")
@@ -32,10 +54,10 @@ def run_command(cmd, description):
     log(f"{description}...", BLUE)
     try:
         call_command(*cmd)
-        log(f"✓ {description} completed", GREEN)
+        log(f"{CHECK_MARK} {description} completed", GREEN)
         return True
     except Exception as e:
-        log(f"✗ {description} failed: {str(e)}", RED)
+        log(f"{X_MARK} {description} failed: {str(e)}", RED)
         return False
 
 def check_and_clear_db():
@@ -108,26 +130,35 @@ def start_qcluster():
     """Start Django-Q2 cluster in background"""
     log("Starting qcluster worker in background...", BLUE)
     
-    # Start qcluster as a subprocess
-    qcluster_cmd = ['python', 'manage.py', 'qcluster']
+    # Detect if we're running via uv
+    is_uv_env = 'VIRTUAL_ENV' in os.environ or os.path.exists('.venv')
+    
+    # Build qcluster command
+    if is_uv_env or sys.executable.endswith('python.exe'):
+        # Running locally with uv or regular python
+        qcluster_cmd = [sys.executable, 'manage.py', 'qcluster']
+    else:
+        # Running in Docker
+        qcluster_cmd = ['python', 'manage.py', 'qcluster']
+    
+    # Start qcluster as a subprocess with output redirected to parent
     qcluster_process = subprocess.Popen(
         qcluster_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
-        bufsize=1
+        stdout=sys.stdout,
+        stderr=sys.stderr,
     )
     
-    log(f"✓ qcluster started with PID {qcluster_process.pid}", GREEN)
+    log(f"{CHECK_MARK} qcluster started with PID {qcluster_process.pid}", GREEN)
     
     # Give it a moment to start
-    time.sleep(5)
+    time.sleep(2)
     
     # Check if it's still running
-    if qcluster_process.poll() is None:
-        log("✓ qcluster is running successfully", GREEN)
+    poll_result = qcluster_process.poll()
+    if poll_result is None:
+        log(f"{CHECK_MARK} qcluster is running successfully", GREEN)
     else:
-        log("✗ qcluster failed to start", RED)
+        log(f"{X_MARK} qcluster failed to start (exit code: {poll_result})", RED)
         return None
     
     return qcluster_process
@@ -140,26 +171,47 @@ def start_gunicorn():
     port = os.environ.get('PORT', '42069')
     workers = os.environ.get('GUNICORN_WORKERS', '3')
     
-    gunicorn_cmd = [
-        'gunicorn',
-        '--bind', f'0.0.0.0:{port}',
-        '--workers', workers,
-        '--timeout', '120',
-        '--access-logfile', '-',
-        '--error-logfile', '-',
-        'django_app.wsgi:application'
-    ]
-    
-    log(f"Starting Gunicorn on port {port} with {workers} workers", BLUE)
-    
-    # Start gunicorn in foreground (blocking)
+    # Check if gunicorn is available
+    gunicorn_available = True
     try:
-        subprocess.run(gunicorn_cmd, check=True)
-    except KeyboardInterrupt:
-        log("Received interrupt signal", YELLOW)
-    except subprocess.CalledProcessError as e:
-        log(f"Gunicorn failed: {str(e)}", RED)
-        sys.exit(1)
+        subprocess.run(['gunicorn', '--version'], 
+                      stdout=subprocess.DEVNULL, 
+                      stderr=subprocess.DEVNULL,
+                      check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        gunicorn_available = False
+    
+    if gunicorn_available:
+        gunicorn_cmd = [
+            'gunicorn',
+            '--bind', f'0.0.0.0:{port}',
+            '--workers', workers,
+            '--timeout', '120',
+            '--access-logfile', '-',
+            '--error-logfile', '-',
+            'django_app.wsgi:application'
+        ]
+        
+        log(f"Starting Gunicorn on port {port} with {workers} workers", BLUE)
+        
+        # Start gunicorn in foreground (blocking)
+        try:
+            subprocess.run(gunicorn_cmd, check=True)
+        except KeyboardInterrupt:
+            log("Received interrupt signal", YELLOW)
+        except subprocess.CalledProcessError as e:
+            log(f"Gunicorn failed: {str(e)}", RED)
+            sys.exit(1)
+    else:
+        # Fallback to Django development server for local development
+        log(f"Gunicorn not found - using Django development server on port {port}", YELLOW)
+        log("Note: This is not recommended for production!", YELLOW)
+        
+        try:
+            from django.core.management import execute_from_command_line
+            execute_from_command_line(['manage.py', 'runserver', f'0.0.0.0:{port}'])
+        except KeyboardInterrupt:
+            log("Received interrupt signal", YELLOW)
 
 def main():
     """Main startup orchestration"""
@@ -208,7 +260,7 @@ def main():
             log("Stopping qcluster worker...", YELLOW)
             qcluster_process.terminate()
             qcluster_process.wait(timeout=5)
-            log("✓ qcluster stopped", GREEN)
+            log(f"{CHECK_MARK} qcluster stopped", GREEN)
 
 if __name__ == '__main__':
     main()

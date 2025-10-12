@@ -17,8 +17,8 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      // Redirect to home page if not authenticated and not in demo mode
-      router.push("/")
+      // Redirect to login page if not authenticated and not in demo mode
+      router.push("/login")
     }
   }, [user, isLoading, router])
 

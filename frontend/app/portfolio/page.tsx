@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ProtectedRoute } from "@/components/protected-route"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import { StockSparkline } from "@/components/stock-sparkline"
 import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
@@ -40,7 +41,7 @@ const elementIcons = {
   Water: "💧",
 }
 
-export default function PortfolioPage() {
+function PortfolioPageContent() {
   // State for holdings selection
   const [selectedHoldings, setSelectedHoldings] = useState<Set<string>>(new Set())
   const [selectAll, setSelectAll] = useState(false)
@@ -644,5 +645,13 @@ export default function PortfolioPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function PortfolioPage() {
+  return (
+    <ProtectedRoute>
+      <PortfolioPageContent />
+    </ProtectedRoute>
   )
 }

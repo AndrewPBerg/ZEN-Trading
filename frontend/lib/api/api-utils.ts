@@ -1,4 +1,4 @@
-import { refreshToken } from '@/lib/api/auth'
+import { refreshToken, logout } from '@/lib/api/auth'
 
 /**
  * Helper to get auth token from localStorage
@@ -18,6 +18,7 @@ export const getAuthToken = (): string | null => {
 /**
  * Helper to make authenticated fetch requests with automatic token refresh
  * Automatically retries once with a refreshed token if the first request returns 401
+ * If the retry also fails with 401, logs the user out and redirects to login
  */
 export const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = getAuthToken()
@@ -25,6 +26,11 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
   console.log('Auth token (first 20 chars):', token ? token.substring(0, 20) + '...' : 'null')
   
   if (!token) {
+    // Clear any stale auth state and redirect to login
+    logout()
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
     throw new Error('Authentication required. Please log in first.')
   }
 
@@ -60,8 +66,24 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
         headers: newHeaders,
       })
       console.log('Retry response status:', response.status)
+      
+      // If still 401 after refresh, clear auth and redirect
+      if (response.status === 401) {
+        console.log('Still 401 after token refresh, logging out...')
+        logout()
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        throw new Error('Authentication expired. Please log in again.')
+      }
     } else {
-      console.log('Token refresh failed')
+      console.log('Token refresh failed, logging out...')
+      // Token refresh failed, clear auth and redirect
+      logout()
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+      throw new Error('Session expired. Please log in again.')
     }
   }
 

@@ -478,18 +478,24 @@ class UserHoldingsView(APIView):
                 stock_holding.quantity -= quantity
                 stock_holding.total_value -= total_value
                 
-                if stock_holding.quantity <= 0:
+                print(f"After sell: {ticker} quantity = {stock_holding.quantity} (type: {type(stock_holding.quantity)}), checking if <= 0: {stock_holding.quantity <= Decimal('0')}")
+                
+                if stock_holding.quantity <= Decimal('0'):
                     # Remove position if fully sold
                     stock_holding.delete()
+                    print(f"Position deleted for {ticker}")
                     
                     # Remove from watchlist so it can appear in discovery again
-                    UserStockPreference.objects.filter(
+                    deleted_count, _ = UserStockPreference.objects.filter(
                         user=request.user,
                         ticker=ticker,
                         preference_type='watchlist'
                     ).delete()
+                    
+                    print(f"Removed {ticker} from watchlist for user {request.user.email}: {deleted_count} entries deleted")
                 else:
                     stock_holding.save()
+                    print(f"Position updated for {ticker}, remaining quantity: {stock_holding.quantity}")
                 
                 # Add to balance
                 holdings.balance += total_value

@@ -58,7 +58,7 @@ export interface PortfolioHolding {
   gain_loss: number
   gain_loss_percent: number
   alignment_score: number
-  match_type: 'positive' | 'neutral' | 'negative'
+  match_type: 'same_sign' | 'positive' | 'neutral' | 'negative'
   zodiac_sign: string
   element: string
 }
@@ -73,8 +73,36 @@ export interface PortfolioSummary {
   overall_alignment_score: number
   cosmic_vibe_index: number
   element_distribution: { Fire: number; Earth: number; Air: number; Water: number }
-  alignment_breakdown: { positive: number; neutral: number; negative: number }
+  alignment_breakdown: { same_sign: number; positive: number; neutral: number; negative: number }
   holdings: PortfolioHolding[]
+}
+
+export interface PortfolioHistoryPoint {
+  timestamp: string
+  portfolio_value: number
+  cash_balance: number
+  stocks_value: number
+  cosmic_vibe_index: number
+}
+
+export interface PortfolioHistoryResponse {
+  timeframe: string
+  data: PortfolioHistoryPoint[]
+}
+
+export interface StockHistoryPoint {
+  timestamp: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface StockHistoryResponse {
+  ticker: string
+  timeframe: string
+  data: StockHistoryPoint[]
 }
 
 interface PortfolioCacheData {
@@ -395,7 +423,7 @@ export const getPortfolioSummary = async (): Promise<PortfolioSummary> => {
       overall_alignment_score: 75,
       cosmic_vibe_index: 78,
       element_distribution: { Fire: 25, Earth: 25, Air: 25, Water: 25 },
-      alignment_breakdown: { positive: 0, neutral: holdings.positions.length, negative: 0 },
+      alignment_breakdown: { same_sign: 0, positive: 0, neutral: holdings.positions.length, negative: 0 },
       holdings: portfolioHoldings
     }
   }
@@ -459,5 +487,228 @@ export const getPortfolioSummary = async (): Promise<PortfolioSummary> => {
     // Re-throw if no cache available
     throw error
   }
+}
+
+/**
+ * Get portfolio value history over time
+ */
+export const getPortfolioHistory = async (timeframe: string = '1M'): Promise<PortfolioHistoryResponse> => {
+  // Check if in demo mode
+  if (isDemoMode()) {
+    // Generate mock data for demo mode
+    const mockData = generateMockPortfolioHistory(timeframe)
+    return {
+      timeframe,
+      data: mockData
+    }
+  }
+  
+  const url = `${API_BASE_URL}/portfolio/history/?timeframe=${timeframe}`
+  console.log('Fetching portfolio history from:', url)
+  
+  const response = await authenticatedFetch(url, {
+    method: 'GET',
+  })
+  
+  console.log('Portfolio history response:', response.status)
+
+  if (!response.ok) {
+    let error
+    try {
+      error = await response.json()
+      console.log('Portfolio history error response:', error)
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError)
+      error = { detail: `Server error (${response.status})` }
+    }
+    
+    if (response.status === 401) {
+      throw new Error('Authentication required. Please log in first.')
+    }
+    
+    if (response.status === 404) {
+      throw new Error('Portfolio history not found.')
+    }
+    
+    throw new Error(error.detail || error.message || 'Failed to fetch portfolio history')
+  }
+
+  const result: PortfolioHistoryResponse = await response.json()
+  console.log('Portfolio history:', result)
+  
+  return result
+}
+
+/**
+ * Get stock price history over time
+ */
+export const getStockHistory = async (ticker: string, timeframe: string = '1M'): Promise<StockHistoryResponse> => {
+  // Check if in demo mode
+  if (isDemoMode()) {
+    // Generate mock data for demo mode
+    const mockData = generateMockStockHistory(ticker, timeframe)
+    return {
+      ticker: ticker.toUpperCase(),
+      timeframe,
+      data: mockData
+    }
+  }
+  
+  const url = `${API_BASE_URL}/stocks/${ticker}/history/?timeframe=${timeframe}`
+  console.log('Fetching stock history from:', url)
+  
+  const response = await fetch(url, {
+    method: 'GET',
+  })
+  
+  console.log('Stock history response:', response.status)
+
+  if (!response.ok) {
+    let error
+    try {
+      error = await response.json()
+      console.log('Stock history error response:', error)
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError)
+      error = { detail: `Server error (${response.status})` }
+    }
+    
+    if (response.status === 404) {
+      throw new Error(`No historical data found for ${ticker}`)
+    }
+    
+    throw new Error(error.detail || error.message || 'Failed to fetch stock history')
+  }
+
+  const result: StockHistoryResponse = await response.json()
+  console.log('Stock history:', result)
+  
+  return result
+}
+
+/**
+ * Generate mock portfolio history for demo mode
+ */
+function generateMockPortfolioHistory(timeframe: string): PortfolioHistoryPoint[] {
+  const points: PortfolioHistoryPoint[] = []
+  const now = new Date()
+  let numPoints = 30
+  let intervalMs = 24 * 60 * 60 * 1000 // 1 day
+  
+  // Adjust number of points and interval based on timeframe
+  switch (timeframe) {
+    case '1D':
+      numPoints = 78 // 6.5 hours of trading * 12 (5-min intervals)
+      intervalMs = 5 * 60 * 1000 // 5 minutes
+      break
+    case '5D':
+      numPoints = 65 // 5 days * 13 (15-min intervals per day)
+      intervalMs = 15 * 60 * 1000 // 15 minutes
+      break
+    case '1W':
+      numPoints = 65
+      intervalMs = 30 * 60 * 1000 // 30 minutes
+      break
+    case '1M':
+      numPoints = 30
+      intervalMs = 24 * 60 * 60 * 1000 // 1 day
+      break
+    case '3M':
+      numPoints = 90
+      intervalMs = 24 * 60 * 60 * 1000 // 1 day
+      break
+    case '1Y':
+      numPoints = 52
+      intervalMs = 7 * 24 * 60 * 60 * 1000 // 1 week
+      break
+    case '5Y':
+      numPoints = 60
+      intervalMs = 30 * 24 * 60 * 60 * 1000 // 1 month
+      break
+  }
+  
+  let baseValue = 100000
+  for (let i = numPoints; i >= 0; i--) {
+    const timestamp = new Date(now.getTime() - i * intervalMs)
+    const variation = (Math.random() - 0.45) * 2000 // Slight upward bias
+    baseValue += variation
+    const portfolioValue = Math.max(baseValue, 80000)
+    const stocksValue = portfolioValue * 0.6
+    const cashBalance = portfolioValue * 0.4
+    
+    points.push({
+      timestamp: timestamp.toISOString(),
+      portfolio_value: portfolioValue,
+      cash_balance: cashBalance,
+      stocks_value: stocksValue,
+      cosmic_vibe_index: Math.round(65 + Math.random() * 30)
+    })
+  }
+  
+  return points
+}
+
+/**
+ * Generate mock stock history for demo mode
+ */
+function generateMockStockHistory(ticker: string, timeframe: string): StockHistoryPoint[] {
+  const points: StockHistoryPoint[] = []
+  const now = new Date()
+  let numPoints = 30
+  let intervalMs = 24 * 60 * 60 * 1000 // 1 day
+  
+  // Adjust number of points and interval based on timeframe
+  switch (timeframe) {
+    case '1D':
+      numPoints = 78
+      intervalMs = 5 * 60 * 1000
+      break
+    case '5D':
+      numPoints = 65
+      intervalMs = 15 * 60 * 1000
+      break
+    case '1W':
+      numPoints = 65
+      intervalMs = 30 * 60 * 1000
+      break
+    case '1M':
+      numPoints = 30
+      intervalMs = 24 * 60 * 60 * 1000
+      break
+    case '3M':
+      numPoints = 90
+      intervalMs = 24 * 60 * 60 * 1000
+      break
+    case '1Y':
+      numPoints = 52
+      intervalMs = 7 * 24 * 60 * 60 * 1000
+      break
+    case '5Y':
+      numPoints = 60
+      intervalMs = 30 * 24 * 60 * 60 * 1000
+      break
+  }
+  
+  let basePrice = 150
+  for (let i = numPoints; i >= 0; i--) {
+    const timestamp = new Date(now.getTime() - i * intervalMs)
+    const variation = (Math.random() - 0.5) * 5
+    basePrice += variation
+    const open = Math.max(basePrice + (Math.random() - 0.5) * 2, 100)
+    const close = Math.max(basePrice + (Math.random() - 0.5) * 2, 100)
+    const high = Math.max(open, close) + Math.random() * 3
+    const low = Math.min(open, close) - Math.random() * 3
+    
+    points.push({
+      timestamp: timestamp.toISOString(),
+      open,
+      high,
+      low,
+      close,
+      volume: Math.floor(Math.random() * 50000000) + 10000000
+    })
+  }
+  
+  return points
 }
 

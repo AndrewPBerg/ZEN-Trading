@@ -202,9 +202,48 @@ async function testAlignmentCalculations(portfolio) {
     console.log(`  ${element}: ${percentage}%`);
   });
   console.log('\nAlignment Breakdown:');
+  console.log(`  Same Sign: ${portfolio.alignment_breakdown.same_sign}`);
   console.log(`  Positive: ${portfolio.alignment_breakdown.positive}`);
   console.log(`  Neutral: ${portfolio.alignment_breakdown.neutral}`);
   console.log(`  Negative: ${portfolio.alignment_breakdown.negative}`);
+  
+  // Verify alignment breakdown integrity
+  const totalBreakdown = 
+    portfolio.alignment_breakdown.same_sign + 
+    portfolio.alignment_breakdown.positive + 
+    portfolio.alignment_breakdown.neutral + 
+    portfolio.alignment_breakdown.negative;
+  
+  const totalHoldings = portfolio.holdings.length;
+  
+  if (totalBreakdown === totalHoldings) {
+    console.log(`\n✓ Alignment breakdown integrity check passed (${totalBreakdown} === ${totalHoldings})`);
+  } else {
+    console.log(`\n✗ Alignment breakdown integrity check failed:`);
+    console.log(`  Total breakdown: ${totalBreakdown}`);
+    console.log(`  Total holdings: ${totalHoldings}`);
+  }
+  
+  // Verify that same_sign holdings have match_type 'same_sign'
+  const sameSignHoldings = portfolio.holdings.filter(h => h.match_type === 'same_sign');
+  if (sameSignHoldings.length === portfolio.alignment_breakdown.same_sign) {
+    console.log(`✓ Same sign count matches holdings with match_type 'same_sign' (${sameSignHoldings.length})`);
+  } else {
+    console.log(`✗ Same sign count mismatch:`);
+    console.log(`  Breakdown count: ${portfolio.alignment_breakdown.same_sign}`);
+    console.log(`  Holdings count: ${sameSignHoldings.length}`);
+  }
+  
+  // Verify same_sign holdings have alignment_score of 100
+  const sameSingWithWrongScore = sameSignHoldings.filter(h => h.alignment_score !== 100);
+  if (sameSingWithWrongScore.length === 0) {
+    console.log(`✓ All same sign holdings have alignment score of 100`);
+  } else {
+    console.log(`✗ Some same sign holdings don't have alignment score of 100:`);
+    sameSingWithWrongScore.forEach(h => {
+      console.log(`  ${h.ticker}: ${h.alignment_score}`);
+    });
+  }
 }
 
 async function buyMoreOfSameStock(ticker, quantity, pricePerShare) {

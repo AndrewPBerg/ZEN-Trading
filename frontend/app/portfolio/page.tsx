@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PortfolioChart } from "@/components/portfolio-chart"
-import { TrendingUp, TrendingDown, Star, Sparkles, Eye, MoreHorizontal, RefreshCw, AlertTriangle, Loader2 } from "lucide-react"
-import { getPortfolioSummary, type PortfolioSummary, type PortfolioHolding } from "@/lib/api/holdings"
+import { StockSparkline } from "@/components/stock-sparkline"
+import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
+import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
+import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 
 const elementColors = {
   Fire: "from-red-500/20 to-orange-500/20 border-red-500/30",
@@ -88,6 +90,7 @@ export default function PortfolioPage() {
   }
 
   const getMatchTypeColor = (matchType: string) => {
+    if (matchType === 'same_sign') return "bg-purple-500/20 text-purple-400 border-purple-500/30"
     if (matchType === 'positive') return "bg-green-500/20 text-green-400 border-green-500/30"
     if (matchType === 'neutral') return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
     return "bg-orange-500/20 text-orange-400 border-orange-500/30"
@@ -167,7 +170,7 @@ export default function PortfolioPage() {
 
       <div className="relative z-10 max-w-md mx-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4 z-20">
           <div className="text-center">
             <h1 className="text-xl font-bold text-foreground">Cosmic Portfolio</h1>
             <p className="text-sm text-muted-foreground">Your stellar investment journey</p>
@@ -199,7 +202,7 @@ export default function PortfolioPage() {
             </Alert>
           )}
 
-          {/* Portfolio Summary */}
+          {/* 1. Portfolio Summary Card */}
           <Card className="p-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
             <div className="space-y-4">
               <div className="text-center">
@@ -249,74 +252,18 @@ export default function PortfolioPage() {
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                <span className="text-sm text-muted-foreground">Alignment Score</span>
-                <span className={`font-medium ${getAlignmentColor(Number(portfolio.overall_alignment_score ?? 0))}`}>
-                  {Number(portfolio.overall_alignment_score ?? 0)}%
-                </span>
-              </div>
             </div>
           </Card>
 
-          {/* Element Distribution Ring */}
-          {portfolio.holdings.length > 0 && (
-            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Elemental Balance</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(portfolio.element_distribution).map(([element, percentage]) => (
-                  <div
-                    key={element}
-                    className={`p-3 rounded-lg bg-gradient-to-br ${elementColors[element as keyof typeof elementColors]} border`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{elementIcons[element as keyof typeof elementIcons]}</span>
-                      <div className="flex-1">
-                        <div className="text-xs text-muted-foreground">{element}</div>
-                        <div className="text-sm font-bold text-foreground">{percentage}%</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Alignment Breakdown */}
-          {portfolio.holdings.length > 0 && (
-            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Alignment Distribution</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Positive Matches</span>
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                    {portfolio.alignment_breakdown.positive}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Neutral Matches</span>
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                    {portfolio.alignment_breakdown.neutral}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Challenging Matches</span>
-                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                    {portfolio.alignment_breakdown.negative}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Performance Chart */}
-          {portfolio.holdings.length > 0 && (
+          {/* 2. Portfolio Chart with Timeframe Selector */}
+          {/* Only show chart if user has completed onboarding and has holdings */}
+          {portfolio.total_portfolio_value > 0 && (
             <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
               <PortfolioChart />
             </Card>
           )}
 
-          {/* Holdings List */}
+          {/* 3. Holdings Panel (More Prominent) */}
           {portfolio.holdings.length > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -357,7 +304,7 @@ export default function PortfolioPage() {
                           </div>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end gap-1">
                           <p className="font-bold text-foreground">
                             ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
@@ -373,6 +320,7 @@ export default function PortfolioPage() {
                               {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
                             </span>
                           </div>
+                          <StockSparkline ticker={holding.ticker} isPositive={isHoldingPositive} />
                         </div>
                       </div>
 
@@ -384,7 +332,7 @@ export default function PortfolioPage() {
                           </span>
                         </div>
                         <Badge className={getMatchTypeColor(holding.match_type)}>
-                          {holding.match_type}
+                          {holding.match_type === 'same_sign' ? 'Same Sign' : holding.match_type}
                         </Badge>
                       </div>
 
@@ -442,7 +390,37 @@ export default function PortfolioPage() {
             </Card>
           )}
 
-          {/* Cosmic Insights */}
+          {/* 4. Compatibility Pie Chart */}
+          {portfolio.holdings.length > 0 && (
+            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+              <CompatibilityPieChart alignmentBreakdown={portfolio.alignment_breakdown} />
+            </Card>
+          )}
+
+          {/* 5. Elemental Balance Card */}
+          {portfolio.holdings.length > 0 && (
+            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Elemental Balance</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(portfolio.element_distribution).map(([element, percentage]) => (
+                  <div
+                    key={element}
+                    className={`p-3 rounded-lg bg-gradient-to-br ${elementColors[element as keyof typeof elementColors]} border`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{elementIcons[element as keyof typeof elementIcons]}</span>
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{element}</div>
+                        <div className="text-sm font-bold text-foreground">{percentage}%</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* 6. Cosmic Insights */}
           {portfolio.holdings.length > 0 && (
             <Card className="p-4 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
               <div className="flex items-start gap-3">

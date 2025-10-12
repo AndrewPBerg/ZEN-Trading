@@ -32,6 +32,7 @@ api_urlpatterns = [
     
     # Stock endpoints (real-time market data)
     path('stocks/', views.StockListView.as_view(), name='stock-list'),
+    path('stocks/<str:ticker>/history/', views.StockHistoryView.as_view(), name='stock-history'),
     path('stocks/<str:ticker>/', views.StockDetailView.as_view(), name='stock-detail'),
     
     # Class-based views
@@ -54,6 +55,9 @@ api_urlpatterns = [
     
     # Portfolio summary endpoint
     path('portfolio/', views.PortfolioSummaryView.as_view(), name='portfolio-summary'),
+    
+    # Portfolio history endpoint
+    path('portfolio/history/', views.PortfolioHistoryView.as_view(), name='portfolio-history'),
     
     # Zodiac sign matching endpoints
     path('zodiac/matched-stocks/', views.ZodiacMatchedStocksView.as_view(), name='zodiac-matched-stocks'),

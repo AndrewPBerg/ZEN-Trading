@@ -488,7 +488,7 @@ class PortfolioSummaryView(APIView):
             
             # Element and alignment tracking
             element_values = {'Fire': 0, 'Earth': 0, 'Air': 0, 'Water': 0}
-            alignment_counts = {'positive': 0, 'neutral': 0, 'negative': 0}
+            alignment_counts = {'same_sign': 0, 'positive': 0, 'neutral': 0, 'negative': 0}
             weighted_alignment_sum = 0
             
             # Process each position
@@ -512,10 +512,11 @@ class PortfolioSummaryView(APIView):
                 match_type = 'neutral'
                 alignment_score = 65  # Default neutral score
                 
-                # Check if same sign
-                if stock.zodiac_sign == user_sign:
+                # Check if same sign (highest priority)
+                is_same_sign = stock.zodiac_sign == user_sign
+                if is_same_sign:
                     alignment_score = 100
-                    match_type = 'positive'  # Treat same sign as positive
+                    match_type = 'same_sign'
                 else:
                     # Lookup zodiac matching
                     try:
@@ -545,7 +546,9 @@ class PortfolioSummaryView(APIView):
                     element_values[element] += current_value
                 
                 # Track alignment counts
-                if alignment_score == 100 or match_type == 'positive':
+                if is_same_sign:
+                    alignment_counts['same_sign'] += 1
+                elif match_type == 'positive':
                     alignment_counts['positive'] += 1
                 elif match_type == 'neutral':
                     alignment_counts['neutral'] += 1
@@ -642,6 +645,206 @@ class PortfolioSummaryView(APIView):
             traceback.print_exc()
             return Response({
                 'error': 'Failed to retrieve portfolio summary',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PortfolioHistoryView(APIView):
+    """
+    GET: Retrieve portfolio value history over a specified timeframe
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # Timeframe to yfinance period/interval mapping
+    TIMEFRAME_MAP = {
+        '1D': {'period': '1d', 'interval': '5m'},
+        '5D': {'period': '5d', 'interval': '15m'},
+        '1W': {'period': '1wk', 'interval': '30m'},
+        '1M': {'period': '1mo', 'interval': '1d'},
+        '3M': {'period': '3mo', 'interval': '1d'},
+        '1Y': {'period': '1y', 'interval': '1wk'},
+        '5Y': {'period': '5y', 'interval': '1mo'},
+    }
+    
+    def get(self, request):
+        """
+        Get historical portfolio values
+        Query params: timeframe (1D, 5D, 1W, 1M, 3M, 1Y, 5Y)
+        """
+        from datetime import datetime
+        import yfinance as yf
+        
+        try:
+            timeframe = request.query_params.get('timeframe', '1M').upper()
+            
+            if timeframe not in self.TIMEFRAME_MAP:
+                return Response({
+                    'error': 'Invalid timeframe',
+                    'detail': f'Timeframe must be one of: {", ".join(self.TIMEFRAME_MAP.keys())}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get user's holdings
+            holdings = UserHoldings.objects.get(user=request.user)
+            positions = holdings.positions.all()
+            
+            if not positions:
+                # No positions, just return cash balance over time
+                return Response({
+                    'timeframe': timeframe,
+                    'data': [{
+                        'timestamp': datetime.now().isoformat(),
+                        'portfolio_value': float(holdings.balance),
+                        'cash_balance': float(holdings.balance),
+                        'stocks_value': 0.0,
+                        'cosmic_vibe_index': 50
+                    }]
+                }, status=status.HTTP_200_OK)
+            
+            # Get historical data for all tickers
+            period_config = self.TIMEFRAME_MAP[timeframe]
+            tickers = [pos.ticker for pos in positions]
+            
+            # Fetch historical data
+            historical_data = {}
+            for ticker in tickers:
+                try:
+                    stock = yf.Ticker(ticker)
+                    hist = stock.history(period=period_config['period'], interval=period_config['interval'])
+                    if not hist.empty:
+                        historical_data[ticker] = hist
+                except Exception as e:
+                    print(f"Failed to fetch history for {ticker}: {e}")
+                    continue
+            
+            if not historical_data:
+                return Response({
+                    'error': 'No historical data available',
+                    'detail': 'Could not fetch historical data for any holdings'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Get common timestamps across all stocks
+            # Use the first stock's timestamps as reference
+            first_ticker = list(historical_data.keys())[0]
+            timestamps = historical_data[first_ticker].index
+            
+            # Calculate portfolio value at each timestamp
+            portfolio_history = []
+            for timestamp in timestamps:
+                stocks_value = Decimal('0')
+                
+                for position in positions:
+                    if position.ticker in historical_data:
+                        hist = historical_data[position.ticker]
+                        try:
+                            # Get the close price at this timestamp
+                            if timestamp in hist.index:
+                                price = Decimal(str(hist.loc[timestamp]['Close']))
+                                quantity = Decimal(str(position.quantity))
+                                stocks_value += price * quantity
+                        except Exception as e:
+                            print(f"Error calculating value for {position.ticker} at {timestamp}: {e}")
+                            continue
+                
+                portfolio_value = float(holdings.balance) + float(stocks_value)
+                
+                # Simple cosmic vibe calculation (can be enhanced)
+                cosmic_vibe_index = min(50 + (float(stocks_value) / portfolio_value * 50) if portfolio_value > 0 else 50, 100)
+                
+                portfolio_history.append({
+                    'timestamp': timestamp.isoformat(),
+                    'portfolio_value': portfolio_value,
+                    'cash_balance': float(holdings.balance),
+                    'stocks_value': float(stocks_value),
+                    'cosmic_vibe_index': round(cosmic_vibe_index)
+                })
+            
+            return Response({
+                'timeframe': timeframe,
+                'data': portfolio_history
+            }, status=status.HTTP_200_OK)
+            
+        except UserHoldings.DoesNotExist:
+            return Response({
+                'error': 'Holdings not found',
+                'detail': 'User holdings have not been created yet. Complete onboarding first.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': 'Failed to retrieve portfolio history',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StockHistoryView(APIView):
+    """
+    GET: Retrieve stock price history over a specified timeframe
+    """
+    permission_classes = [permissions.AllowAny]  # Public access to stock data
+    
+    # Timeframe to yfinance period/interval mapping
+    TIMEFRAME_MAP = {
+        '1D': {'period': '1d', 'interval': '5m'},
+        '5D': {'period': '5d', 'interval': '15m'},
+        '1W': {'period': '1wk', 'interval': '30m'},
+        '1M': {'period': '1mo', 'interval': '1d'},
+        '3M': {'period': '3mo', 'interval': '1d'},
+        '1Y': {'period': '1y', 'interval': '1wk'},
+        '5Y': {'period': '5y', 'interval': '1mo'},
+    }
+    
+    def get(self, request, ticker):
+        """
+        Get historical stock prices
+        Query params: timeframe (1D, 5D, 1W, 1M, 3M, 1Y, 5Y)
+        """
+        import yfinance as yf
+        
+        try:
+            timeframe = request.query_params.get('timeframe', '1M').upper()
+            
+            if timeframe not in self.TIMEFRAME_MAP:
+                return Response({
+                    'error': 'Invalid timeframe',
+                    'detail': f'Timeframe must be one of: {", ".join(self.TIMEFRAME_MAP.keys())}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            period_config = self.TIMEFRAME_MAP[timeframe]
+            
+            # Fetch historical data
+            stock = yf.Ticker(ticker.upper())
+            hist = stock.history(period=period_config['period'], interval=period_config['interval'])
+            
+            if hist.empty:
+                return Response({
+                    'error': 'No data available',
+                    'detail': f'No historical data found for ticker {ticker}'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Format the data
+            history_data = []
+            for timestamp, row in hist.iterrows():
+                history_data.append({
+                    'timestamp': timestamp.isoformat(),
+                    'open': float(row['Open']),
+                    'high': float(row['High']),
+                    'low': float(row['Low']),
+                    'close': float(row['Close']),
+                    'volume': int(row['Volume'])
+                })
+            
+            return Response({
+                'ticker': ticker.upper(),
+                'timeframe': timeframe,
+                'data': history_data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': 'Failed to retrieve stock history',
                 'detail': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

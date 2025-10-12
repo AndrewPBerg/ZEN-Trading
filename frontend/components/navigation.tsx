@@ -171,11 +171,36 @@ export function Navigation() {
                     {marketStatus.is_open ? 'Closes' : 'Opens'}:
                   </span>
                   <span className="text-purple-300 ml-1">
-                    {new Date(marketStatus.next_event_time).toLocaleString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      timeZoneName: 'short'
-                    })}
+                    {(() => {
+                      const nextEventDate = new Date(marketStatus.next_event_time)
+                      const today = new Date()
+                      const isToday = nextEventDate.toDateString() === today.toDateString()
+                      const tomorrow = new Date(today)
+                      tomorrow.setDate(tomorrow.getDate() + 1)
+                      const isTomorrow = nextEventDate.toDateString() === tomorrow.toDateString()
+                      
+                      if (isToday) {
+                        return nextEventDate.toLocaleString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        })
+                      } else if (isTomorrow) {
+                        return 'Tomorrow ' + nextEventDate.toLocaleString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        })
+                      } else {
+                        return nextEventDate.toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        })
+                      }
+                    })()}
                   </span>
                 </div>
               </div>

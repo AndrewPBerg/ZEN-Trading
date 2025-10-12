@@ -160,6 +160,31 @@ function WatchlistPageContent() {
     setSelectedStock(null)
   }
 
+  // Handle successful purchase
+  const handlePurchaseSuccess = async () => {
+    if (!selectedStock) return
+
+    try {
+      // Remove from watchlist
+      await removeFromWatchlist(selectedStock.ticker)
+      
+      // Show success toast
+      toast.success(
+        `Successfully purchased ${selectedStock.ticker}! Stock removed from watchlist.`,
+        { duration: 5000 }
+      )
+      
+      // Refresh data
+      await fetchData()
+    } catch (err) {
+      console.error("Failed to remove from watchlist after purchase:", err)
+      // Still show success for the purchase
+      toast.success(`Successfully purchased ${selectedStock.ticker}!`, { duration: 5000 })
+      // Refresh data anyway
+      await fetchData()
+    }
+  }
+
   // Calculate price change
   const getPriceChange = (stock: Stock) => {
     if (!stock.current_price || !stock.previous_close) return null
@@ -496,6 +521,7 @@ function WatchlistPageContent() {
         onClose={closeBuyModal}
         ticker={selectedStock?.ticker || ""}
         stockData={selectedStock?.stock}
+        onPurchaseSuccess={handlePurchaseSuccess}
       />
     </div>
   )

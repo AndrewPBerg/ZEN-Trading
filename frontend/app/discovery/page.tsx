@@ -451,7 +451,12 @@ function DiscoveryPageContent() {
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={handleDislike}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDislike()
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
                     className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
                   >
@@ -459,7 +464,12 @@ function DiscoveryPageContent() {
                   </Button>
                   <Button
                     size="lg"
-                    onClick={handleLike}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLike()
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
                     className="w-14 h-14 rounded-full bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-400 hover:text-green-300 transition-all duration-200 hover:scale-110"
                   >

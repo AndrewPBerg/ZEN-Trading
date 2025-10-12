@@ -153,7 +153,7 @@ export default function PortfolioPage() {
 
   if (!portfolio) return null
 
-  const isPositive = portfolio.total_gain_loss >= 0
+  const isPositive = Number(portfolio.total_gain_loss ?? 0) >= 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-8">
@@ -204,15 +204,15 @@ export default function PortfolioPage() {
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-foreground">
-                  ${portfolio.total_portfolio_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${Number(portfolio.total_portfolio_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div
                   className={`flex items-center justify-center gap-1 mt-1 ${isPositive ? "text-green-500" : "text-red-500"}`}
                 >
                   {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                   <span className="font-medium">
-                    {isPositive ? "+" : ""}${Math.abs(portfolio.total_gain_loss).toFixed(2)} ({isPositive ? "+" : ""}
-                    {portfolio.total_gain_loss_percent.toFixed(2)}%)
+                    {isPositive ? "+" : ""}${Math.abs(Number(portfolio.total_gain_loss ?? 0)).toFixed(2)} ({isPositive ? "+" : ""}
+                    {Number(portfolio.total_gain_loss_percent ?? 0).toFixed(2)}%)
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Total Portfolio Value</p>
@@ -224,14 +224,14 @@ export default function PortfolioPage() {
                   <span className="text-sm font-medium text-foreground">Cosmic Vibe Index</span>
                   <div className="flex items-center gap-2">
                     <Star className="w-4 h-4 text-accent" fill="currentColor" />
-                    <span className={`font-bold ${getVibeColor(portfolio.cosmic_vibe_index)}`}>
-                      {portfolio.cosmic_vibe_index}%
+                    <span className={`font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
+                      {Number(portfolio.cosmic_vibe_index ?? 0)}%
                     </span>
                   </div>
                 </div>
-                <Progress value={portfolio.cosmic_vibe_index} className="h-2" />
+                <Progress value={Number(portfolio.cosmic_vibe_index ?? 0)} className="h-2" />
                 <p className="text-xs text-muted-foreground text-center">
-                  {getAlignmentPhrase(portfolio.overall_alignment_score)}
+                  {getAlignmentPhrase(Number(portfolio.overall_alignment_score ?? 0))}
                 </p>
               </div>
 
@@ -239,21 +239,21 @@ export default function PortfolioPage() {
                 <div>
                   <span className="text-xs text-muted-foreground">Cash Balance</span>
                   <p className="font-medium text-foreground">
-                    ${portfolio.cash_balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${Number(portfolio.cash_balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs text-muted-foreground">Stocks Value</span>
                   <p className="font-medium text-foreground">
-                    ${portfolio.stocks_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${Number(portfolio.stocks_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                 <span className="text-sm text-muted-foreground">Alignment Score</span>
-                <span className={`font-medium ${getAlignmentColor(portfolio.overall_alignment_score)}`}>
-                  {portfolio.overall_alignment_score}%
+                <span className={`font-medium ${getAlignmentColor(Number(portfolio.overall_alignment_score ?? 0))}`}>
+                  {Number(portfolio.overall_alignment_score ?? 0)}%
                 </span>
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function PortfolioPage() {
               </div>
 
               {portfolio.holdings.map((holding) => {
-                const isHoldingPositive = holding.gain_loss >= 0
+                const isHoldingPositive = Number(holding.gain_loss ?? 0) >= 0
                 const isSelected = selectedHolding === holding.ticker
 
                 return (
@@ -352,14 +352,14 @@ export default function PortfolioPage() {
                               </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              {holding.quantity} share{holding.quantity !== 1 ? 's' : ''}
+                              {Number(holding.quantity)} share{Number(holding.quantity) !== 1 ? 's' : ''}
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
                           <p className="font-bold text-foreground">
-                            ${holding.current_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                           <div
                             className={`flex items-center gap-1 text-xs ${isHoldingPositive ? "text-green-500" : "text-red-500"}`}
@@ -370,7 +370,7 @@ export default function PortfolioPage() {
                               <TrendingDown className="w-3 h-3" />
                             )}
                             <span>
-                              {isHoldingPositive ? "+" : ""}${Math.abs(holding.gain_loss).toFixed(2)}
+                              {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -378,9 +378,9 @@ export default function PortfolioPage() {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Star className={`w-4 h-4 ${getAlignmentColor(holding.alignment_score)}`} fill="currentColor" />
-                          <span className={`text-sm font-medium ${getAlignmentColor(holding.alignment_score)}`}>
-                            {holding.alignment_score}% Aligned
+                          <Star className={`w-4 h-4 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
+                          <span className={`text-sm font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
+                            {Number(holding.alignment_score ?? 0)}% Aligned
                           </span>
                         </div>
                         <Badge className={getMatchTypeColor(holding.match_type)}>
@@ -388,7 +388,7 @@ export default function PortfolioPage() {
                         </Badge>
                       </div>
 
-                      {holding.alignment_score >= 85 && (
+                      {Number(holding.alignment_score ?? 0) >= 85 && (
                         <div className="flex items-center gap-1 text-xs text-accent">
                           <Sparkles className="w-3 h-3 animate-pulse" />
                           <span>Excellent Alignment!</span>
@@ -401,25 +401,25 @@ export default function PortfolioPage() {
                             <div>
                               <p className="text-muted-foreground">Avg Price</p>
                               <p className="font-medium text-foreground">
-                                ${holding.purchase_price.toFixed(2)}
+                                ${Number(holding.purchase_price ?? 0).toFixed(2)}
                               </p>
                             </div>
                             <div>
                               <p className="text-muted-foreground">Current Price</p>
                               <p className="font-medium text-foreground">
-                                ${holding.current_price.toFixed(2)}
+                                ${Number(holding.current_price ?? 0).toFixed(2)}
                               </p>
                             </div>
                             <div>
                               <p className="text-muted-foreground">Cost Basis</p>
                               <p className="font-medium text-foreground">
-                                ${holding.cost_basis.toFixed(2)}
+                                ${Number(holding.cost_basis ?? 0).toFixed(2)}
                               </p>
                             </div>
                             <div>
                               <p className="text-muted-foreground">Gain/Loss</p>
                               <p className={`font-medium ${isHoldingPositive ? 'text-green-500' : 'text-red-500'}`}>
-                                {isHoldingPositive ? '+' : ''}${holding.gain_loss.toFixed(2)} ({isHoldingPositive ? '+' : ''}{holding.gain_loss_percent.toFixed(2)}%)
+                                {isHoldingPositive ? '+' : ''}${Number(holding.gain_loss ?? 0).toFixed(2)} ({isHoldingPositive ? '+' : ''}{Number(holding.gain_loss_percent ?? 0).toFixed(2)}%)
                               </p>
                             </div>
                           </div>
@@ -450,11 +450,11 @@ export default function PortfolioPage() {
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Cosmic Portfolio Insight</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {portfolio.overall_alignment_score >= 85 
-                      ? `Your portfolio radiates powerful cosmic energy with ${portfolio.overall_alignment_score}% alignment! The stars strongly favor your investments.`
-                      : portfolio.overall_alignment_score >= 70
-                      ? `Your ${portfolio.overall_alignment_score}% alignment shows good cosmic harmony. Consider adding more aligned stocks to enhance your stellar connection.`
-                      : `Your portfolio has ${portfolio.overall_alignment_score}% alignment. Explore stocks with better zodiac compatibility to improve your cosmic balance.`
+                    {Number(portfolio.overall_alignment_score ?? 0) >= 85 
+                      ? `Your portfolio radiates powerful cosmic energy with ${Number(portfolio.overall_alignment_score ?? 0)}% alignment! The stars strongly favor your investments.`
+                      : Number(portfolio.overall_alignment_score ?? 0) >= 70
+                      ? `Your ${Number(portfolio.overall_alignment_score ?? 0)}% alignment shows good cosmic harmony. Consider adding more aligned stocks to enhance your stellar connection.`
+                      : `Your portfolio has ${Number(portfolio.overall_alignment_score ?? 0)}% alignment. Explore stocks with better zodiac compatibility to improve your cosmic balance.`
                     }
                   </p>
                 </div>

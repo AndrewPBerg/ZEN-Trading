@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { AnimatedStars } from "@/components/animated-stars"
+import { Footer } from "@/components/footer"
 
 export const metadata: Metadata = {
   title: "ZEN Trader",
@@ -19,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} antialiased h-full`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -40,10 +41,17 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
-        <AnimatedStars />
-        <Navigation />
-        {children}
+      <body className="flex flex-col min-h-full">
+        <div className="fixed inset-0 z-0">
+          <AnimatedStars />
+        </div>
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <Navigation />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   )

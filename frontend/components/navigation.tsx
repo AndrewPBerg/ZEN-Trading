@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { TrendingUp, Star, Eye, Sparkles, Moon, Sun, User, Settings, LogOut } from "lucide-react"
+import { TrendingUp, Star, Eye, Sparkles, Moon, Sun, User, Settings, LogOut, AlertTriangle } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
 import { isDemoMode } from "@/lib/demo-mode"
 import { getMarketStatus, type MarketStatusResponse } from "@/lib/api/market"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/discovery", icon: TrendingUp, label: "Discovery" },
@@ -119,8 +120,24 @@ export function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-900/95 via-indigo-900/95 to-purple-900/95 backdrop-blur-lg border-b border-purple-500/20">
-      <div className="flex items-center justify-between px-6 py-3">
+    <>
+      {/* Demo Mode Warning Banner */}
+      {mounted && isDemo && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-orange-600/95 to-amber-600/95 backdrop-blur-lg border-b border-orange-500/30">
+          <div className="flex items-center justify-center px-4 py-2 gap-2">
+            <AlertTriangle className="w-4 h-4 text-white" />
+            <span className="text-sm font-medium text-white">
+              Demo Mode: No live data - All information is simulated
+            </span>
+          </div>
+        </div>
+      )}
+      
+      <nav className={cn(
+        "fixed left-0 right-0 z-50 bg-gradient-to-r from-purple-900/95 via-indigo-900/95 to-purple-900/95 backdrop-blur-lg border-b border-purple-500/20",
+        mounted && isDemo ? "top-10" : "top-0"
+      )}>
+        <div className="flex items-center justify-between px-6 py-3">
         {/* Navigation Items */}
         <div className="flex items-center gap-1">
           {navItems.map(({ href, icon: Icon, label }) => {
@@ -258,5 +275,6 @@ export function Navigation() {
         </div>
       </div>
     </nav>
+    </>
   )
 }

@@ -6,14 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import { StockSparkline } from "@/components/stock-sparkline"
 import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
-import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
+import { CombinedHoldingsChart } from "@/components/combined-holdings-chart"
+import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw, Info } from "lucide-react"
 import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { getCurrentUser, type User } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser } from "@/lib/demo-mode"
+import { cn } from "@/lib/utils"
 
 const elementColors = {
   Fire: "from-red-500/20 to-orange-500/20 border-red-500/30",
@@ -30,7 +40,11 @@ const elementIcons = {
 }
 
 export default function PortfolioPage() {
-  const [selectedHolding, setSelectedHolding] = useState<string | null>(null)
+  // State for holdings selection
+  const [selectedHoldings, setSelectedHoldings] = useState<Set<string>>(new Set())
+  const [selectAll, setSelectAll] = useState(false)
+  
+  // Existing state
   const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,6 +52,9 @@ export default function PortfolioPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [accountStartDate, setAccountStartDate] = useState<string | null>(null)
+
+  // Info modal state
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   const fetchPortfolio = async () => {
     setLoading(true)
@@ -51,19 +68,16 @@ export default function PortfolioPage() {
       
       // Fetch user data for account start date
       try {
-        // Check if in demo mode first
         if (isDemoMode()) {
           const demoUser = getCompleteDemoUser()
           if (demoUser) {
             setUser(demoUser)
-            // Use profile created_at or user date_joined
             setAccountStartDate(demoUser.profile?.created_at || demoUser.date_joined)
           }
         } else {
           const userData = getCurrentUser()
           if (userData) {
             setUser(userData)
-            // Use profile created_at or user date_joined
             setAccountStartDate(userData.profile?.created_at || userData.date_joined)
           }
         }
@@ -94,6 +108,35 @@ export default function PortfolioPage() {
   useEffect(() => {
     fetchPortfolio()
   }, [])
+
+  // Handle select all toggle
+  const handleSelectAllChange = (checked: boolean) => {
+    setSelectAll(checked)
+    if (checked && portfolio) {
+      const allTickers = new Set(portfolio.holdings.map(h => h.ticker))
+      setSelectedHoldings(allTickers)
+    } else {
+      setSelectedHoldings(new Set())
+    }
+  }
+
+  // Handle individual holding selection
+  const toggleHolding = (ticker: string) => {
+    const newSelected = new Set(selectedHoldings)
+    if (newSelected.has(ticker)) {
+      newSelected.delete(ticker)
+    } else {
+      newSelected.add(ticker)
+    }
+    setSelectedHoldings(newSelected)
+    
+    // Update select all state
+    if (portfolio && newSelected.size === portfolio.holdings.length) {
+      setSelectAll(true)
+    } else {
+      setSelectAll(false)
+    }
+  }
 
   const getVibeColor = (score: number) => {
     if (score >= 85) return "text-green-500"
@@ -132,6 +175,9 @@ export default function PortfolioPage() {
     const hours = Math.floor(minutes / 60)
     return `${hours} hour${hours > 1 ? 's' : ''} ago`
   }
+
+  const hasSelections = selectedHoldings.size > 0
+  const selectedHoldingsData = portfolio?.holdings.filter(h => selectedHoldings.has(h.ticker)) || []
 
   if (loading && !portfolio) {
     return (
@@ -229,7 +275,7 @@ export default function PortfolioPage() {
             </Alert>
           )}
 
-          {/* Portfolio Summary Card */}
+          {/* Portfolio Summary Card - Always Visible */}
           <Card className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
             <div className="space-y-2">
               <div className="text-center">
@@ -241,17 +287,27 @@ export default function PortfolioPage() {
                 >
                   {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                   <span className="font-medium">
-                    {isPositive ? "+" : ""}${Math.abs(Number(portfolio.total_gain_loss ?? 0)).toFixed(2)} ({isPositive ? "+" : ""}
+                    {isPositive ? "+" : ""}${Math.abs(Number(portfolio.total_gain_loss ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? "+" : ""}
                     {Number(portfolio.total_gain_loss_percent ?? 0).toFixed(2)}%)
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Total Portfolio Value</p>
               </div>
 
-              {/* Cosmic Vibe Index Meter */}
+              {/* Cosmic Vibe Index Meter with Info Icon */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-foreground">Cosmic Vibe Index</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-medium text-foreground">Cosmic Vibe Index</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => setShowInfoModal(true)}
+                    >
+                      <Info className="w-3 h-3 text-muted-foreground hover:text-accent transition-colors" />
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <Star className="w-3 h-3 text-accent" fill="currentColor" />
                     <span className={`text-sm font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
@@ -282,143 +338,186 @@ export default function PortfolioPage() {
             </div>
           </Card>
 
-          {/* Tabs for Account Overview and Alignment Scores */}
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="overview">Account Overview</TabsTrigger>
-              <TabsTrigger value="alignment">Alignment Scores</TabsTrigger>
-            </TabsList>
+          {/* Holdings Section with Dynamic Layout */}
+          {portfolio.holdings.length > 0 ? (
+            <div className={cn(
+              "grid gap-4 transition-all duration-500 ease-in-out",
+              hasSelections ? "lg:grid-cols-[350px_1fr]" : "grid-cols-1"
+            )}>
+              {/* Holdings List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Your Holdings</h2>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-xs">
+                      {portfolio.holdings.length} Position{portfolio.holdings.length !== 1 ? 's' : ''}
+                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="select-all"
+                        checked={selectAll}
+                        onCheckedChange={handleSelectAllChange}
+                      />
+                      <Label htmlFor="select-all" className="text-xs cursor-pointer">
+                        Select All
+                      </Label>
+                    </div>
+                  </div>
+                </div>
 
-            <TabsContent value="overview" className="space-y-3 mt-3">
-              {/* Portfolio Chart */}
-              {portfolio.total_portfolio_value > 0 && (
-                <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-                  <PortfolioChart accountStartDate={accountStartDate} />
-                </Card>
-              )}
+                <div className={cn(
+                  "grid gap-3 transition-all duration-500",
+                  hasSelections ? "grid-cols-1" : "sm:grid-cols-2"
+                )}>
+                  {portfolio.holdings.map((holding) => {
+                    const isHoldingPositive = Number(holding.gain_loss ?? 0) >= 0
+                    const isSelected = selectedHoldings.has(holding.ticker)
 
-              {/* Holdings Panel */}
-              {portfolio.holdings.length > 0 ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Your Holdings</h2>
-                <Badge variant="outline" className="text-xs">
-                  {portfolio.holdings.length} Position{portfolio.holdings.length !== 1 ? 's' : ''}
-                </Badge>
+                    return (
+                      <Card
+                        key={holding.ticker}
+                        className={cn(
+                          "p-3 cursor-pointer transition-all duration-300",
+                          "hover:shadow-lg hover:scale-[1.01]",
+                          isSelected && "ring-2 ring-primary shadow-lg scale-[1.01]",
+                          `bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`
+                        )}
+                        onClick={() => toggleHolding(holding.ticker)}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-background/80 rounded-full flex items-center justify-center text-lg">
+                                {elementIcons[holding.element as keyof typeof elementIcons]}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-bold text-foreground">{holding.ticker}</h3>
+                                  <Badge variant="outline" className="text-xs px-2 py-0">
+                                    {holding.zodiac_sign}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {Number(holding.quantity)} share{Number(holding.quantity) !== 1 ? 's' : ''}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right flex flex-col items-end gap-1">
+                              <p className="font-bold text-foreground">
+                                ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </p>
+                              <div
+                                className={`flex items-center gap-1 text-xs ${isHoldingPositive ? "text-green-500" : "text-red-500"}`}
+                              >
+                                {isHoldingPositive ? (
+                                  <TrendingUp className="w-3 h-3" />
+                                ) : (
+                                  <TrendingDown className="w-3 h-3" />
+                                )}
+                                <span>
+                                  {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
+                                </span>
+                              </div>
+                              <StockSparkline 
+                                ticker={holding.ticker} 
+                                isPositive={isHoldingPositive}
+                                purchaseDate={holding.purchase_date}
+                                accountStartDate={accountStartDate}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Star className={`w-4 h-4 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
+                              <span className={`text-sm font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
+                                {Number(holding.alignment_score ?? 0)}% Aligned
+                              </span>
+                            </div>
+                            <Badge className={getMatchTypeColor(holding.match_type)}>
+                              {holding.match_type === 'same_sign' ? 'Same Sign' : holding.match_type}
+                            </Badge>
+                          </div>
+
+                          {Number(holding.alignment_score ?? 0) >= 85 && (
+                            <div className="flex items-center gap-1 text-xs text-accent">
+                              <Sparkles className="w-3 h-3 animate-pulse" />
+                              <span>Excellent Alignment!</span>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
               </div>
 
-              {portfolio.holdings.map((holding) => {
-                const isHoldingPositive = Number(holding.gain_loss ?? 0) >= 0
-                const isSelected = selectedHolding === holding.ticker
+              {/* Combined Chart and Alignment Panel - Appears when selections are made */}
+              {hasSelections && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right duration-500">
+                  {/* Combined Chart */}
+                  <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+                    <CombinedHoldingsChart 
+                      tickers={Array.from(selectedHoldings)}
+                      holdings={selectedHoldingsData}
+                    />
+                  </Card>
 
-                return (
-                  <Card
-                    key={holding.ticker}
-                    className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] ${
-                      isSelected ? "ring-2 ring-primary shadow-lg scale-[1.01]" : ""
-                    } bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`}
-                    onClick={() => setSelectedHolding(isSelected ? null : holding.ticker)}
-                  >
+                  {/* Alignment Scores for Selected Holdings */}
+                  <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">
+                      Selected Holdings Alignment
+                    </h3>
                     <div className="space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-background/80 rounded-full flex items-center justify-center text-lg">
-                            {elementIcons[holding.element as keyof typeof elementIcons]}
+                      {selectedHoldingsData.map((holding) => (
+                        <div 
+                          key={holding.ticker}
+                          className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">{holding.ticker}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {holding.zodiac_sign}
+                            </Badge>
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-foreground">{holding.ticker}</h3>
-                              <Badge variant="outline" className="text-xs px-2 py-0">
-                                {holding.zodiac_sign}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {Number(holding.quantity)} share{Number(holding.quantity) !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="text-right flex flex-col items-end gap-1">
-                          <p className="font-bold text-foreground">
-                            ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </p>
-                          <div
-                            className={`flex items-center gap-1 text-xs ${isHoldingPositive ? "text-green-500" : "text-red-500"}`}
-                          >
-                            {isHoldingPositive ? (
-                              <TrendingUp className="w-3 h-3" />
-                            ) : (
-                              <TrendingDown className="w-3 h-3" />
-                            )}
-                            <span>
-                              {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
+                          <div className="flex items-center gap-2">
+                            <Star 
+                              className={`w-4 h-4 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} 
+                              fill="currentColor" 
+                            />
+                            <span className={`text-xs font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
+                              {Number(holding.alignment_score ?? 0)}%
                             </span>
                           </div>
-                          <StockSparkline 
-                            ticker={holding.ticker} 
-                            isPositive={isHoldingPositive}
-                            purchaseDate={holding.purchase_date}
-                            accountStartDate={accountStartDate}
-                          />
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Star className={`w-4 h-4 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
-                          <span className={`text-sm font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
-                            {Number(holding.alignment_score ?? 0)}% Aligned
-                          </span>
-                        </div>
-                        <Badge className={getMatchTypeColor(holding.match_type)}>
-                          {holding.match_type === 'same_sign' ? 'Same Sign' : holding.match_type}
-                        </Badge>
-                      </div>
-
-                      {Number(holding.alignment_score ?? 0) >= 85 && (
-                        <div className="flex items-center gap-1 text-xs text-accent">
-                          <Sparkles className="w-3 h-3 animate-pulse" />
-                          <span>Excellent Alignment!</span>
-                        </div>
-                      )}
-
-                      {isSelected && (
-                        <div className="pt-2 border-t border-border/50 space-y-1.5">
-                          <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div>
-                              <p className="text-muted-foreground">Avg Price</p>
-                              <p className="font-medium text-foreground">
-                                ${Number(holding.purchase_price ?? 0).toFixed(2)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Current Price</p>
-                              <p className="font-medium text-foreground">
-                                ${Number(holding.current_price ?? 0).toFixed(2)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Cost Basis</p>
-                              <p className="font-medium text-foreground">
-                                ${Number(holding.cost_basis ?? 0).toFixed(2)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Gain/Loss</p>
-                              <p className={`font-medium ${isHoldingPositive ? 'text-green-500' : 'text-red-500'}`}>
-                                {isHoldingPositive ? '+' : ''}${Number(holding.gain_loss ?? 0).toFixed(2)} ({isHoldingPositive ? '+' : ''}{Number(holding.gain_loss_percent ?? 0).toFixed(2)}%)
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Zodiac Match: {holding.zodiac_sign} • Element: {holding.element}
-                          </div>
-                        </div>
-                      )}
+                      ))}
                     </div>
                   </Card>
-                )
-              })}
+
+                  {/* Elemental Balance for Selected */}
+                  <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Elemental Balance</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(portfolio.element_distribution).map(([element, percentage]) => (
+                        <div
+                          key={element}
+                          className={`p-3 rounded-lg bg-gradient-to-br ${elementColors[element as keyof typeof elementColors]} border`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{elementIcons[element as keyof typeof elementIcons]}</span>
+                            <div className="flex-1">
+                              <div className="text-xs text-muted-foreground">{element}</div>
+                              <div className="text-sm font-bold text-foreground">{percentage}%</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              )}
+
             </div>
           ) : (
             <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 text-center">
@@ -428,71 +527,60 @@ export default function PortfolioPage() {
               </div>
             </Card>
           )}
-            </TabsContent>
-
-            <TabsContent value="alignment" className="space-y-3 mt-3">
-              {/* Compatibility Pie Chart */}
-              {portfolio.holdings.length > 0 && (
-            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-              <CompatibilityPieChart alignmentBreakdown={portfolio.alignment_breakdown} />
-            </Card>
-          )}
-
-              {/* Elemental Balance Card */}
-              {portfolio.holdings.length > 0 && (
-            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Elemental Balance</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(portfolio.element_distribution).map(([element, percentage]) => (
-                  <div
-                    key={element}
-                    className={`p-3 rounded-lg bg-gradient-to-br ${elementColors[element as keyof typeof elementColors]} border`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{elementIcons[element as keyof typeof elementIcons]}</span>
-                      <div className="flex-1">
-                        <div className="text-xs text-muted-foreground">{element}</div>
-                        <div className="text-sm font-bold text-foreground">{percentage}%</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-              {/* Cosmic Insights */}
-              {portfolio.holdings.length > 0 && (
-            <Card className="p-4 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-accent mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-foreground mb-2">Cosmic Portfolio Insight</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {Number(portfolio.overall_alignment_score ?? 0) >= 85 
-                      ? `Your portfolio radiates powerful cosmic energy with ${Number(portfolio.overall_alignment_score ?? 0)}% alignment! The stars strongly favor your investments.`
-                      : Number(portfolio.overall_alignment_score ?? 0) >= 70
-                      ? `Your ${Number(portfolio.overall_alignment_score ?? 0)}% alignment shows good cosmic harmony. Consider adding more aligned stocks to enhance your stellar connection.`
-                      : `Your portfolio has ${Number(portfolio.overall_alignment_score ?? 0)}% alignment. Explore stocks with better zodiac compatibility to improve your cosmic balance.`
-                    }
-                  </p>
-                </div>
-              </div>
-            </Card>
-              )}
-
-              {portfolio.holdings.length === 0 && (
-                <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 text-center">
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground">No alignment data yet</p>
-                    <p className="text-sm text-muted-foreground">Purchase stocks to see your cosmic alignment!</p>
-                  </div>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
         </div>
       </div>
+
+      {/* Alignment Info Modal */}
+      <Dialog open={showInfoModal} onOpenChange={setShowInfoModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-accent" />
+              How Cosmic Alignment is Calculated
+            </DialogTitle>
+            <DialogDescription>
+              Understanding your portfolio's cosmic energy
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Alignment Scoring</h4>
+              <p className="text-muted-foreground mb-2">
+                Each stock in your portfolio receives an alignment score based on zodiac compatibility:
+              </p>
+              <ul className="space-y-1 text-muted-foreground ml-4">
+                <li>• <span className="text-purple-400 font-medium">Same Sign (100%):</span> Stock matches your zodiac sign exactly</li>
+                <li>• <span className="text-green-400 font-medium">Positive Match (85%):</span> Highly compatible zodiac pairing</li>
+                <li>• <span className="text-yellow-400 font-medium">Neutral Match (65%):</span> Moderate compatibility</li>
+                <li>• <span className="text-orange-400 font-medium">Negative Match (40%):</span> Challenging cosmic aspects</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Overall Alignment Score</h4>
+              <p className="text-muted-foreground">
+                Your portfolio's overall alignment is calculated as a weighted average based on the current value of each position. 
+                Larger positions have more influence on your overall cosmic energy.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Cosmic Vibe Index</h4>
+              <p className="text-muted-foreground">
+                The Cosmic Vibe Index combines your alignment score with a diversity bonus (up to +15 points) 
+                for having stocks across multiple elements (Fire, Earth, Air, Water), promoting balance in your cosmic portfolio.
+              </p>
+            </div>
+
+            <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold text-accent">Pro Tip:</span> Diversifying across compatible zodiac signs 
+                and elements can maximize your Cosmic Vibe Index while maintaining strong alignment.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

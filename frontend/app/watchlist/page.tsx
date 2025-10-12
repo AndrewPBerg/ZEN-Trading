@@ -232,6 +232,23 @@ function WatchlistPageContent() {
     return ZODIAC_ELEMENTS[zodiacSign] || null
   }
 
+  // Get alignment score based on match type (matching backend logic)
+  const getAlignmentScore = (stock: Stock): number => {
+    if (stock.is_same_sign) return 100
+    if (stock.match_type === 'positive') return 85
+    if (stock.match_type === 'neutral') return 65
+    if (stock.match_type === 'negative') return 40
+    return 50 // Default
+  }
+
+  // Get alignment color
+  const getAlignmentColor = (score: number): string => {
+    if (score >= 85) return "text-green-500"
+    if (score >= 70) return "text-blue-500"
+    if (score >= 50) return "text-yellow-500"
+    return "text-orange-500"
+  }
+
   // Get match type badge (same as discovery page)
   const getMatchBadge = (stock: Stock) => {
     if (stock.is_same_sign) {
@@ -336,6 +353,16 @@ function WatchlistPageContent() {
               </Badge>
             )}
           </div>
+
+          {/* Alignment Score */}
+          {(stock.match_type || stock.is_same_sign) && (
+            <div className="flex items-center gap-2 py-2 border-t border-border/30">
+              <Star className={`w-4 h-4 ${getAlignmentColor(getAlignmentScore(stock))}`} fill="currentColor" />
+              <span className={`text-sm font-medium ${getAlignmentColor(getAlignmentScore(stock))}`}>
+                {getAlignmentScore(stock)}% Cosmic Alignment
+              </span>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex gap-2 pt-2 border-t border-border/50">

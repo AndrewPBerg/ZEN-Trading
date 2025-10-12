@@ -676,3 +676,91 @@ export const getWatchlistWithDetails = async (): Promise<{
   }
 }
 
+/**
+ * Get historical stock price data
+ */
+export interface StockHistoryData {
+  timestamp: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface StockHistoryResponse {
+  ticker: string
+  timeframe: string
+  data: StockHistoryData[]
+}
+
+export const getStockHistory = async (
+  ticker: string,
+  timeframe: string = '1M'
+): Promise<StockHistoryResponse> => {
+  // Demo mode: return mock data
+  if (isDemoMode()) {
+    return generateMockHistoryData(ticker, timeframe)
+  }
+
+  try {
+    const response = await authenticatedFetch(`${API_BASE_URL}/stocks/${ticker}/history?timeframe=${timeframe}`)
+    return response as StockHistoryResponse
+  } catch (error) {
+    console.error(`Failed to fetch stock history for ${ticker}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Generate mock historical data for demo mode
+ */
+function generateMockHistoryData(ticker: string, timeframe: string): StockHistoryResponse {
+  const periods: Record<string, number> = {
+    '1D': 1,
+    '5D': 5,
+    '1W': 7,
+    '1M': 30,
+    '3M': 90,
+    '1Y': 365,
+  }
+
+  const days = periods[timeframe] || 30
+  const data: StockHistoryData[] = []
+  
+  // Base price varies by ticker for variety
+  const basePrice = 100 + (ticker.charCodeAt(0) % 50)
+  let currentPrice = basePrice
+
+  for (let i = days; i >= 0; i--) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+
+    // Random walk with slight upward bias
+    const change = (Math.random() - 0.48) * basePrice * 0.02
+    currentPrice = Math.max(currentPrice + change, basePrice * 0.7)
+
+    const open = currentPrice
+    const close = currentPrice + (Math.random() - 0.5) * basePrice * 0.01
+    const high = Math.max(open, close) + Math.random() * basePrice * 0.01
+    const low = Math.min(open, close) - Math.random() * basePrice * 0.01
+
+    data.push({
+      timestamp: date.toISOString(),
+      open: Number(open.toFixed(2)),
+      high: Number(high.toFixed(2)),
+      low: Number(low.toFixed(2)),
+      close: Number(close.toFixed(2)),
+      volume: Math.floor(Math.random() * 10000000) + 1000000,
+    })
+
+    currentPrice = close
+  }
+
+  return {
+    ticker,
+    timeframe,
+    data,
+  }
+}
+

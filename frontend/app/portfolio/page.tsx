@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import { StockSparkline } from "@/components/stock-sparkline"
 import { CompatibilityPieChart } from "@/components/compatibility-pie-chart"
 import { TrendingUp, TrendingDown, Star, Sparkles, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
+import { getCurrentUser, type User } from "@/lib/api/auth"
 
 const elementColors = {
   Fire: "from-red-500/20 to-orange-500/20 border-red-500/30",
@@ -33,6 +35,8 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null)
   const [usingCache, setUsingCache] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [accountStartDate, setAccountStartDate] = useState<string | null>(null)
 
   const fetchPortfolio = async () => {
     setLoading(true)
@@ -43,6 +47,16 @@ export default function PortfolioPage() {
       const data = await getPortfolioSummary()
       setPortfolio(data)
       setLastUpdated(new Date())
+      
+      // Fetch user data for account start date
+      try {
+        const userData = await getCurrentUser()
+        setUser(userData)
+        // Use profile created_at or user date_joined
+        setAccountStartDate(userData.profile?.created_at || userData.date_joined)
+      } catch (userErr) {
+        console.error('Failed to fetch user data:', userErr)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load portfolio'
       setError(errorMessage)
@@ -109,10 +123,10 @@ export default function PortfolioPage() {
   if (loading && !portfolio) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-8">
-        <div className="relative z-10 max-w-md mx-auto">
-          <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4">
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
+          <div className="mb-4">
             <div className="text-center">
-              <h1 className="text-xl font-bold text-foreground">Cosmic Portfolio</h1>
+              <h1 className="text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
               <p className="text-sm text-muted-foreground">Your stellar investment journey</p>
             </div>
           </div>
@@ -130,10 +144,10 @@ export default function PortfolioPage() {
   if (error && !portfolio) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-8">
-        <div className="relative z-10 max-w-md mx-auto">
-          <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4">
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
+          <div className="mb-4">
             <div className="text-center">
-              <h1 className="text-xl font-bold text-foreground">Cosmic Portfolio</h1>
+              <h1 className="text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
               <p className="text-sm text-muted-foreground">Your stellar investment journey</p>
             </div>
           </div>
@@ -159,7 +173,7 @@ export default function PortfolioPage() {
   const isPositive = Number(portfolio.total_gain_loss ?? 0) >= 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-4">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -168,16 +182,16 @@ export default function PortfolioPage() {
         <div className="absolute bottom-20 right-8 w-2 h-2 bg-accent rounded-full animate-pulse delay-700" />
       </div>
 
-      <div className="relative z-10 max-w-md mx-auto">
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4 z-20">
+        <div className="mb-4">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-foreground">Cosmic Portfolio</h1>
+            <h1 className="text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
             <p className="text-sm text-muted-foreground">Your stellar investment journey</p>
           </div>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="space-y-4">
           {/* Connection Status Warning */}
           {usingCache && (
             <Alert className="bg-orange-500/10 border-orange-500/30">
@@ -202,11 +216,11 @@ export default function PortfolioPage() {
             </Alert>
           )}
 
-          {/* 1. Portfolio Summary Card */}
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
-            <div className="space-y-4">
+          {/* Portfolio Summary Card */}
+          <Card className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
+            <div className="space-y-2">
               <div className="text-center">
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-2xl font-bold text-foreground">
                   ${Number(portfolio.total_portfolio_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div
@@ -222,23 +236,23 @@ export default function PortfolioPage() {
               </div>
 
               {/* Cosmic Vibe Index Meter */}
-              <div className="space-y-3">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">Cosmic Vibe Index</span>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-accent" fill="currentColor" />
-                    <span className={`font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
+                  <span className="text-xs font-medium text-foreground">Cosmic Vibe Index</span>
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-3 h-3 text-accent" fill="currentColor" />
+                    <span className={`text-sm font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
                       {Number(portfolio.cosmic_vibe_index ?? 0)}%
                     </span>
                   </div>
                 </div>
-                <Progress value={Number(portfolio.cosmic_vibe_index ?? 0)} className="h-2" />
+                <Progress value={Number(portfolio.cosmic_vibe_index ?? 0)} className="h-1.5" />
                 <p className="text-xs text-muted-foreground text-center">
                   {getAlignmentPhrase(Number(portfolio.overall_alignment_score ?? 0))}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50">
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
                 <div>
                   <span className="text-xs text-muted-foreground">Cash Balance</span>
                   <p className="font-medium text-foreground">
@@ -255,16 +269,23 @@ export default function PortfolioPage() {
             </div>
           </Card>
 
-          {/* 2. Portfolio Chart with Timeframe Selector */}
-          {/* Only show chart if user has completed onboarding and has holdings */}
-          {portfolio.total_portfolio_value > 0 && (
-            <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-              <PortfolioChart />
-            </Card>
-          )}
+          {/* Tabs for Account Overview and Alignment Scores */}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="overview">Account Overview</TabsTrigger>
+              <TabsTrigger value="alignment">Alignment Scores</TabsTrigger>
+            </TabsList>
 
-          {/* 3. Holdings Panel (More Prominent) */}
-          {portfolio.holdings.length > 0 ? (
+            <TabsContent value="overview" className="space-y-3 mt-3">
+              {/* Portfolio Chart */}
+              {portfolio.total_portfolio_value > 0 && (
+                <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+                  <PortfolioChart accountStartDate={accountStartDate} />
+                </Card>
+              )}
+
+              {/* Holdings Panel */}
+              {portfolio.holdings.length > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Your Holdings</h2>
@@ -280,12 +301,12 @@ export default function PortfolioPage() {
                 return (
                   <Card
                     key={holding.ticker}
-                    className={`p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
-                      isSelected ? "ring-2 ring-primary shadow-lg scale-[1.02]" : ""
+                    className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] ${
+                      isSelected ? "ring-2 ring-primary shadow-lg scale-[1.01]" : ""
                     } bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`}
                     onClick={() => setSelectedHolding(isSelected ? null : holding.ticker)}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-background/80 rounded-full flex items-center justify-center text-lg">
@@ -320,7 +341,12 @@ export default function PortfolioPage() {
                               {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
                             </span>
                           </div>
-                          <StockSparkline ticker={holding.ticker} isPositive={isHoldingPositive} />
+                          <StockSparkline 
+                            ticker={holding.ticker} 
+                            isPositive={isHoldingPositive}
+                            purchaseDate={holding.purchase_date}
+                            accountStartDate={accountStartDate}
+                          />
                         </div>
                       </div>
 
@@ -344,8 +370,8 @@ export default function PortfolioPage() {
                       )}
 
                       {isSelected && (
-                        <div className="pt-3 border-t border-border/50 space-y-2">
-                          <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="pt-2 border-t border-border/50 space-y-1.5">
+                          <div className="grid grid-cols-2 gap-3 text-xs">
                             <div>
                               <p className="text-muted-foreground">Avg Price</p>
                               <p className="font-medium text-foreground">
@@ -389,16 +415,18 @@ export default function PortfolioPage() {
               </div>
             </Card>
           )}
+            </TabsContent>
 
-          {/* 4. Compatibility Pie Chart */}
-          {portfolio.holdings.length > 0 && (
+            <TabsContent value="alignment" className="space-y-3 mt-3">
+              {/* Compatibility Pie Chart */}
+              {portfolio.holdings.length > 0 && (
             <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
               <CompatibilityPieChart alignmentBreakdown={portfolio.alignment_breakdown} />
             </Card>
           )}
 
-          {/* 5. Elemental Balance Card */}
-          {portfolio.holdings.length > 0 && (
+              {/* Elemental Balance Card */}
+              {portfolio.holdings.length > 0 && (
             <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
               <h3 className="text-sm font-semibold text-foreground mb-3">Elemental Balance</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -420,8 +448,8 @@ export default function PortfolioPage() {
             </Card>
           )}
 
-          {/* 6. Cosmic Insights */}
-          {portfolio.holdings.length > 0 && (
+              {/* Cosmic Insights */}
+              {portfolio.holdings.length > 0 && (
             <Card className="p-4 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-accent mt-0.5" />
@@ -438,7 +466,18 @@ export default function PortfolioPage() {
                 </div>
               </div>
             </Card>
-          )}
+              )}
+
+              {portfolio.holdings.length === 0 && (
+                <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 text-center">
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground">No alignment data yet</p>
+                    <p className="text-sm text-muted-foreground">Purchase stocks to see your cosmic alignment!</p>
+                  </div>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

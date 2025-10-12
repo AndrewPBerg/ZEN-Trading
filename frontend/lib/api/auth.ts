@@ -21,7 +21,7 @@ if (typeof window !== 'undefined') {
 
 
 // Types
-interface UserProfile {
+export interface UserProfile {
   zodiac_sign: string
   zodiac_symbol: string
   zodiac_element: string
@@ -33,7 +33,7 @@ interface UserProfile {
   updated_at: string
 }
 
-interface User {
+export interface User {
   id: number
   email: string
   username: string

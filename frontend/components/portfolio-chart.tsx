@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { getPortfolioHistory, type PortfolioHistoryPoint } from "@/lib/api/holdings"
@@ -9,7 +9,11 @@ import { getPortfolioHistory, type PortfolioHistoryPoint } from "@/lib/api/holdi
 const TIMEFRAMES = ['1D', '5D', '1W', '1M', '3M', '1Y', '5Y'] as const
 type Timeframe = typeof TIMEFRAMES[number]
 
-export function PortfolioChart() {
+interface PortfolioChartProps {
+  accountStartDate?: string | null
+}
+
+export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('1M')
   const [data, setData] = useState<PortfolioHistoryPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -184,6 +188,21 @@ export function PortfolioChart() {
                 domain={['dataMin - 1000', 'dataMax + 1000']}
               />
               <Tooltip content={<CustomTooltip />} />
+              {accountStartDate && (
+                <ReferenceLine 
+                  x={accountStartDate} 
+                  stroke="hsl(var(--primary))" 
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  label={{ 
+                    value: "★ Account Started", 
+                    position: "top", 
+                    fill: "hsl(var(--primary))", 
+                    fontSize: 11,
+                    fontWeight: 600
+                  }}
+                />
+              )}
               <Line
                 type="monotone"
                 dataKey="portfolio_value"

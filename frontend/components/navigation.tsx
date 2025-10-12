@@ -22,9 +22,10 @@ export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, isLoading: authLoading } = useAuth()
-  // Initialize theme state with a function to avoid hydration mismatch
+  // Initialize theme state synchronously to match the blocking script in layout.tsx
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return false
+    // Use the same logic as the blocking script
     const savedTheme = localStorage.getItem('theme')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     return savedTheme === 'dark' || (!savedTheme && prefersDark)
@@ -32,7 +33,11 @@ export function Navigation() {
   const [mounted, setMounted] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
   const [marketStatus, setMarketStatus] = useState<MarketStatusResponse | null>(null)
-  const [hasAuth, setHasAuth] = useState(false)
+  // Initialize hasAuth synchronously from localStorage to avoid delay
+  const [hasAuth, setHasAuth] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('zenTraderTokens') !== null || localStorage.getItem('zenTraderDemoMode') === 'true'
+  })
 
   // Hide navigation on specific pages
   const hideNavPages = ["/", "/login", "/signup", "/onboarding"]
@@ -41,6 +46,13 @@ export function Navigation() {
   useEffect(() => {
     setMounted(true)
     setIsDemo(isDemoMode())
+    
+    // Sync theme state with DOM to ensure consistency
+    const syncThemeWithDOM = () => {
+      const hasDarkClass = document.documentElement.classList.contains('dark')
+      setIsDark(hasDarkClass)
+    }
+    syncThemeWithDOM()
     
     // Check if user has auth tokens immediately
     const checkAuth = () => {
@@ -56,6 +68,10 @@ export function Navigation() {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'zenTraderTokens' || e.key === 'zenTraderDemoMode') {
         checkAuth()
+      }
+      // Sync theme when it changes in localStorage
+      if (e.key === 'theme') {
+        syncThemeWithDOM()
       }
     }
     
@@ -235,8 +251,8 @@ export function Navigation() {
             </Button>
           )}
 
-          {/* User Menu - Show immediately if auth exists, populate with user data when loaded */}
-          {mounted && hasAuth && (
+          {/* User Menu - Always visible, shows login options when not authenticated */}
+          {mounted && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -248,21 +264,42 @@ export function Navigation() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 bg-purple-950/95 border-purple-500/30">
-                <DropdownMenuItem 
-                  onClick={() => router.push("/settings")}
-                  className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-purple-500/20" />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
-                  className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {isDemo ? "Exit Demo" : "Logout"}
-                </DropdownMenuItem>
+                {hasAuth ? (
+                  <>
+                    <DropdownMenuItem 
+                      onClick={() => router.push("/settings")}
+                      className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-purple-500/20" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout} 
+                      className="text-red-400 focus:text-red-300 cursor-pointer focus:bg-purple-800/30"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isDemo ? "Exit Demo" : "Logout"}
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem 
+                      onClick={() => router.push("/login")}
+                      className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Login
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => router.push("/signup")}
+                      className="cursor-pointer focus:bg-purple-800/30 focus:text-gold-300"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Sign Up
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

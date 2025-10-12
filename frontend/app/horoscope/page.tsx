@@ -241,6 +241,8 @@ export default function HoroscopePage() {
     setAddingToWatchlist(ticker)
     try {
       await addToWatchlist(ticker)
+      // Remove the stock from the aligned stocks list
+      setAlignedStocks((prevStocks) => prevStocks.filter((stock) => stock.ticker !== ticker))
       toast({
         title: "Added to Watchlist",
         description: `${ticker} has been added to your watchlist.`,

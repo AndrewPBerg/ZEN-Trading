@@ -106,8 +106,10 @@ class StockHolding(models.Model):
     """
     user_holdings = models.ForeignKey(UserHoldings, on_delete=models.CASCADE, related_name='positions')
     ticker = models.CharField(max_length=10)
-    quantity = models.DecimalField(max_digits=12, decimal_places=4)
-    total_value = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.DecimalField(max_digits=12, decimal_places=4)  # Supports fractional shares
+    total_value = models.DecimalField(max_digits=12, decimal_places=2)  # Total cost basis (purchase value)
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)  # Average price per share
+    purchase_date = models.DateTimeField(null=True, blank=True)  # Date of first purchase (or last update)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

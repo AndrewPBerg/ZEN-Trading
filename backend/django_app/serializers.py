@@ -192,7 +192,7 @@ class StockHoldingSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = StockHolding
-        fields = ['id', 'ticker', 'quantity', 'total_value', 'created_at', 'updated_at']
+        fields = ['id', 'ticker', 'quantity', 'total_value', 'purchase_price', 'purchase_date', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
@@ -252,3 +252,40 @@ class UserStockPreferenceSerializer(serializers.ModelSerializer):
         model = UserStockPreference
         fields = ['id', 'ticker', 'preference_type', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class PortfolioHoldingSerializer(serializers.Serializer):
+    """
+    Serializer for portfolio holdings with alignment information
+    """
+    ticker = serializers.CharField()
+    company_name = serializers.CharField()
+    quantity = serializers.DecimalField(max_digits=12, decimal_places=4)
+    purchase_price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    purchase_date = serializers.DateTimeField()
+    current_price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    current_value = serializers.DecimalField(max_digits=12, decimal_places=2)
+    cost_basis = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gain_loss = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gain_loss_percent = serializers.DecimalField(max_digits=12, decimal_places=2)
+    alignment_score = serializers.IntegerField()
+    match_type = serializers.CharField()
+    zodiac_sign = serializers.CharField()
+    element = serializers.CharField()
+
+
+class PortfolioSummarySerializer(serializers.Serializer):
+    """
+    Serializer for complete portfolio summary with alignment metrics
+    """
+    cash_balance = serializers.DecimalField(max_digits=12, decimal_places=2)
+    stocks_value = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_portfolio_value = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_cost_basis = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_gain_loss = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_gain_loss_percent = serializers.DecimalField(max_digits=12, decimal_places=2)
+    overall_alignment_score = serializers.IntegerField()
+    cosmic_vibe_index = serializers.IntegerField()
+    element_distribution = serializers.DictField()
+    alignment_breakdown = serializers.DictField()
+    holdings = PortfolioHoldingSerializer(many=True)

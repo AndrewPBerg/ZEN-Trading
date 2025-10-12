@@ -52,6 +52,9 @@ api_urlpatterns = [
     # Holdings endpoint
     path('holdings/', views.UserHoldingsView.as_view(), name='user-holdings'),
     
+    # Portfolio summary endpoint
+    path('portfolio/', views.PortfolioSummaryView.as_view(), name='portfolio-summary'),
+    
     # Zodiac sign matching endpoints
     path('zodiac/matched-stocks/', views.ZodiacMatchedStocksView.as_view(), name='zodiac-matched-stocks'),
     path('zodiac/matching-rules/', views.ZodiacSignMatchingListView.as_view(), name='zodiac-matching-rules'),

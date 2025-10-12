@@ -20,6 +20,8 @@ export interface StockHolding {
   ticker: string
   quantity: number
   total_value: number
+  purchase_price: number | null
+  purchase_date: string | null
   created_at: string
   updated_at: string
 }
@@ -42,6 +44,42 @@ export interface TradeRequest {
 export interface TradeResponse {
   message: string
   holdings: UserHoldings
+}
+
+export interface PortfolioHolding {
+  ticker: string
+  company_name: string
+  quantity: number
+  purchase_price: number
+  purchase_date: string | null
+  current_price: number
+  current_value: number
+  cost_basis: number
+  gain_loss: number
+  gain_loss_percent: number
+  alignment_score: number
+  match_type: 'positive' | 'neutral' | 'negative'
+  zodiac_sign: string
+  element: string
+}
+
+export interface PortfolioSummary {
+  cash_balance: number
+  stocks_value: number
+  total_portfolio_value: number
+  total_cost_basis: number
+  total_gain_loss: number
+  total_gain_loss_percent: number
+  overall_alignment_score: number
+  cosmic_vibe_index: number
+  element_distribution: { Fire: number; Earth: number; Air: number; Water: number }
+  alignment_breakdown: { positive: number; neutral: number; negative: number }
+  holdings: PortfolioHolding[]
+}
+
+interface PortfolioCacheData {
+  data: PortfolioSummary
+  timestamp: string
 }
 
 /**
@@ -167,6 +205,8 @@ export const executeTrade = async (trade: TradeRequest): Promise<TradeResponse> 
           ticker: trade.ticker,
           quantity: trade.quantity,
           total_value: trade.total_value,
+          purchase_price: trade.total_value / trade.quantity,
+          purchase_date: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -246,5 +286,178 @@ export const executeTrade = async (trade: TradeRequest): Promise<TradeResponse> 
   console.log('Trade successful:', result)
   
   return result
+}
+
+/**
+ * Get portfolio summary with alignment metrics
+ */
+export const getPortfolioSummary = async (): Promise<PortfolioSummary> => {
+  const CACHE_KEY = 'zenTraderPortfolioCache'
+  const CACHE_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
+  
+  // Helper to get cached data
+  const getCachedData = (): PortfolioSummary | null => {
+    if (typeof window === 'undefined') return null
+    
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (!cached) return null
+      
+      const cacheData: PortfolioCacheData = JSON.parse(cached)
+      return cacheData.data
+    } catch (error) {
+      console.error('Failed to parse cached portfolio data:', error)
+      return null
+    }
+  }
+  
+  // Helper to check if cache is fresh
+  const isCacheFresh = (): boolean => {
+    if (typeof window === 'undefined') return false
+    
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (!cached) return false
+      
+      const cacheData: PortfolioCacheData = JSON.parse(cached)
+      const cacheAge = Date.now() - new Date(cacheData.timestamp).getTime()
+      return cacheAge < CACHE_DURATION
+    } catch (error) {
+      return false
+    }
+  }
+  
+  // Helper to save to cache
+  const saveToCache = (data: PortfolioSummary) => {
+    if (typeof window === 'undefined') return
+    
+    try {
+      const cacheData: PortfolioCacheData = {
+        data,
+        timestamp: new Date().toISOString()
+      }
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
+    } catch (error) {
+      console.error('Failed to cache portfolio data:', error)
+    }
+  }
+  
+  // Check if in demo mode
+  if (isDemoMode()) {
+    // For demo mode, calculate portfolio from holdings and stock data
+    const demoHoldings = localStorage.getItem('zenTraderDemoHoldings')
+    const demoProfile = localStorage.getItem('zenTraderDemoProfile')
+    
+    if (!demoProfile) {
+      throw new Error('Demo profile not found')
+    }
+    
+    const profile = JSON.parse(demoProfile)
+    const holdings: UserHoldings = demoHoldings 
+      ? JSON.parse(demoHoldings) 
+      : { 
+          id: 1, 
+          balance: profile.starting_balance || 100000, 
+          positions: [], 
+          created_at: new Date().toISOString(), 
+          updated_at: new Date().toISOString() 
+        }
+    
+    // Calculate portfolio summary for demo mode
+    // For simplicity, we'll create a basic summary
+    // In a real implementation, you'd fetch stock prices and calculate alignment
+    const portfolioHoldings: PortfolioHolding[] = holdings.positions.map((pos) => ({
+      ticker: pos.ticker,
+      company_name: pos.ticker, // Would need to fetch from stocks API
+      quantity: pos.quantity,
+      purchase_price: pos.purchase_price || 0,
+      purchase_date: pos.purchase_date,
+      current_price: pos.purchase_price || 0, // Demo: use purchase price as current
+      current_value: pos.total_value,
+      cost_basis: pos.total_value,
+      gain_loss: 0,
+      gain_loss_percent: 0,
+      alignment_score: 75, // Demo: default alignment
+      match_type: 'neutral' as const,
+      zodiac_sign: 'Aries', // Demo: would need to fetch
+      element: 'Fire'
+    }))
+    
+    const totalStocksValue = holdings.positions.reduce((sum, pos) => sum + pos.total_value, 0)
+    
+    return {
+      cash_balance: holdings.balance,
+      stocks_value: totalStocksValue,
+      total_portfolio_value: holdings.balance + totalStocksValue,
+      total_cost_basis: totalStocksValue,
+      total_gain_loss: 0,
+      total_gain_loss_percent: 0,
+      overall_alignment_score: 75,
+      cosmic_vibe_index: 78,
+      element_distribution: { Fire: 25, Earth: 25, Air: 25, Water: 25 },
+      alignment_breakdown: { positive: 0, neutral: holdings.positions.length, negative: 0 },
+      holdings: portfolioHoldings
+    }
+  }
+  
+  // Try to fetch from API
+  const url = `${API_BASE_URL}/portfolio/`
+  console.log('Fetching portfolio summary from:', url)
+  
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'GET',
+    })
+    
+    console.log('Portfolio response:', response.status)
+
+    if (!response.ok) {
+      let error
+      try {
+        error = await response.json()
+        console.log('Portfolio error response:', error)
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError)
+        error = { detail: `Server error (${response.status})` }
+      }
+      
+      // If we have an error, try to use cached data
+      const cachedData = getCachedData()
+      if (cachedData) {
+        console.log('Using cached portfolio data due to error')
+        return cachedData
+      }
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in first.')
+      }
+      
+      if (response.status === 404) {
+        throw new Error('Portfolio not found. Please complete onboarding first.')
+      }
+      
+      throw new Error(error.detail || error.message || 'Failed to fetch portfolio summary')
+    }
+
+    const result: PortfolioSummary = await response.json()
+    console.log('Portfolio summary:', result)
+    
+    // Save to cache
+    saveToCache(result)
+    
+    return result
+  } catch (error) {
+    console.error('Failed to fetch portfolio:', error)
+    
+    // Try to use cached data on network error
+    const cachedData = getCachedData()
+    if (cachedData) {
+      console.log('Using cached portfolio data due to network error')
+      return cachedData
+    }
+    
+    // Re-throw if no cache available
+    throw error
+  }
 }
 

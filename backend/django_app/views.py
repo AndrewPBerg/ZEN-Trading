@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from decimal import Decimal
 from .serializers import (
     StockSerializer,
     UserSerializer, 
@@ -14,7 +15,8 @@ from .serializers import (
     OnboardingSerializer,
     UserHoldingsSerializer,
     ZodiacSignMatchingSerializer,
-    UserStockPreferenceSerializer
+    UserStockPreferenceSerializer,
+    PortfolioSummarySerializer
 )
 from .models import Stock, UserHoldings, ZodiacSignMatching, UserStockPreference, get_element_from_zodiac
 
@@ -327,8 +329,8 @@ class UserHoldingsView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                quantity = float(quantity)
-                total_value = float(total_value)
+                quantity = Decimal(str(quantity))
+                total_value = Decimal(str(total_value))
             except (ValueError, TypeError):
                 return Response({
                     'error': 'Invalid data',
@@ -356,19 +358,39 @@ class UserHoldingsView(APIView):
                         'detail': f'Your balance (${holdings.balance}) is insufficient to complete this purchase (${total_value})'
                     }, status=status.HTTP_400_BAD_REQUEST)
                 
+                # Calculate purchase price per share
+                from django.utils import timezone
+                purchase_price_per_share = total_value / quantity
+                
                 # Update or create stock holding
                 from .models import StockHolding
                 stock_holding, created = StockHolding.objects.get_or_create(
                     user_holdings=holdings,
                     ticker=ticker,
-                    defaults={'quantity': quantity, 'total_value': total_value}
+                    defaults={
+                        'quantity': quantity, 
+                        'total_value': total_value,
+                        'purchase_price': purchase_price_per_share,
+                        'purchase_date': timezone.now()
+                    }
                 )
                 
                 if not created:
-                    # Update existing position
-                    stock_holding.quantity += quantity
-                    stock_holding.total_value += total_value
+                    # Update existing position with weighted average purchase price
+                    old_cost_basis = stock_holding.total_value
+                    new_cost_basis = old_cost_basis + total_value
+                    old_quantity = stock_holding.quantity
+                    new_quantity = old_quantity + quantity
+                    
+                    # Calculate new weighted average purchase price
+                    stock_holding.purchase_price = new_cost_basis / new_quantity
+                    stock_holding.quantity = new_quantity
+                    stock_holding.total_value = new_cost_basis
+                    stock_holding.purchase_date = timezone.now()  # Update to most recent purchase
                     stock_holding.save()
+                else:
+                    # For new positions, purchase_price is already set in defaults
+                    pass
                 
                 # Deduct from balance
                 holdings.balance -= total_value
@@ -429,6 +451,197 @@ class UserHoldingsView(APIView):
         except Exception as e:
             return Response({
                 'error': 'Failed to process transaction',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PortfolioSummaryView(APIView):
+    """
+    GET: Retrieve comprehensive portfolio summary with alignment metrics
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get portfolio summary including financial metrics and alignment scores
+        """
+        try:
+            # Get user's holdings
+            holdings = UserHoldings.objects.get(user=request.user)
+            positions = holdings.positions.all()
+            
+            # Get user's zodiac sign
+            profile = request.user.profile
+            if not profile.zodiac_sign:
+                return Response({
+                    'error': 'Zodiac sign not set',
+                    'detail': 'Please complete onboarding to set your zodiac sign'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            user_sign = profile.zodiac_sign
+            
+            # Initialize metrics
+            cash_balance = holdings.balance
+            total_cost_basis = Decimal('0')
+            stocks_current_value = Decimal('0')
+            portfolio_holdings = []
+            
+            # Element and alignment tracking
+            element_values = {'Fire': 0, 'Earth': 0, 'Air': 0, 'Water': 0}
+            alignment_counts = {'positive': 0, 'neutral': 0, 'negative': 0}
+            weighted_alignment_sum = 0
+            
+            # Process each position
+            for position in positions:
+                # Get stock information
+                try:
+                    stock = Stock.objects.get(ticker=position.ticker)
+                except Stock.DoesNotExist:
+                    # Skip positions where stock doesn't exist in database
+                    continue
+                
+                # Calculate financial metrics
+                current_price = Decimal(str(stock.current_price)) if stock.current_price else Decimal('0')
+                quantity = Decimal(str(position.quantity))
+                current_value = current_price * quantity
+                cost_basis = Decimal(str(position.total_value))
+                gain_loss = current_value - cost_basis
+                gain_loss_percent = (gain_loss / cost_basis * 100) if cost_basis > 0 else Decimal('0')
+                
+                # Get alignment information
+                match_type = 'neutral'
+                alignment_score = 65  # Default neutral score
+                
+                # Check if same sign
+                if stock.zodiac_sign == user_sign:
+                    alignment_score = 100
+                    match_type = 'positive'  # Treat same sign as positive
+                else:
+                    # Lookup zodiac matching
+                    try:
+                        matching = ZodiacSignMatching.objects.get(
+                            user_sign=user_sign,
+                            stock_sign=stock.zodiac_sign
+                        )
+                        match_type = matching.match_type
+                        
+                        # Assign alignment scores based on match type
+                        if match_type == 'positive':
+                            alignment_score = 85
+                        elif match_type == 'neutral':
+                            alignment_score = 65
+                        elif match_type == 'negative':
+                            alignment_score = 40
+                    except ZodiacSignMatching.DoesNotExist:
+                        # Default to neutral if no matching data
+                        match_type = 'neutral'
+                        alignment_score = 65
+                
+                # Get element
+                element = get_element_from_zodiac(stock.zodiac_sign)
+                
+                # Track element distribution (by current value)
+                if element in element_values:
+                    element_values[element] += current_value
+                
+                # Track alignment counts
+                if alignment_score == 100 or match_type == 'positive':
+                    alignment_counts['positive'] += 1
+                elif match_type == 'neutral':
+                    alignment_counts['neutral'] += 1
+                elif match_type == 'negative':
+                    alignment_counts['negative'] += 1
+                
+                # Add to totals
+                total_cost_basis += cost_basis
+                stocks_current_value += current_value
+                
+                # Create portfolio holding dict
+                holding_data = {
+                    'ticker': position.ticker,
+                    'company_name': stock.company_name,
+                    'quantity': position.quantity,
+                    'purchase_price': position.purchase_price or 0,
+                    'purchase_date': position.purchase_date,
+                    'current_price': current_price,
+                    'current_value': current_value,
+                    'cost_basis': cost_basis,
+                    'gain_loss': gain_loss,
+                    'gain_loss_percent': gain_loss_percent,
+                    'alignment_score': alignment_score,
+                    'match_type': match_type,
+                    'zodiac_sign': stock.zodiac_sign,
+                    'element': element
+                }
+                
+                portfolio_holdings.append(holding_data)
+                
+                # Accumulate weighted alignment (weight by current value percentage)
+                # We'll normalize this after we know the total
+            
+            # Calculate total portfolio value
+            total_portfolio_value = cash_balance + stocks_current_value
+            
+            # Calculate overall alignment score (weighted by position value)
+            overall_alignment_score = 0
+            if stocks_current_value > 0:
+                for holding in portfolio_holdings:
+                    weight = holding['current_value'] / stocks_current_value
+                    weighted_alignment_sum += holding['alignment_score'] * weight
+                overall_alignment_score = int(weighted_alignment_sum)
+            else:
+                # No stocks, neutral alignment
+                overall_alignment_score = 50
+            
+            # Calculate element distribution percentages
+            element_distribution = {}
+            if stocks_current_value > 0:
+                for element, value in element_values.items():
+                    element_distribution[element] = round((value / stocks_current_value) * 100, 1)
+            else:
+                element_distribution = {'Fire': 0, 'Earth': 0, 'Air': 0, 'Water': 0}
+            
+            # Calculate cosmic vibe index (alignment + diversity bonus)
+            # Bonus for having diverse elements (max 15 points)
+            diversity_bonus = 0
+            if stocks_current_value > 0:
+                elements_with_holdings = sum(1 for v in element_values.values() if v > 0)
+                diversity_bonus = min(elements_with_holdings * 3, 15)
+            
+            cosmic_vibe_index = min(overall_alignment_score + diversity_bonus, 100)
+            
+            # Calculate total gain/loss
+            total_gain_loss = stocks_current_value - total_cost_basis
+            total_gain_loss_percent = (total_gain_loss / total_cost_basis * 100) if total_cost_basis > 0 else 0
+            
+            # Build response data
+            summary_data = {
+                'cash_balance': cash_balance,
+                'stocks_value': stocks_current_value,
+                'total_portfolio_value': total_portfolio_value,
+                'total_cost_basis': total_cost_basis,
+                'total_gain_loss': total_gain_loss,
+                'total_gain_loss_percent': total_gain_loss_percent,
+                'overall_alignment_score': overall_alignment_score,
+                'cosmic_vibe_index': cosmic_vibe_index,
+                'element_distribution': element_distribution,
+                'alignment_breakdown': alignment_counts,
+                'holdings': portfolio_holdings
+            }
+            
+            serializer = PortfolioSummarySerializer(summary_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except UserHoldings.DoesNotExist:
+            return Response({
+                'error': 'Holdings not found',
+                'detail': 'User holdings have not been created yet. Complete onboarding first.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': 'Failed to retrieve portfolio summary',
                 'detail': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

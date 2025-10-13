@@ -705,7 +705,13 @@ export const getStockHistory = async (
 
   try {
     const response = await authenticatedFetch(`${API_BASE_URL}/stocks/${ticker}/history?timeframe=${timeframe}`)
-    return response as StockHistoryResponse
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Failed to fetch stock history' }))
+      throw new Error(error.detail || 'Failed to fetch stock history')
+    }
+    
+    return await response.json()
   } catch (error) {
     console.error(`Failed to fetch stock history for ${ticker}:`, error)
     throw error
@@ -762,5 +768,85 @@ function generateMockHistoryData(ticker: string, timeframe: string): StockHistor
     timeframe,
     data,
   }
+}
+
+/**
+ * Daily horoscope response from API
+ */
+export interface DailyHoroscope {
+  id: number
+  zodiac_sign: string
+  investing_style: string
+  date: string
+  horoscope_text: string
+  created_at: string
+}
+
+/**
+ * Get daily horoscope for the authenticated user
+ * Uses 10-minute caching to minimize API calls
+ */
+export const getDailyHoroscope = async (forceRefresh: boolean = false): Promise<DailyHoroscope> => {
+  // Check cache first (unless force refresh)
+  if (!forceRefresh) {
+    const cached = getCache<DailyHoroscope>('daily_horoscope')
+    if (cached) {
+      console.log('Using cached daily horoscope')
+      return cached
+    }
+  }
+
+  // Check if in demo mode
+  if (isDemoMode()) {
+    // Return demo horoscope data
+    const demoHoroscope: DailyHoroscope = {
+      id: 1,
+      zodiac_sign: 'Virgo',
+      investing_style: 'balanced',
+      date: new Date().toISOString().split('T')[0],
+      horoscope_text: 'Today brings powerful opportunities in the markets. Your Virgo alignment channels energy toward strategic opportunities that match your cosmic energy. Mercury sharpens your analytical edge, guiding you to make well-informed decisions. The stars favor meticulous research and calculated moves in established sectors. Trust your attention to detail as you navigate today\'s trading landscape.',
+      created_at: new Date().toISOString(),
+    }
+    
+    // Cache demo data for 10 minutes
+    setCache('daily_horoscope', demoHoroscope, 600)
+    return demoHoroscope
+  }
+
+  const url = `${API_BASE_URL}/horoscope/`
+  console.log('Fetching daily horoscope from:', url)
+
+  const response = await authenticatedFetch(url, {
+    method: 'GET',
+  })
+
+  if (!response.ok) {
+    let error
+    try {
+      error = await response.json()
+      console.log('Daily horoscope error response:', error)
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError)
+      error = { detail: `Server error (${response.status})` }
+    }
+
+    if (response.status === 401) {
+      throw new Error('Authentication required. Please log in first.')
+    }
+
+    if (response.status === 404) {
+      throw new Error('Horoscope not available yet. Please check back later.')
+    }
+
+    throw new Error(error.detail || error.error || 'Failed to fetch daily horoscope')
+  }
+
+  const result: DailyHoroscope = await response.json()
+  console.log('Daily horoscope:', result)
+
+  // Cache the result for 10 minutes
+  setCache('daily_horoscope', result, 600)
+
+  return result
 }
 

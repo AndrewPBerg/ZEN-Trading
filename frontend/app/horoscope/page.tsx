@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Star, Moon, Sun, TrendingUp, Sparkles, Calendar, Loader2, User, Plus } from "lucide-react"
+import { Sparkles, Calendar, Loader2, User, AlertCircle } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
-import { getZodiacMatchedStocks, addToWatchlist, type MatchedStock } from "@/lib/api/stocks"
-import { useToast } from "@/hooks/use-toast"
+import { getDailyHoroscope, type DailyHoroscope } from "@/lib/api/stocks"
 
-// Comprehensive horoscope data for all 12 zodiac signs
-const horoscopeData = {
+// Comprehensive horoscope data for all 12 zodiac signs (static UI data)
+const staticHoroscopeData = {
   Aries: {
     symbol: "♈",
     element: "Fire",
@@ -167,11 +165,9 @@ const investmentStyleInsights = {
 
 export default function HoroscopePage() {
   const { user } = useAuth()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [alignedStocks, setAlignedStocks] = useState<MatchedStock[]>([])
-  const [addingToWatchlist, setAddingToWatchlist] = useState<string | null>(null)
+  const [horoscopeData, setHoroscopeData] = useState<DailyHoroscope | null>(null)
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -180,19 +176,17 @@ export default function HoroscopePage() {
     day: "numeric",
   })
 
-  const dayOfWeek = new Date().toLocaleDateString("en-US", { weekday: "long" })
-
   // Get user's zodiac sign and investment style
   const userSign = user?.profile?.zodiac_sign || "Leo"
   const userSymbol = user?.profile?.zodiac_symbol || "♌"
   const userElement = user?.profile?.zodiac_element || "Fire"
   const investingStyle = user?.profile?.investing_style || "balanced"
 
-  const horoscope = horoscopeData[userSign as keyof typeof horoscopeData] || horoscopeData.Leo
+  const horoscope = staticHoroscopeData[userSign as keyof typeof staticHoroscopeData] || staticHoroscopeData.Leo
   const styleInfo = investmentStyleInsights[investingStyle as keyof typeof investmentStyleInsights] || investmentStyleInsights.balanced
 
   useEffect(() => {
-    const fetchAlignedStocks = async () => {
+    const fetchHoroscope = async () => {
       if (!user?.profile?.zodiac_sign) {
         setIsLoading(false)
         return
@@ -202,21 +196,17 @@ export default function HoroscopePage() {
       setError(null)
 
       try {
-        const response = await getZodiacMatchedStocks(true) // Force refresh
-        // Get top 3 stocks by compatibility score
-        const topStocks = response.matched_stocks
-          .sort((a, b) => b.compatibility_score - a.compatibility_score)
-          .slice(0, 3)
-        setAlignedStocks(topStocks)
+        const data = await getDailyHoroscope()
+        setHoroscopeData(data)
       } catch (err) {
-        console.error("Failed to fetch aligned stocks:", err)
-        setError(err instanceof Error ? err.message : "Failed to load aligned stocks")
+        console.error("Failed to fetch horoscope:", err)
+        setError(err instanceof Error ? err.message : "Failed to load horoscope")
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchAlignedStocks()
+    fetchHoroscope()
   }, [user])
 
   const getVibeColor = (score: number) => {
@@ -225,52 +215,6 @@ export default function HoroscopePage() {
     return "text-orange-500"
   }
 
-  const getAlignmentColor = (score: number) => {
-    if (score === 4) return "text-green-500"
-    if (score === 3) return "text-blue-500"
-    if (score === 2) return "text-yellow-500"
-    return "text-orange-500"
-  }
-
-  const getAlignmentPercentage = (score: number) => {
-    // Convert score (1-4) to percentage (70-100)
-    return 70 + (score - 1) * 10
-  }
-
-  const handleAddToWatchlist = async (ticker: string) => {
-    setAddingToWatchlist(ticker)
-    try {
-      await addToWatchlist(ticker)
-      // Remove the stock from the aligned stocks list
-      setAlignedStocks((prevStocks) => prevStocks.filter((stock) => stock.ticker !== ticker))
-      toast({
-        title: "Added to Watchlist",
-        description: `${ticker} has been added to your watchlist.`,
-      })
-    } catch (err) {
-      console.error("Failed to add to watchlist:", err)
-      toast({
-        title: "Failed to Add",
-        description: err instanceof Error ? err.message : "Could not add to watchlist",
-        variant: "destructive",
-      })
-    } finally {
-      setAddingToWatchlist(null)
-    }
-  }
-
-  // Generate dynamic horoscope text
-  const generateHoroscopeText = () => {
-    const energyWords = ["powerful", "transformative", "dynamic", "favorable", "intense", "harmonious"]
-    const marketWords = ["opportunities", "movements", "shifts", "developments", "trends", "signals"]
-    const alignmentWords = ["aligns perfectly", "resonates strongly", "harmonizes", "channels energy", "guides you"]
-    
-    const energy = energyWords[Math.floor(Math.random() * energyWords.length)]
-    const market = marketWords[Math.floor(Math.random() * marketWords.length)]
-    const alignment = alignmentWords[Math.floor(Math.random() * alignmentWords.length)]
-
-    return `Today is ${dayOfWeek}, and you will experience ${energy} ${market} in the markets. Your ${userSign} alignment ${alignment} toward strategic opportunities that match your cosmic energy. ${horoscope.cosmicAdvice}`
-  }
 
   if (!user?.profile?.zodiac_sign) {
     return (
@@ -310,10 +254,8 @@ export default function HoroscopePage() {
           </div>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Left Column */}
-          <div className="space-y-4">
+        {/* Single Column Layout */}
+        <div className="max-w-3xl mx-auto space-y-4">
             {/* Profile Summary Card */}
             <Card className="p-5 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/30 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-4">
@@ -346,16 +288,30 @@ export default function HoroscopePage() {
               </div>
             </Card>
 
-            {/* Your Daily Forecast - Combined Comprehensive Forecast */}
-            <Card className="p-5 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/30 backdrop-blur-sm">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h3 className="text-base font-semibold text-foreground">Your Daily Forecast</h3>
+          {/* Your Daily Forecast */}
+          <Card className="p-5 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/30 backdrop-blur-sm">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="text-base font-semibold text-foreground">Your Daily Forecast</h3>
+              </div>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
+              ) : error ? (
+                <div className="flex items-center gap-3 py-6 text-muted-foreground">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground mb-1">Sorry but this feature isn't available</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
+                </div>
+              ) : horoscopeData ? (
                 <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-                  <p className="text-base leading-loose">
-                    {generateHoroscopeText()}
+                  <p className="text-base leading-loose text-foreground">
+                    {horoscopeData.horoscope_text}
                   </p>
                   <p>
                     {horoscope.dailyInsight} {horoscope.marketPrediction}
@@ -366,78 +322,9 @@ export default function HoroscopePage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-4">
-            {/* Aligned Stocks */}
-            <Card className="p-5 bg-card/80 backdrop-blur-sm border-secondary/20">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-secondary" fill="currentColor" />
-                  <h3 className="text-base font-semibold text-foreground">Today's Aligned Stocks</h3>
-                </div>
-
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : error ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">{error}</p>
-                  </div>
-                ) : alignedStocks.length > 0 ? (
-                  <div className="space-y-3">
-                    {alignedStocks.map((stock, index) => (
-                      <div
-                        key={stock.ticker}
-                        className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 space-y-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className="text-base font-medium text-foreground">{stock.ticker}</h4>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-accent" fill="currentColor" />
-                                <span className={`text-sm font-medium ${getAlignmentColor(stock.compatibility_score)}`}>
-                                  {getAlignmentPercentage(stock.compatibility_score)}%
-                                </span>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2"
-                                onClick={() => handleAddToWatchlist(stock.ticker)}
-                                disabled={addingToWatchlist === stock.ticker}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground truncate">{stock.company_name}</p>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Badge variant="secondary" className="text-sm">
-                              {stock.zodiac_sign}
-                            </Badge>
-                            <span className="text-muted-foreground capitalize text-sm">{stock.match_type}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">No aligned stocks available</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+              ) : null}
+            </div>
+          </Card>
         </div>
       </div>
     </div>

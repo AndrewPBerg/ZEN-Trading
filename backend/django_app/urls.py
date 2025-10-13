@@ -67,6 +67,9 @@ api_urlpatterns = [
     path('watchlist/', views.UserWatchlistView.as_view(), name='user-watchlist'),
     path('dislike-list/', views.UserDislikeListView.as_view(), name='user-dislike-list'),
     
+    # Horoscope endpoint
+    path('horoscope/', views.DailyHoroscopeView.as_view(), name='daily-horoscope'),
+    
     # Market status (public endpoint)
     path('market/status/', views.market_status, name='market-status'),
 ]

@@ -16,9 +16,11 @@ from .serializers import (
     UserHoldingsSerializer,
     ZodiacSignMatchingSerializer,
     UserStockPreferenceSerializer,
-    PortfolioSummarySerializer
+    PortfolioSummarySerializer,
+    DailyHoroscopeSerializer
 )
-from .models import Stock, UserHoldings, ZodiacSignMatching, UserStockPreference, get_element_from_zodiac
+from .models import Stock, UserHoldings, ZodiacSignMatching, UserStockPreference, DailyHoroscope, get_element_from_zodiac
+from datetime import date
 
 User = get_user_model()
 
@@ -306,6 +308,21 @@ class OnboardingView(APIView):
                 # Save the onboarding data to the user's profile
                 # This also creates UserHoldings with starting_balance
                 serializer.save_to_profile(request.user)
+                
+                # Trigger horoscope generation for this user's zodiac sign + investing style
+                # Run in background using Django-Q2
+                try:
+                    from django_q.tasks import async_task
+                    async_task(
+                        'django_app.tasks.generate_single_horoscope',
+                        request.user.profile.zodiac_sign,
+                        request.user.profile.investing_style
+                    )
+                except Exception as e:
+                    # Log but don't fail onboarding if horoscope generation fails
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to trigger horoscope generation for user {request.user.email}: {str(e)}")
                 
                 # Return the updated user data with profile
                 user_serializer = UserSerializer(request.user)
@@ -1294,5 +1311,59 @@ class UserDislikeListView(APIView):
         except Exception as e:
             return Response({
                 'error': 'Failed to remove from dislike list',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DailyHoroscopeView(APIView):
+    """
+    GET: Retrieve today's horoscope for the authenticated user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """
+        Get today's horoscope based on user's zodiac sign and investing style
+        """
+        try:
+            # Get user's profile
+            profile = request.user.profile
+            
+            # Validate profile is complete
+            if not profile.zodiac_sign:
+                return Response({
+                    'error': 'Profile incomplete',
+                    'detail': 'Please complete onboarding to set your zodiac sign'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not profile.investing_style:
+                return Response({
+                    'error': 'Profile incomplete',
+                    'detail': 'Please complete onboarding to set your investing style'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get today's date
+            today = date.today()
+            
+            # Fetch horoscope for user's zodiac sign and investing style
+            try:
+                horoscope = DailyHoroscope.objects.get(
+                    zodiac_sign=profile.zodiac_sign,
+                    investing_style=profile.investing_style,
+                    date=today
+                )
+                
+                serializer = DailyHoroscopeSerializer(horoscope)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                
+            except DailyHoroscope.DoesNotExist:
+                return Response({
+                    'error': 'Horoscope not available',
+                    'detail': f'No horoscope has been generated for {profile.zodiac_sign} - {profile.investing_style} today. Please try again later.'
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch horoscope',
                 'detail': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

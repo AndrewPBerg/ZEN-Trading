@@ -189,6 +189,49 @@ class UserStockPreference(models.Model):
         ordering = ['-created_at']
 
 
+class DailyHoroscope(models.Model):
+    """
+    Daily horoscope for each zodiac sign and investing style combination
+    Generated once per day and discarded when new ones are created
+    """
+    ZODIAC_SIGNS = [
+        ('Aries', 'Aries'),
+        ('Taurus', 'Taurus'),
+        ('Gemini', 'Gemini'),
+        ('Cancer', 'Cancer'),
+        ('Leo', 'Leo'),
+        ('Virgo', 'Virgo'),
+        ('Libra', 'Libra'),
+        ('Scorpio', 'Scorpio'),
+        ('Sagittarius', 'Sagittarius'),
+        ('Capricorn', 'Capricorn'),
+        ('Aquarius', 'Aquarius'),
+        ('Pisces', 'Pisces'),
+    ]
+    
+    INVESTING_STYLES = [
+        ('casual', 'Casual Explorer'),
+        ('balanced', 'Balanced Seeker'),
+        ('profit-seeking', 'Profit Seeker'),
+        ('playful', 'Playful Mystic'),
+    ]
+    
+    zodiac_sign = models.CharField(max_length=50, choices=ZODIAC_SIGNS)
+    investing_style = models.CharField(max_length=50, choices=INVESTING_STYLES)
+    date = models.DateField(db_index=True)
+    horoscope_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.zodiac_sign} - {self.investing_style} ({self.date})"
+    
+    class Meta:
+        verbose_name = "Daily Horoscope"
+        verbose_name_plural = "Daily Horoscopes"
+        unique_together = ['zodiac_sign', 'investing_style', 'date']
+        ordering = ['-date', 'zodiac_sign']
+
+
 # Utility function to get element from zodiac sign
 def get_element_from_zodiac(zodiac_sign):
     """

@@ -28,7 +28,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_app.settings')
 django.setup()
 
 from django.core.management import call_command
-from django_app.models import Stock, ZodiacSignMatching
+from django_app.models import Stock, ZodiacSignMatching, DailyHoroscope
+from datetime import date as date_type
 
 # Color codes for output
 GREEN = '\033[92m'
@@ -125,6 +126,31 @@ def setup_price_updates():
     """Set up Django-Q2 scheduled task for price updates"""
     log("Setting up price update schedule", BLUE)
     run_command(['setup_price_updates'], 'Setup price updates')
+
+
+def setup_horoscope_schedule():
+    """Set up Django-Q2 scheduled task for daily horoscope generation"""
+    log("Setting up horoscope generation schedule", BLUE)
+    run_command(['setup_horoscope_schedule'], 'Setup horoscope schedule')
+
+
+def check_and_generate_horoscopes():
+    """Check if horoscopes exist for today, and generate if missing (backfill)"""
+    try:
+        today = date_type.today()
+        horoscope_count = DailyHoroscope.objects.filter(date=today).count()
+        
+        log(f"Current horoscopes for today ({today}): {horoscope_count}", BLUE)
+        
+        # If no horoscopes exist for today, generate them
+        if horoscope_count == 0:
+            log("No horoscopes found for today - generating (backfill)...", YELLOW)
+            run_command(['generate_horoscopes'], 'Generate horoscopes')
+        else:
+            log(f"Horoscopes already exist for today ({horoscope_count} entries)", GREEN)
+            
+    except Exception as e:
+        log(f"Error in check_and_generate_horoscopes: {str(e)}", RED)
 
 def start_qcluster():
     """Start Django-Q2 cluster in background"""
@@ -237,14 +263,20 @@ def main():
         # Step 5: Set up price update schedule
         setup_price_updates()
         
-        # Step 6: Start qcluster worker
+        # Step 6: Set up horoscope generation schedule
+        setup_horoscope_schedule()
+        
+        # Step 7: Check and backfill horoscopes if needed
+        check_and_generate_horoscopes()
+        
+        # Step 8: Start qcluster worker
         qcluster_process = start_qcluster()
         
         if qcluster_process is None:
             log("Failed to start qcluster - exiting", RED)
             sys.exit(1)
         
-        # Step 7: Start Gunicorn (blocking)
+        # Step 9: Start Gunicorn (blocking)
         log("=" * 60, GREEN)
         log("All services started successfully!", GREEN)
         log("=" * 60, GREEN)

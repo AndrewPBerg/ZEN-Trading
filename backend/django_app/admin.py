@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, UserProfile, Stock, UserHoldings, StockHolding, ZodiacSignMatching
+from .models import User, UserProfile, Stock, UserHoldings, StockHolding, ZodiacSignMatching, DailyHoroscope
 
 
 class UserProfileInline(admin.StackedInline):
@@ -65,6 +65,27 @@ class ZodiacSignMatchingAdmin(admin.ModelAdmin):
         }),
         ('Compatibility', {
             'fields': ('match_type', 'element')
+        }),
+    )
+
+
+@admin.register(DailyHoroscope)
+class DailyHoroscopeAdmin(admin.ModelAdmin):
+    list_display = ('zodiac_sign', 'investing_style', 'date', 'created_at')
+    list_filter = ('zodiac_sign', 'investing_style', 'date')
+    search_fields = ('zodiac_sign', 'horoscope_text')
+    readonly_fields = ('created_at',)
+    ordering = ('-date', 'zodiac_sign')
+    
+    fieldsets = (
+        ('Identity', {
+            'fields': ('zodiac_sign', 'investing_style', 'date')
+        }),
+        ('Content', {
+            'fields': ('horoscope_text',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at',)
         }),
     )
 

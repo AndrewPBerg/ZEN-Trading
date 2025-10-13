@@ -16,6 +16,9 @@ COPY . .
 RUN pip install uv
 RUN uv sync
 
+# Change to backend directory
+WORKDIR /app/backend
+
 # Make startup script executable
 RUN chmod +x startup.py
 

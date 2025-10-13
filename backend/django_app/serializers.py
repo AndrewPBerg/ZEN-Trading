@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import Stock, UserProfile, UserHoldings, StockHolding, ZodiacSignMatching, UserStockPreference
+from .models import Stock, UserProfile, UserHoldings, StockHolding, ZodiacSignMatching, UserStockPreference, DailyHoroscope
 
 User = get_user_model()
 
@@ -289,3 +289,13 @@ class PortfolioSummarySerializer(serializers.Serializer):
     element_distribution = serializers.DictField()
     alignment_breakdown = serializers.DictField()
     holdings = PortfolioHoldingSerializer(many=True)
+
+
+class DailyHoroscopeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for daily horoscope
+    """
+    class Meta:
+        model = DailyHoroscope
+        fields = ['id', 'zodiac_sign', 'investing_style', 'date', 'horoscope_text', 'created_at']
+        read_only_fields = ['id', 'created_at']

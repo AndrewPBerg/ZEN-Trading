@@ -184,8 +184,7 @@ export default function HoroscopePage() {
   const investingStyle = user?.profile?.investing_style || "balanced"
 
   const horoscope = staticHoroscopeData[userSign as keyof typeof staticHoroscopeData] || staticHoroscopeData.Leo
-  const styleInfo = investmentStyleInsights[investingStyle as keyof typeof investmentStyleInsights] || investmentStyleInsights.balanced
-
+  const styleInfo = investmentStyleInsights[investingStyle as keyof typeof investmentStyleInsights] 
   console.log('🌟 HoroscopePage state:', {
     hasUser: !!user,
     hasProfile: !!user?.profile,

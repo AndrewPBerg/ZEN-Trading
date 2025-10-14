@@ -356,6 +356,11 @@ function PortfolioPageContent() {
             </div>
           </Card>
 
+          {/* Portfolio Chart */}
+          <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+            <PortfolioChart accountStartDate={accountStartDate} />
+          </Card>
+
           {/* Holdings Section with Dynamic Layout */}
           {portfolio.holdings.length > 0 ? (
             <div className={cn(

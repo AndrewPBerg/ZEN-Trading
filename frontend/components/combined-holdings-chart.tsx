@@ -1,17 +1,20 @@
 "use client"
 
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import { useTheme } from "next-themes"
 
 // Generate normalized chart data for multiple tickers
 const generateCombinedChartData = (tickers: string[]) => {
   const data = []
+  
+  // Using CSS variable-compatible colors
   const colors = [
-    "#8b5cf6", // purple
-    "#06b6d4", // cyan
-    "#f59e0b", // amber
-    "#ec4899", // pink
-    "#10b981", // emerald
-    "#f97316", // orange
+    "hsl(var(--primary))",    // purple
+    "hsl(var(--secondary))",  // cyan
+    "hsl(var(--accent))",     // gold
+    "hsl(339, 82%, 56%)",     // pink
+    "hsl(142, 76%, 36%)",     // emerald
+    "hsl(25, 95%, 53%)",      // orange
   ]
 
   // Generate 30 days of data
@@ -44,6 +47,8 @@ interface CombinedHoldingsChartProps {
 
 export function CombinedHoldingsChart({ tickers, holdings = [] }: CombinedHoldingsChartProps) {
   const { data, colors } = generateCombinedChartData(tickers)
+  const { theme, systemTheme } = useTheme()
+  const currentTheme = theme === 'system' ? systemTheme : theme
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

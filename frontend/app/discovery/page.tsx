@@ -7,9 +7,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AlignmentInfoModal } from "@/components/alignment-info-modal"
-import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles, Calendar, Info } from "lucide-react"
+import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles, Calendar, Info, ExternalLink } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link"
 import { isDemoMode } from "@/lib/demo-mode"
 import { getZodiacMatchedStocks, addToWatchlist, addToDislikeList, type Stock } from "@/lib/api/stocks"
 import { toast } from "sonner"
@@ -401,6 +402,18 @@ function DiscoveryPageContent() {
                 <div className="text-center mb-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <h2 className="text-xl font-bold text-foreground">{currentStock.ticker}</h2>
+                    <Link href={`/stock/${currentStock.ticker}`} passHref>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-accent/20"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
+                      </Button>
+                    </Link>
                     {currentStock.element && ELEMENT_COLORS[currentStock.element] && (
                       <Badge
                         className={`text-xs ${ELEMENT_COLORS[currentStock.element].bg} ${ELEMENT_COLORS[currentStock.element].text} ${ELEMENT_COLORS[currentStock.element].border}`}

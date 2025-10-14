@@ -238,14 +238,14 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
                     <>
                       <ReferenceLine
                         x={startDataPoint.timestamp}
-                        stroke={currentTheme === 'dark' ? '#FFD700' : '#DAA520'}
+                        stroke="hsl(var(--accent))"
                         strokeWidth={2}
                         strokeDasharray="3 3"
                         yAxisId="portfolio"
                         label={{
                           value: "Account Start",
                           position: "top",
-                          fill: currentTheme === 'dark' ? '#FFD700' : '#DAA520',
+                          fill: "hsl(var(--accent))",
                           fontSize: 11,
                           fontWeight: 600,
                         }}
@@ -255,7 +255,7 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
                         y={startDataPoint.portfolio_value}
                         yAxisId="portfolio"
                         r={8}
-                        fill={currentTheme === 'dark' ? '#FFD700' : '#DAA520'}
+                        fill="hsl(var(--accent))"
                         stroke="hsl(var(--background))"
                         strokeWidth={2}
                         shape={(props: any) => {
@@ -318,7 +318,7 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
                 yAxisId="vibe"
                 type="monotone"
                 dataKey="cosmic_vibe_index"
-                fill="url(#vibeBackgroundGradient)"
+                fill={`url(#${getVibeGradientId(averageVibeIndex)})`}
                 stroke="none"
                 fillOpacity={1}
               />

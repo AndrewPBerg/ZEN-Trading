@@ -64,27 +64,22 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
     }
   }
 
-  // Get gradient colors based on alignment score
-  const getAlignmentGradient = () => {
-    if (alignmentScore >= 80) {
-      return {
-        start: "hsl(var(--accent))", // Gold
-        end: "hsl(142, 76%, 36%)", // Green
-      }
-    } else if (alignmentScore >= 50) {
-      return {
-        start: "hsl(var(--primary))", // Purple
-        end: "hsl(var(--secondary))", // Turquoise
-      }
-    } else {
-      return {
-        start: "hsl(var(--destructive))", // Red
-        end: "hsl(0, 70%, 45%)", // Darker red
-      }
-    }
+  // Get alignment gradient ID based on score
+  const getAlignmentGradientId = () => {
+    if (alignmentScore >= 80) return 'alignmentHigh'
+    if (alignmentScore >= 50) return 'alignmentMed'
+    return 'alignmentLow'
   }
 
-  const alignmentGradient = getAlignmentGradient()
+  // Get alignment color for UI elements
+  const getAlignmentColor = () => {
+    if (alignmentScore >= 80) return "hsl(var(--accent))"
+    if (alignmentScore >= 50) return "hsl(var(--primary))"
+    return "hsl(var(--destructive))"
+  }
+
+  const alignmentGradientId = getAlignmentGradientId()
+  const alignmentColor = getAlignmentColor()
 
   // Detect key points (local minima/maxima and significant moves)
   const detectKeyPoints = () => {
@@ -163,7 +158,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
             </p>
           </div>
           <div className="mt-2 pt-2 border-t border-border/50">
-            <p className="text-xs font-medium" style={{ color: alignmentGradient.start }}>
+            <p className="text-xs font-medium" style={{ color: alignmentColor }}>
               Alignment: {alignmentScore}%
             </p>
           </div>
@@ -187,7 +182,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
         cx={cx}
         cy={cy}
         r={4}
-        fill={isMaxima ? "hsl(var(--accent))" : alignmentGradient.start}
+        fill={isMaxima ? "hsl(var(--accent))" : alignmentColor}
         stroke="hsl(var(--background))"
         strokeWidth={2}
         opacity={0.8}
@@ -207,7 +202,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
                 {isPositive ? '+' : ''}${Math.abs(change.amount).toFixed(2)} ({isPositive ? '+' : ''}{change.percent.toFixed(2)}%)
               </span>
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-medium" style={{ color: alignmentGradient.start }}>
+              <span className="text-xs font-medium" style={{ color: alignmentColor }}>
                 {alignmentScore}% Aligned
               </span>
             </div>
@@ -252,10 +247,22 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <defs>
-                {/* Alignment-based gradient */}
-                <linearGradient id={`alignmentGradient-${ticker}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={alignmentGradient.start} />
-                  <stop offset="100%" stopColor={alignmentGradient.end} />
+                {/* High alignment gradient (80-100) */}
+                <linearGradient id="alignmentHigh" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(142, 76%, 36%)" }} />
+                </linearGradient>
+
+                {/* Medium alignment gradient (50-79) */}
+                <linearGradient id="alignmentMed" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--primary))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))" }} />
+                </linearGradient>
+
+                {/* Low alignment gradient (0-49) */}
+                <linearGradient id="alignmentLow" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--destructive))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--destructive))" }} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -277,12 +284,12 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
               <Line
                 type="monotone"
                 dataKey="close"
-                stroke={`url(#alignmentGradient-${ticker})`}
+                stroke={`url(#${alignmentGradientId})`}
                 strokeWidth={2.5}
                 dot={<CustomDot />}
                 activeDot={{
                   r: 5,
-                  fill: alignmentGradient.start,
+                  fill: alignmentColor,
                   stroke: "hsl(var(--background))",
                   strokeWidth: 2,
                 }}
@@ -295,7 +302,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: alignmentGradient.start }} />
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: alignmentColor }} />
           <span>
             {alignmentScore >= 80 ? 'High Alignment' : alignmentScore >= 50 ? 'Medium Alignment' : 'Low Alignment'}
           </span>
@@ -303,7 +310,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
         {keyPoints.size > 0 && (
           <>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-accent rounded-full" />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(var(--accent))" }} />
               <span>Key Points</span>
             </div>
           </>

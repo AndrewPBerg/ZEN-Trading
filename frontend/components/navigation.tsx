@@ -137,9 +137,9 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-100/95 via-indigo-100/95 to-purple-100/95 dark:from-purple-900/95 dark:via-indigo-900/95 dark:to-purple-900/95 backdrop-blur-lg border-b border-purple-300/40 dark:border-purple-500/20">
-      <div className="flex items-center justify-between px-6 py-3">
+      <div className="relative flex items-center justify-between px-6 py-3">
         {/* Navigation Items */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 z-10">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
@@ -171,9 +171,9 @@ export function Navigation() {
           })}
         </div>
 
-        {/* Center: Demo Mode Warning Bubble */}
+        {/* Center: Demo Mode Warning Bubble - Absolutely Centered */}
         {mounted && isDemo && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg pointer-events-none">
             <AlertTriangle className="w-3.5 h-3.5 text-white" />
             <span className="text-xs font-medium text-white whitespace-nowrap">
               Demo Mode Active: No Live Data
@@ -182,7 +182,7 @@ export function Navigation() {
         )}
 
         {/* Right Side: Market Status, Theme Toggle & User Menu */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 z-10">
           {/* Market Status Indicator */}
           {mounted && marketStatus && (
             <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20">

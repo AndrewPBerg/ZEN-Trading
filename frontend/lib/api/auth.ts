@@ -22,13 +22,13 @@ if (typeof window !== 'undefined') {
 
 // Types
 export interface UserProfile {
-  zodiac_sign: string
-  zodiac_symbol: string
-  zodiac_element: string
-  date_of_birth: string
-  investing_style: string
+  zodiac_sign: string | null
+  zodiac_symbol: string | null
+  zodiac_element: string | null
+  date_of_birth: string | null
+  investing_style: string | null
   onboarding_completed: boolean
-  starting_balance: string
+  starting_balance: number | null
   created_at: string
   updated_at: string
 }

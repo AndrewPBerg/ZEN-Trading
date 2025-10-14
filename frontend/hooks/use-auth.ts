@@ -1,28 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getCurrentUser, isAuthenticated, logout as authLogout, fetchCurrentUser } from "@/lib/api/auth"
+import { getCurrentUser, isAuthenticated, logout as authLogout, fetchCurrentUser, type User } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser, clearDemoMode } from "@/lib/demo-mode"
-
-interface UserProfile {
-  zodiac_sign: string
-  zodiac_symbol: string
-  zodiac_element: string
-  date_of_birth: string
-  investing_style: string
-  onboarding_completed: boolean
-}
-
-interface User {
-  id: number
-  email: string
-  username: string
-  first_name: string
-  last_name: string
-  date_joined: string
-  is_active: boolean
-  profile?: UserProfile
-}
 
 export function useAuth() {
   // Initialize user state immediately with localStorage data (synchronous)

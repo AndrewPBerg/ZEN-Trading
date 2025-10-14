@@ -14,6 +14,10 @@ function SettingsPageContent() {
   const router = useRouter()
   const { user } = useAuth()
 
+  if (!user) {
+    return null
+  }
+
   return (
     <div className="min-h-screen pt-20 pb-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">

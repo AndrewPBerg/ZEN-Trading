@@ -18,12 +18,12 @@ export interface DemoUser {
 }
 
 export interface DemoProfile {
-  date_of_birth: string
-  zodiac_sign: string
-  zodiac_symbol: string
-  zodiac_element: string
-  investing_style: string
-  starting_balance: string
+  date_of_birth: string | null
+  zodiac_sign: string | null
+  zodiac_symbol: string | null
+  zodiac_element: string | null
+  investing_style: string | null
+  starting_balance: number | null
   onboarding_completed: boolean
   created_at: string
   updated_at: string
@@ -101,12 +101,12 @@ export const setDemoUserProfile = (profile: Partial<DemoProfile>): void => {
   const existingProfile = getDemoProfile()
   
   const fullProfile: DemoProfile = {
-    date_of_birth: profile.date_of_birth || '',
-    zodiac_sign: profile.zodiac_sign || '',
-    zodiac_symbol: profile.zodiac_symbol || '',
-    zodiac_element: profile.zodiac_element || '',
-    investing_style: profile.investing_style || '',
-    starting_balance: profile.starting_balance || '100000.00',
+    date_of_birth: profile.date_of_birth || null,
+    zodiac_sign: profile.zodiac_sign || null,
+    zodiac_symbol: profile.zodiac_symbol || null,
+    zodiac_element: profile.zodiac_element || null,
+    investing_style: profile.investing_style || null,
+    starting_balance: profile.starting_balance || 100000,
     onboarding_completed: profile.onboarding_completed ?? true,
     created_at: existingProfile?.created_at || now,
     updated_at: now,
@@ -132,12 +132,12 @@ export const createDemoUser = (profileData: Partial<DemoProfile>): { user: DemoU
   }
   
   const demoProfile: DemoProfile = {
-    date_of_birth: profileData.date_of_birth || '',
-    zodiac_sign: profileData.zodiac_sign || '',
-    zodiac_symbol: profileData.zodiac_symbol || '',
-    zodiac_element: profileData.zodiac_element || '',
-    investing_style: profileData.investing_style || '',
-    starting_balance: profileData.starting_balance || '100000.00',
+    date_of_birth: profileData.date_of_birth || null,
+    zodiac_sign: profileData.zodiac_sign || null,
+    zodiac_symbol: profileData.zodiac_symbol || null,
+    zodiac_element: profileData.zodiac_element || null,
+    investing_style: profileData.investing_style || null,
+    starting_balance: profileData.starting_balance || 100000,
     onboarding_completed: true,
     created_at: now,
     updated_at: now,

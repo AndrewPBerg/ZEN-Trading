@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -23,7 +23,7 @@ const investingVibes = [
   { value: "playful", label: "Playful Mystic", description: "Let the stars guide my trades" },
 ]
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isDemo, setIsDemo] = useState(false)
@@ -66,7 +66,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
-          starting_balance: formData.startingBalance.toFixed(2),
+          starting_balance: formData.startingBalance,
         })
         
         console.log("Demo onboarding complete:", demoData)
@@ -244,5 +244,20 @@ export default function OnboardingPage() {
         </div> */}
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-purple-950/10 to-background">
+        <div className="text-center">
+          <Sparkles className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-pulse" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OnboardingPageContent />
+    </Suspense>
   )
 }

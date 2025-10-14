@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { LineChart, Line, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceArea, ReferenceDot } from "recharts"
+import { LineChart, Line, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, ReferenceDot } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Loader2, Star } from "lucide-react"
 import { getPortfolioHistory, type PortfolioHistoryPoint } from "@/lib/api/holdings"
@@ -49,15 +49,11 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
     }
   }
 
-  // Get gradient color based on vibe index
-  const getVibeGradientColor = (vibeIndex: number) => {
-    if (vibeIndex < 40) {
-      return currentTheme === 'dark' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.05)' // Red
-    } else if (vibeIndex < 70) {
-      return currentTheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' // Purple
-    } else {
-      return currentTheme === 'dark' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.05)' // Green
-    }
+  // Get vibe gradient ID based on vibe index
+  const getVibeGradientId = (vibeIndex: number) => {
+    if (vibeIndex < 40) return 'vibeBackgroundLow'
+    if (vibeIndex < 70) return 'vibeBackgroundMed'
+    return 'vibeBackgroundHigh'
   }
 
   // Calculate average vibe index for background color
@@ -199,42 +195,87 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
               <defs>
                 {/* Portfolio value gradient */}
                 <linearGradient id="portfolioGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={isPositive ? "hsl(var(--accent))" : "hsl(var(--destructive))"} />
-                  <stop offset="100%" stopColor={isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))"} />
+                  <stop offset="0%" style={{ stopColor: isPositive ? "hsl(var(--accent))" : "hsl(var(--destructive))" }} />
+                  <stop offset="100%" style={{ stopColor: isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }} />
                 </linearGradient>
                 
-                {/* Vibe index background gradient */}
-                <linearGradient id="vibeBackgroundGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={getVibeGradientColor(averageVibeIndex)} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={getVibeGradientColor(averageVibeIndex)} stopOpacity={0.1} />
+                {/* Vibe index background gradients - Low */}
+                <linearGradient id="vibeBackgroundLow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--destructive))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--destructive))", stopOpacity: 0.05 }} />
+                </linearGradient>
+
+                {/* Vibe index background gradients - Medium */}
+                <linearGradient id="vibeBackgroundMed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.05 }} />
+                </linearGradient>
+
+                {/* Vibe index background gradients - High */}
+                <linearGradient id="vibeBackgroundHigh" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--accent))", stopOpacity: 0.05 }} />
                 </linearGradient>
 
                 {/* Vibe index line gradient */}
                 <linearGradient id="vibeLineGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="hsl(var(--accent))" />
-                  <stop offset="50%" stopColor="hsl(var(--secondary))" />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" />
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))" }} />
+                  <stop offset="50%" style={{ stopColor: "hsl(var(--secondary))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--primary))" }} />
                 </linearGradient>
               </defs>
 
-              {/* Account start date band */}
+              {/* Account start date line with star */}
               {accountStartDate && (() => {
-                const startIndex = data.findIndex(point => point.timestamp === accountStartDate)
-                if (startIndex >= 0 && startIndex < data.length - 1) {
+                const startDataPoint = data.find(point => {
+                  const pointDate = new Date(point.timestamp).toDateString()
+                  const accountDate = new Date(accountStartDate).toDateString()
+                  return pointDate === accountDate
+                })
+                
+                if (startDataPoint) {
                   return (
-                    <ReferenceArea
-                      x1={data[startIndex].timestamp}
-                      x2={data[Math.min(startIndex + 1, data.length - 1)].timestamp}
-                      fill="hsl(var(--accent))"
-                      fillOpacity={0.15}
-                      label={{
-                        value: "★ Start",
-                        position: "top",
-                        fill: "hsl(var(--accent))",
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    />
+                    <>
+                      <ReferenceLine
+                        x={startDataPoint.timestamp}
+                        stroke={currentTheme === 'dark' ? '#FFD700' : '#DAA520'}
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
+                        yAxisId="portfolio"
+                        label={{
+                          value: "Account Start",
+                          position: "top",
+                          fill: currentTheme === 'dark' ? '#FFD700' : '#DAA520',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      />
+                      <ReferenceDot
+                        x={startDataPoint.timestamp}
+                        y={startDataPoint.portfolio_value}
+                        yAxisId="portfolio"
+                        r={8}
+                        fill={currentTheme === 'dark' ? '#FFD700' : '#DAA520'}
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                        shape={(props: any) => {
+                          const { cx, cy } = props
+                          return (
+                            <text
+                              x={cx}
+                              y={cy}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="hsl(var(--background))"
+                              fontSize={12}
+                              fontWeight="bold"
+                            >
+                              ★
+                            </text>
+                          )
+                        }}
+                      />
+                    </>
                   )
                 }
                 return null
@@ -246,7 +287,7 @@ export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
                 tickLine={false}
                 tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 tickFormatter={formatXAxis}
-                minTickGap={30}
+                minTickGap={selectedTimeframe === '1Y' ? 80 : selectedTimeframe === '5Y' ? 100 : 30}
               />
               
               {/* Primary Y-axis for portfolio value */}

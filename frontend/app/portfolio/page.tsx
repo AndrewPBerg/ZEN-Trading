@@ -498,15 +498,7 @@ function PortfolioPageContent() {
 
               {/* Combined Chart and Alignment Panel - Appears when selections are made */}
               {hasSelections && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right duration-500">
-                  {/* Combined Chart */}
-                  <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-                    <CombinedHoldingsChart 
-                      tickers={Array.from(selectedHoldings)}
-                      holdings={selectedHoldingsData}
-                    />
-                  </Card>
-
+                <div className="space-y-4">
                   {/* Alignment Scores for Selected Holdings */}
                   <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
                     <h3 className="text-sm font-semibold text-foreground mb-3">

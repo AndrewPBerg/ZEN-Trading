@@ -1,73 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, use } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StockChart } from "@/components/stock-chart"
-import { ArrowLeft, Star, TrendingUp, TrendingDown, Plus, ShoppingCart, Share2, Heart } from "lucide-react"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
+import { ArrowLeft, Star, TrendingUp, TrendingDown, Plus, ShoppingCart, Share2, Heart, Info, Loader2 } from "lucide-react"
+import { getStockByTicker, type Stock } from "@/lib/api/stocks"
+import { useRouter } from "next/navigation"
 
-// Mock stock detail data
-const stockDetails = {
-  AAPL: {
-    ticker: "AAPL",
-    name: "Apple Inc.",
-    price: 175.43,
-    change: 2.34,
-    changePercent: 1.35,
-    logo: "🍎",
-    alignment: 92,
-    zodiacMatch: "Leo",
-    element: "Fire",
-    sector: "Technology",
-    marketCap: "2.8T",
-    peRatio: 28.5,
-    dividend: "0.96%",
-    volume: "45.2M",
-    high52Week: 199.62,
-    low52Week: 164.08,
-    cosmicProfile: {
-      birthChart: "Founded April 1, 1976 - Aries Sun with Leo Rising",
-      planetaryInfluence: "Mars drives innovation, Sun illuminates premium positioning",
-      elementalEnergy: "Fire energy fuels creative breakthroughs and market leadership",
-      cosmicStrengths: ["Innovation Leadership", "Premium Brand Power", "Loyal Customer Base"],
-      cosmicChallenges: ["Market Saturation", "Regulatory Pressure", "Competition Intensity"],
-      astroNote:
-        "Apple's Aries foundation combined with Leo energy creates a perfect storm of innovation and luxury appeal. The company's fire element drives continuous reinvention.",
-    },
-    news: [
-      {
-        title: "Apple Unveils Revolutionary AI Features",
-        summary: "New machine learning capabilities align with cosmic innovation cycles",
-        time: "2 hours ago",
-        sentiment: "positive",
-      },
-      {
-        title: "Q4 Earnings Beat Expectations",
-        summary: "Strong performance reflects Leo energy in premium market positioning",
-        time: "1 day ago",
-        sentiment: "positive",
-      },
-      {
-        title: "Supply Chain Optimization Continues",
-        summary: "Aries determination overcomes global logistics challenges",
-        time: "3 days ago",
-        sentiment: "neutral",
-      },
-    ],
-  },
-}
-
-export default function StockDetailPage({ params }: { params: { ticker: string } }) {
+export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const [activeTab, setActiveTab] = useState("market")
   const [isWatchlisted, setIsWatchlisted] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
+  const [stock, setStock] = useState<Stock | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const ticker = params.ticker.toUpperCase()
-  const stock = stockDetails[ticker as keyof typeof stockDetails] || stockDetails.AAPL
+  const unwrappedParams = use(params)
+  const ticker = unwrappedParams.ticker.toUpperCase()
 
-  const isPositive = stock.change >= 0
+  useEffect(() => {
+    fetchStockData()
+  }, [ticker])
+
+  const fetchStockData = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const data = await getStockByTicker(ticker)
+      setStock(data)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load stock data'
+      setError(errorMessage)
+      console.error('Failed to fetch stock:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleWatchlist = () => {
     setIsWatchlisted(!isWatchlisted)
@@ -76,6 +51,37 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
   const handleLike = () => {
     setIsLiked(!isLiked)
   }
+
+  const handleBack = () => {
+    router.back()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error || !stock) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-foreground mb-2">Failed to load stock</p>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <Button onClick={handleBack}>Go Back</Button>
+        </div>
+      </div>
+    )
+  }
+
+  const currentPrice = Number(stock.current_price) || 0
+  const previousClose = Number(stock.previous_close) || currentPrice
+  const change = currentPrice - previousClose
+  const changePercent = previousClose ? (change / previousClose) * 100 : 0
+  const isPositive = change >= 0
+  const alignmentScore = stock.compatibility_score ? stock.compatibility_score * 25 : 65 // Convert 1-4 scale to 0-100
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative">
@@ -93,7 +99,7 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
         {/* Header */}
         <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/50 p-4">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="p-2">
+            <Button variant="ghost" size="sm" className="p-2" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex items-center gap-2">
@@ -114,30 +120,34 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-background/80 rounded-full flex items-center justify-center text-2xl">
-                    {stock.logo}
+                    {stock.ticker.charAt(0)}
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-foreground">{stock.ticker}</h1>
-                    <p className="text-sm text-muted-foreground">{stock.name}</p>
+                    <p className="text-sm text-muted-foreground">{stock.company_name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {stock.zodiacMatch}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {stock.element}
-                      </Badge>
+                      {stock.zodiac_sign && (
+                        <Badge variant="outline" className="text-xs">
+                          {stock.zodiac_sign}
+                        </Badge>
+                      )}
+                      {stock.element && (
+                        <Badge variant="secondary" className="text-xs">
+                          {stock.element}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-foreground">${stock.price.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-foreground">${currentPrice.toFixed(2)}</div>
                   <div className={`flex items-center gap-1 ${isPositive ? "text-green-500" : "text-red-500"}`}>
                     {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     <span className="text-sm font-medium">
                       {isPositive ? "+" : ""}
-                      {stock.change.toFixed(2)} ({isPositive ? "+" : ""}
-                      {stock.changePercent.toFixed(2)}%)
+                      {change.toFixed(2)} ({isPositive ? "+" : ""}
+                      {changePercent.toFixed(2)}%)
                     </span>
                   </div>
                 </div>
@@ -146,16 +156,24 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Star className="w-4 h-4 text-accent" fill="currentColor" />
-                  <span className="text-sm font-medium text-accent">{stock.alignment}% Cosmic Alignment</span>
+                  <span className="text-sm font-medium text-accent">{alignmentScore}% Cosmic Alignment</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 hover:bg-transparent"
+                    onClick={() => setShowInfoModal(true)}
+                  >
+                    <Info className="w-3 h-3 text-muted-foreground hover:text-accent transition-colors" />
+                  </Button>
                 </div>
-                <span className="text-xs text-muted-foreground">{stock.sector}</span>
+                <span className="text-xs text-muted-foreground">{stock.market_state || 'MARKET'}</span>
               </div>
             </div>
           </Card>
 
           {/* Price Chart */}
           <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
-            <StockChart ticker={stock.ticker} />
+            <StockChart ticker={stock.ticker} alignmentScore={alignmentScore} />
           </Card>
 
           {/* Tabs */}
@@ -170,29 +188,33 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
               <Card className="p-4 bg-card/80 backdrop-blur-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Market Cap</p>
-                    <p className="font-semibold text-foreground">{stock.marketCap}</p>
+                    <p className="text-xs text-muted-foreground">Current Price</p>
+                    <p className="font-semibold text-foreground">${currentPrice.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">P/E Ratio</p>
-                    <p className="font-semibold text-foreground">{stock.peRatio}</p>
+                    <p className="text-xs text-muted-foreground">Previous Close</p>
+                    <p className="font-semibold text-foreground">${previousClose.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Dividend Yield</p>
-                    <p className="font-semibold text-foreground">{stock.dividend}</p>
+                    <p className="text-xs text-muted-foreground">Market State</p>
+                    <p className="font-semibold text-foreground">{stock.market_state || 'N/A'}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Volume</p>
-                    <p className="font-semibold text-foreground">{stock.volume}</p>
+                    <p className="text-xs text-muted-foreground">Alignment</p>
+                    <p className="font-semibold text-accent">{alignmentScore}%</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">52W High</p>
-                    <p className="font-semibold text-green-500">${stock.high52Week}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">52W Low</p>
-                    <p className="font-semibold text-red-500">${stock.low52Week}</p>
-                  </div>
+                  {stock.zodiac_sign && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Zodiac Sign</p>
+                      <p className="font-semibold text-foreground">{stock.zodiac_sign}</p>
+                    </div>
+                  )}
+                  {stock.element && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Element</p>
+                      <p className="font-semibold text-foreground">{stock.element}</p>
+                    </div>
+                  )}
                 </div>
               </Card>
             </TabsContent>
@@ -200,74 +222,70 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
             <TabsContent value="astro" className="space-y-4 mt-4">
               <Card className="p-4 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/30">
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">Cosmic Birth Chart</h3>
-                    <p className="text-sm text-muted-foreground">{stock.cosmicProfile.birthChart}</p>
-                  </div>
+                  {stock.zodiac_sign && stock.date_founded && (
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">Cosmic Birth Chart</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Founded {new Date(stock.date_founded).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} 
+                        {' - '}
+                        {stock.zodiac_sign} energy
+                      </p>
+                    </div>
+                  )}
+
+                  {stock.element && (
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">Elemental Energy</h3>
+                      <p className="text-sm text-muted-foreground">
+                        This company carries {stock.element} element energy, which 
+                        {stock.element === 'Fire' && ' drives innovation and bold action.'}
+                        {stock.element === 'Earth' && ' provides stability and practical growth.'}
+                        {stock.element === 'Air' && ' fosters communication and adaptability.'}
+                        {stock.element === 'Water' && ' enhances intuition and emotional depth.'}
+                      </p>
+                    </div>
+                  )}
 
                   <div>
-                    <h3 className="font-semibold text-foreground mb-2">Planetary Influence</h3>
-                    <p className="text-sm text-muted-foreground">{stock.cosmicProfile.planetaryInfluence}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">Elemental Energy</h3>
-                    <p className="text-sm text-muted-foreground">{stock.cosmicProfile.elementalEnergy}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">Cosmic Strengths</h3>
+                    <h3 className="font-semibold text-foreground mb-2">Cosmic Alignment</h3>
                     <div className="flex flex-wrap gap-2">
-                      {stock.cosmicProfile.cosmicStrengths.map((strength) => (
-                        <Badge key={strength} variant="outline" className="text-xs bg-green-500/10 text-green-600">
-                          {strength}
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          alignmentScore >= 80 
+                            ? 'bg-green-500/10 text-green-600' 
+                            : alignmentScore >= 50 
+                            ? 'bg-blue-500/10 text-blue-600' 
+                            : 'bg-orange-500/10 text-orange-600'
+                        }`}
+                      >
+                        {alignmentScore >= 80 ? 'High Alignment' : alignmentScore >= 50 ? 'Medium Alignment' : 'Low Alignment'}
+                      </Badge>
+                      {stock.match_type && (
+                        <Badge variant="outline" className="text-xs bg-primary/10 text-primary">
+                          {stock.match_type === 'positive' ? 'Positive Match' : stock.match_type === 'neutral' ? 'Neutral Match' : 'Challenging Match'}
                         </Badge>
-                      ))}
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">Cosmic Challenges</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {stock.cosmicProfile.cosmicChallenges.map((challenge) => (
-                        <Badge key={challenge} variant="outline" className="text-xs bg-orange-500/10 text-orange-600">
-                          {challenge}
-                        </Badge>
-                      ))}
+                  {stock.description && (
+                    <div className="bg-background/50 rounded-lg p-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{stock.description}</p>
                     </div>
-                  </div>
-
-                  <div className="bg-background/50 rounded-lg p-3">
-                    <p className="text-sm text-muted-foreground leading-relaxed">{stock.cosmicProfile.astroNote}</p>
-                  </div>
+                  )}
                 </div>
               </Card>
             </TabsContent>
 
             <TabsContent value="news" className="space-y-3 mt-4">
-              {stock.news.map((article, index) => (
-                <Card key={index} className="p-4 bg-card/80 backdrop-blur-sm">
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-medium text-foreground text-sm leading-tight">{article.title}</h3>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ml-2 ${
-                          article.sentiment === "positive"
-                            ? "bg-green-500/10 text-green-600"
-                            : article.sentiment === "negative"
-                              ? "bg-red-500/10 text-red-600"
-                              : "bg-gray-500/10 text-gray-600"
-                        }`}
-                      >
-                        {article.sentiment}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{article.summary}</p>
-                    <p className="text-xs text-muted-foreground/70">{article.time}</p>
-                  </div>
-                </Card>
-              ))}
+              <Card className="p-4 bg-card/80 backdrop-blur-sm">
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    News feed coming soon. Check back later for cosmic market insights.
+                  </p>
+                </div>
+              </Card>
             </TabsContent>
           </Tabs>
 
@@ -292,6 +310,9 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
           </div>
         </div>
       </div>
+
+      {/* Alignment Info Modal */}
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
     </div>
   )
 }

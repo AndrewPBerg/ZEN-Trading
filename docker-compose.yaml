@@ -2,8 +2,8 @@ services:
   # Backend service using backend/Dockerfile
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./backend/Dockerfile
     ports:
       - "42069:42069"
     env_file:
@@ -16,9 +16,8 @@ services:
       - POSTGRES_PORT=5432
       - SECRET_KEY=dev-secret-key-change-in-production
       - DJANGO_DEBUG=1
-    command: >
-      sh -c "uv run manage.py makemigrations && uv run manage.py migrate && uv run gunicorn --bind 0.0.0.0:42069 --workers 3 django_app.wsgi:application"
-    # command: ["CMD", "uv run gunicorn", "--bind", "0.0.0.0:42069", "--workers", "3", "django_app.wsgi:application"]
+      - CLEAR_DB=true
+    command: ["uv", "run", "startup.py"]
     depends_on:
       pgsql:
         condition: service_healthy

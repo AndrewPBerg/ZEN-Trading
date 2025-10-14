@@ -1,0 +1,86 @@
+[
+  {
+    "sign": "Aries",
+    "element": "Fire",
+    "positive_matches": ["Leo", "Sagittarius", "Gemini", "Aquarius"],
+    "negative_matches": ["Cancer", "Capricorn"],
+    "neutral_matches": ["Taurus", "Virgo", "Libra", "Scorpio", "Pisces"]
+  },
+  {
+    "sign": "Taurus",
+    "element": "Earth",
+    "positive_matches": ["Virgo", "Capricorn", "Cancer", "Pisces"],
+    "negative_matches": ["Leo", "Aquarius"],
+    "neutral_matches": ["Aries", "Gemini", "Libra", "Scorpio", "Sagittarius"]
+  },
+  {
+    "sign": "Gemini",
+    "element": "Air",
+    "positive_matches": ["Libra", "Aquarius", "Aries", "Leo"],
+    "negative_matches": ["Virgo", "Pisces", "Scorpio"],
+    "neutral_matches": ["Taurus", "Cancer", "Sagittarius", "Capricorn"]
+  },
+  {
+    "sign": "Cancer",
+    "element": "Water",
+    "positive_matches": ["Scorpio", "Pisces", "Taurus", "Virgo"],
+    "negative_matches": ["Aries", "Libra"],
+    "neutral_matches": ["Gemini", "Leo", "Sagittarius", "Capricorn", "Aquarius"]
+  },
+  {
+    "sign": "Leo",
+    "element": "Fire",
+    "positive_matches": ["Aries", "Sagittarius", "Gemini", "Libra"],
+    "negative_matches": ["Taurus", "Scorpio"],
+    "neutral_matches": ["Cancer", "Virgo", "Aquarius", "Pisces", "Capricorn"]
+  },
+  {
+    "sign": "Virgo",
+    "element": "Earth",
+    "positive_matches": ["Taurus", "Capricorn", "Cancer", "Scorpio"],
+    "negative_matches": ["Gemini", "Sagittarius"],
+    "neutral_matches": ["Aries", "Leo", "Libra", "Aquarius", "Pisces"]
+  },
+  {
+    "sign": "Libra",
+    "element": "Air",
+    "positive_matches": ["Gemini", "Aquarius", "Leo", "Sagittarius"],
+    "negative_matches": ["Cancer", "Capricorn"],
+    "neutral_matches": ["Aries", "Taurus", "Virgo", "Scorpio", "Pisces"]
+  },
+  {
+    "sign": "Scorpio",
+    "element": "Water",
+    "positive_matches": ["Cancer", "Pisces", "Virgo", "Capricorn"],
+    "negative_matches": ["Leo", "Aquarius"],
+    "neutral_matches": ["Aries", "Taurus", "Gemini", "Libra", "Sagittarius"]
+  },
+  {
+    "sign": "Sagittarius",
+    "element": "Fire",
+    "positive_matches": ["Aries", "Leo", "Libra", "Aquarius"],
+    "negative_matches": ["Virgo", "Pisces", "Taurus"],
+    "neutral_matches": ["Gemini", "Cancer", "Scorpio", "Capricorn"]
+  },
+  {
+    "sign": "Capricorn",
+    "element": "Earth",
+    "positive_matches": ["Taurus", "Virgo", "Scorpio", "Pisces"],
+    "negative_matches": ["Aries", "Leo", "Libra"],
+    "neutral_matches": ["Gemini", "Cancer", "Sagittarius", "Aquarius"]
+  },
+  {
+    "sign": "Aquarius",
+    "element": "Air",
+    "positive_matches": ["Gemini", "Libra", "Aries", "Sagittarius"],
+    "negative_matches": ["Taurus", "Scorpio", "Cancer"],
+    "neutral_matches": ["Leo", "Virgo", "Capricorn", "Pisces"]
+  },
+  {
+    "sign": "Pisces",
+    "element": "Water",
+    "positive_matches": ["Cancer", "Scorpio", "Taurus", "Capricorn"],
+    "negative_matches": ["Gemini", "Sagittarius"],
+    "neutral_matches": ["Aries", "Leo", "Virgo", "Libra", "Aquarius"]
+  }
+]

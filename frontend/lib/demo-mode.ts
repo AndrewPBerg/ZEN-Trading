@@ -3,6 +3,9 @@
 const DEMO_MODE_KEY = 'zenTraderDemoMode'
 const DEMO_USER_KEY = 'zenTraderDemoUser'
 const DEMO_PROFILE_KEY = 'zenTraderDemoProfile'
+const DEMO_HOLDINGS_KEY = 'zenTraderDemoHoldings'
+const DEMO_WATCHLIST_KEY = 'zenTraderDemoWatchlist'
+const DEMO_DISLIKE_LIST_KEY = 'zenTraderDemoDislikeList'
 
 export interface DemoUser {
   id: number
@@ -20,6 +23,7 @@ export interface DemoProfile {
   zodiac_symbol: string
   zodiac_element: string
   investing_style: string
+  starting_balance: string
   onboarding_completed: boolean
   created_at: string
   updated_at: string
@@ -37,6 +41,9 @@ export const setDemoMode = (enabled: boolean): void => {
     localStorage.removeItem(DEMO_MODE_KEY)
     localStorage.removeItem(DEMO_USER_KEY)
     localStorage.removeItem(DEMO_PROFILE_KEY)
+    localStorage.removeItem(DEMO_HOLDINGS_KEY)
+    localStorage.removeItem(DEMO_WATCHLIST_KEY)
+    localStorage.removeItem(DEMO_DISLIKE_LIST_KEY)
   }
 }
 
@@ -99,6 +106,7 @@ export const setDemoUserProfile = (profile: Partial<DemoProfile>): void => {
     zodiac_symbol: profile.zodiac_symbol || '',
     zodiac_element: profile.zodiac_element || '',
     investing_style: profile.investing_style || '',
+    starting_balance: profile.starting_balance || '100000.00',
     onboarding_completed: profile.onboarding_completed ?? true,
     created_at: existingProfile?.created_at || now,
     updated_at: now,
@@ -129,6 +137,7 @@ export const createDemoUser = (profileData: Partial<DemoProfile>): { user: DemoU
     zodiac_symbol: profileData.zodiac_symbol || '',
     zodiac_element: profileData.zodiac_element || '',
     investing_style: profileData.investing_style || '',
+    starting_balance: profileData.starting_balance || '100000.00',
     onboarding_completed: true,
     created_at: now,
     updated_at: now,
@@ -149,6 +158,9 @@ export const clearDemoMode = (): void => {
   localStorage.removeItem(DEMO_MODE_KEY)
   localStorage.removeItem(DEMO_USER_KEY)
   localStorage.removeItem(DEMO_PROFILE_KEY)
+  localStorage.removeItem(DEMO_HOLDINGS_KEY)
+  localStorage.removeItem(DEMO_WATCHLIST_KEY)
+  localStorage.removeItem(DEMO_DISLIKE_LIST_KEY)
 }
 
 /**
@@ -164,5 +176,89 @@ export const getCompleteDemoUser = (): (DemoUser & { profile: DemoProfile }) | n
     ...user,
     profile,
   }
+}
+
+/**
+ * Get demo watchlist
+ */
+export const getDemoWatchlist = (): string[] => {
+  if (typeof window === 'undefined') return []
+  
+  try {
+    const stored = localStorage.getItem(DEMO_WATCHLIST_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Set demo watchlist
+ */
+export const setDemoWatchlist = (tickers: string[]): void => {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(DEMO_WATCHLIST_KEY, JSON.stringify(tickers))
+}
+
+/**
+ * Add ticker to demo watchlist
+ */
+export const addToDemoWatchlist = (ticker: string): void => {
+  const watchlist = getDemoWatchlist()
+  if (!watchlist.includes(ticker)) {
+    watchlist.push(ticker)
+    setDemoWatchlist(watchlist)
+  }
+}
+
+/**
+ * Remove ticker from demo watchlist
+ */
+export const removeFromDemoWatchlist = (ticker: string): void => {
+  const watchlist = getDemoWatchlist()
+  const filtered = watchlist.filter(t => t !== ticker)
+  setDemoWatchlist(filtered)
+}
+
+/**
+ * Get demo dislike list
+ */
+export const getDemoDislikeList = (): string[] => {
+  if (typeof window === 'undefined') return []
+  
+  try {
+    const stored = localStorage.getItem(DEMO_DISLIKE_LIST_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Set demo dislike list
+ */
+export const setDemoDislikeList = (tickers: string[]): void => {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(DEMO_DISLIKE_LIST_KEY, JSON.stringify(tickers))
+}
+
+/**
+ * Add ticker to demo dislike list
+ */
+export const addToDemoDislikeList = (ticker: string): void => {
+  const dislikeList = getDemoDislikeList()
+  if (!dislikeList.includes(ticker)) {
+    dislikeList.push(ticker)
+    setDemoDislikeList(dislikeList)
+  }
+}
+
+/**
+ * Remove ticker from demo dislike list
+ */
+export const removeFromDemoDislikeList = (ticker: string): void => {
+  const dislikeList = getDemoDislikeList()
+  const filtered = dislikeList.filter(t => t !== ticker)
+  setDemoDislikeList(filtered)
 }
 

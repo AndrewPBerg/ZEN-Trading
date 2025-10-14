@@ -6,95 +6,43 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles } from "lucide-react"
+import { AlignmentInfoModal } from "@/components/alignment-info-modal"
+import { Star, TrendingUp, TrendingDown, Heart, X, Sparkles, Calendar, Info, ExternalLink } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link"
 import { isDemoMode } from "@/lib/demo-mode"
+import { getZodiacMatchedStocks, addToWatchlist, addToDislikeList, type Stock } from "@/lib/api/stocks"
+import { toast } from "sonner"
 
-interface Stock {
-  ticker: string
-  name: string
-  price: number
-  change: number
-  changePercent: number
-  alignment: number
-  element: string
-  reason: string
-  logo: string
+// Zodiac sign emojis
+const ZODIAC_EMOJIS: Record<string, string> = {
+  Aries: "♈",
+  Taurus: "♉",
+  Gemini: "♊",
+  Cancer: "♋",
+  Leo: "♌",
+  Virgo: "♍",
+  Libra: "♎",
+  Scorpio: "♏",
+  Sagittarius: "♐",
+  Capricorn: "♑",
+  Aquarius: "♒",
+  Pisces: "♓",
 }
 
-const recommendedStocks: Stock[] = [
-  {
-    ticker: "AAPL",
-    name: "Apple Inc.",
-    price: 189.25,
-    change: 2.45,
-    changePercent: 1.31,
-    alignment: 92,
-    element: "Earth",
-    reason: "Virgo energy aligns with Apple's methodical innovation and attention to detail",
-    logo: "🍎",
-  },
-  {
-    ticker: "MSFT",
-    name: "Microsoft Corp.",
-    price: 378.85,
-    change: -1.2,
-    changePercent: -0.32,
-    alignment: 88,
-    element: "Earth",
-    reason: "Systematic approach to technology resonates with Virgo's analytical nature",
-    logo: "🪟",
-  },
-  {
-    ticker: "GOOGL",
-    name: "Alphabet Inc.",
-    price: 142.56,
-    change: 3.78,
-    changePercent: 2.72,
-    alignment: 85,
-    element: "Air",
-    reason: "Information organization and search perfection appeals to Virgo precision",
-    logo: "🔍",
-  },
-  {
-    ticker: "NVDA",
-    name: "NVIDIA Corp.",
-    price: 875.3,
-    change: 15.6,
-    changePercent: 1.82,
-    alignment: 79,
-    element: "Fire",
-    reason: "Technical excellence in AI chips matches Virgo's pursuit of perfection",
-    logo: "🎮",
-  },
-  {
-    ticker: "TSLA",
-    name: "Tesla Inc.",
-    price: 248.42,
-    change: -4.33,
-    changePercent: -1.71,
-    alignment: 76,
-    element: "Air",
-    reason: "Sustainable innovation and efficiency align with Virgo values",
-    logo: "⚡",
-  },
-  {
-    ticker: "META",
-    name: "Meta Platforms",
-    price: 484.2,
-    change: 8.9,
-    changePercent: 1.87,
-    alignment: 73,
-    element: "Air",
-    reason: "Connecting people systematically resonates with Virgo's service nature",
-    logo: "📱",
-  },
-]
+// Element colors
+const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Fire: { bg: "bg-red-500/20", text: "text-red-400", border: "border-red-500/30" },
+  Earth: { bg: "bg-green-500/20", text: "text-green-400", border: "border-green-500/30" },
+  Air: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
+  Water: { bg: "bg-cyan-500/20", text: "text-cyan-400", border: "border-cyan-500/30" },
+}
 
 function DiscoveryPageContent() {
   const { user } = useAuth()
   const [isDemo, setIsDemo] = useState(false)
+  const [stocks, setStocks] = useState<Stock[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedStocks, setLikedStocks] = useState<string[]>([])
   const [dislikedStocks, setDislikedStocks] = useState<string[]>([])
@@ -103,10 +51,55 @@ function DiscoveryPageContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userSign, setUserSign] = useState<string>("")
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   useEffect(() => {
+    // Clear demo mode if user has real auth tokens
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('zenTraderTokens')
+      if (stored) {
+        try {
+          const tokens = JSON.parse(stored)
+          if (tokens.access) {
+            // User has real tokens, clear demo mode
+            localStorage.removeItem('zenTraderDemoMode')
+            localStorage.removeItem('zenTraderDemoUser')
+            localStorage.removeItem('zenTraderDemoProfile')
+            localStorage.removeItem('zenTraderDemoHoldings')
+            localStorage.removeItem('zenTraderDemoWatchlist')
+            localStorage.removeItem('zenTraderDemoDislikeList')
+            // Clear the zodiac cache to force fresh data
+            localStorage.removeItem('cache_zodiac_matched_stocks')
+          }
+        } catch (e) {
+          console.error('Error checking tokens:', e)
+        }
+      }
+    }
     setIsDemo(isDemoMode())
+    fetchStocks()
   }, [])
+
+  const fetchStocks = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      // Force refresh to bypass cache and get fresh data
+      const response = await getZodiacMatchedStocks(true)
+      setStocks(response.matched_stocks)
+      setUserSign(response.user_sign)
+      console.log("Fetched stocks:", response.matched_stocks)
+    } catch (err) {
+      console.error("Failed to fetch stocks:", err)
+      setError(err instanceof Error ? err.message : "Failed to fetch stocks")
+      toast.error("Failed to load stocks")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleDragStart = (clientX: number, clientY: number) => {
     if (isAnimating) return
@@ -169,58 +162,195 @@ function DiscoveryPageContent() {
     handleDragEnd()
   }
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (isAnimating) return
     setIsAnimating(true)
     setSwipeDirection("right")
 
-    setTimeout(() => {
-      const currentStock = recommendedStocks[currentIndex]
+    const currentStock = stocks[currentIndex]
+
+    try {
+      await addToWatchlist(currentStock.ticker)
+      toast.success(`Added ${currentStock.ticker} to watchlist`)
       setLikedStocks((prev) => [...prev, currentStock.ticker])
-      nextCard()
+      
+      // Remove the stock from the stocks array so it won't appear again
+      setStocks((prev) => prev.filter((_, idx) => idx !== currentIndex))
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err)
+      toast.error("Failed to add to watchlist")
+      // Still move to next card even if API fails
+      setTimeout(() => {
+        nextCard()
+      }, 300)
+      return
+    }
+
+    setTimeout(() => {
+      setIsAnimating(false)
+      setSwipeDirection(null)
+      setDragOffset({ x: 0, y: 0 })
+      // Don't increment currentIndex since we removed the item from the array
     }, 300)
   }
 
-  const handleDislike = () => {
+  const handleDislike = async () => {
     if (isAnimating) return
     setIsAnimating(true)
     setSwipeDirection("left")
 
-    setTimeout(() => {
-      const currentStock = recommendedStocks[currentIndex]
+    const currentStock = stocks[currentIndex]
+
+    try {
+      await addToDislikeList(currentStock.ticker)
+      toast.success(`Added ${currentStock.ticker} to dislike list`)
       setDislikedStocks((prev) => [...prev, currentStock.ticker])
-      nextCard()
+      
+      // Remove the stock from the stocks array so it won't appear again
+      setStocks((prev) => prev.filter((_, idx) => idx !== currentIndex))
+    } catch (err) {
+      console.error("Failed to add to dislike list:", err)
+      toast.error("Failed to add to dislike list")
+      // Still move to next card even if API fails
+      setTimeout(() => {
+        nextCard()
+      }, 300)
+      return
+    }
+
+    setTimeout(() => {
+      setIsAnimating(false)
+      setSwipeDirection(null)
+      setDragOffset({ x: 0, y: 0 })
+      // Don't increment currentIndex since we removed the item from the array
     }, 300)
   }
 
   const nextCard = () => {
-    if (currentIndex < recommendedStocks.length - 1) {
-      setCurrentIndex((prev) => prev + 1)
-      setIsAnimating(false)
-      setSwipeDirection(null)
-      setDragOffset({ x: 0, y: 0 })
-    } else {
-      setIsAnimating(false)
-      setSwipeDirection(null)
-      setDragOffset({ x: 0, y: 0 })
-    }
+    setCurrentIndex((prev) => prev + 1)
+    setIsAnimating(false)
+    setSwipeDirection(null)
+    setDragOffset({ x: 0, y: 0 })
   }
 
-  const currentStock = recommendedStocks[currentIndex]
-  const isFinished = currentIndex >= recommendedStocks.length
+  const currentStock = stocks[currentIndex]
+  const isFinished = currentIndex >= stocks.length
 
   const rotation = isDragging ? dragOffset.x * 0.1 : 0
   const opacity = isDragging ? Math.max(0.7, 1 - Math.abs(dragOffset.x) * 0.002) : 1
   const scale = isDragging ? Math.max(0.95, 1 - Math.abs(dragOffset.x) * 0.0005) : 1
+
+  // Get match type badge
+  const getMatchBadge = (stock: Stock) => {
+    if (stock.is_same_sign) {
+      return (
+        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm">
+          ✨ Same Sign
+        </Badge>
+      )
+    }
+    if (stock.match_type === "positive") {
+      return (
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm">
+          ⭐ Positive Match
+        </Badge>
+      )
+    }
+    if (stock.match_type === "neutral") {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-sm">
+          ◯ Neutral Match
+        </Badge>
+      )
+    }
+    return (
+      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-sm">
+        ⚠ Negative Match
+      </Badge>
+    )
+  }
+
+  // Format founding date
+  const formatFoundingDate = (dateString: string | null) => {
+    if (!dateString) return "N/A"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    } catch {
+      return "N/A"
+    }
+  }
+
+  // Calculate price change percentage
+  const getPriceChange = (stock: Stock) => {
+    if (!stock.current_price || !stock.previous_close) return null
+    // Ensure prices are numbers (in case they come as strings from API)
+    const currentPrice = typeof stock.current_price === 'string' ? parseFloat(stock.current_price) : stock.current_price
+    const previousClose = typeof stock.previous_close === 'string' ? parseFloat(stock.previous_close) : stock.previous_close
+    
+    if (isNaN(currentPrice) || isNaN(previousClose)) return null
+    
+    const change = currentPrice - previousClose
+    const changePercent = (change / previousClose) * 100
+    return { change, changePercent }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+            <p className="text-muted-foreground">Loading cosmic matches...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md px-6">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">Oops!</h2>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={fetchStocks} size="sm">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
       {/* Header */}
       <div className="px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
-            {/* <p className="text-sm text-muted-foreground">Curated for {user?.first_name || "User"}</p> */}
+          <div className="flex items-center gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-transparent"
+                  onClick={() => setShowInfoModal(true)}
+                >
+                  <Info className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} matches`}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {isDemo && (
@@ -236,44 +366,9 @@ function DiscoveryPageContent() {
         </div>
       </div>
 
-      {/* Cosmic Insight Card */}
-      <div className="px-6 py-2 flex-shrink-0">
-        <Card className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground mb-1 text-sm">Today's Cosmic Insight</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Virgo energy is strong today! Your analytical nature will help you spot undervalued opportunities.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       <div className="flex-1 px-6 flex items-center justify-center overflow-hidden">
-        {!isFinished ? (
+        {!isFinished && currentStock ? (
           <div className="w-full max-w-lg">
-            {/* Progress indicator */}
-            <div className="flex items-center justify-center mb-4">
-              <div className="flex gap-2">
-                {recommendedStocks.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? "bg-accent scale-125"
-                        : index < currentIndex
-                          ? "bg-primary/50"
-                          : "bg-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Stock Card with Swipe Animation */}
             <div className="relative">
               <Card
@@ -299,66 +394,96 @@ function DiscoveryPageContent() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
+                {/* Match Badge */}
+                <div className="mb-4 flex justify-center">
+                  {getMatchBadge(currentStock)}
+                </div>
+
                 <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
-                    {currentStock.logo}
-                  </div>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <h2 className="text-xl font-bold text-foreground">{currentStock.ticker}</h2>
-                    <Badge
-                      variant="secondary"
-                      className={`text-xs ${
-                        currentStock.element === "Earth"
-                          ? "bg-green-500/20 text-green-400"
-                          : currentStock.element === "Air"
-                            ? "bg-blue-500/20 text-blue-400"
-                            : "bg-red-500/20 text-red-400"
-                      }`}
-                    >
-                      {currentStock.element}
-                    </Badge>
+                    <Link href={`/stock/${currentStock.ticker}`} passHref>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-accent/20"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
+                      </Button>
+                    </Link>
+                    {currentStock.element && ELEMENT_COLORS[currentStock.element] && (
+                      <Badge
+                        className={`text-xs ${ELEMENT_COLORS[currentStock.element].bg} ${ELEMENT_COLORS[currentStock.element].text} ${ELEMENT_COLORS[currentStock.element].border}`}
+                      >
+                        {currentStock.element}
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-muted-foreground mb-3 text-sm">{currentStock.name}</p>
+                  <p className="text-muted-foreground mb-1 text-sm font-medium">{currentStock.company_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentStock.zodiac_sign && `${ZODIAC_EMOJIS[currentStock.zodiac_sign]} ${currentStock.zodiac_sign}`}
+                  </p>
+                </div>
 
-                  <div className="text-center mb-4">
-                    <p className="text-2xl font-bold text-foreground">${currentStock.price}</p>
-                    <div
-                      className={`flex items-center justify-center gap-1 text-sm ${
-                        currentStock.change >= 0 ? "text-green-400" : "text-red-400"
-                      }`}
-                    >
-                      {currentStock.change >= 0 ? (
-                        <TrendingUp className="w-3 h-3" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3" />
-                      )}
-                      {currentStock.change >= 0 ? "+" : ""}
-                      {currentStock.changePercent}%
+                {/* Price Section */}
+                {currentStock.current_price && (
+                  <div className="text-center mb-4 pb-4 border-b border-border/50">
+                    <p className="text-2xl font-bold text-foreground">
+                      ${(typeof currentStock.current_price === 'string' 
+                        ? parseFloat(currentStock.current_price) 
+                        : currentStock.current_price).toFixed(2)}
+                    </p>
+                    {getPriceChange(currentStock) && (
+                      <div
+                        className={`flex items-center justify-center gap-1 text-sm ${
+                          getPriceChange(currentStock)!.change >= 0 ? "text-green-400" : "text-red-400"
+                        }`}
+                      >
+                        {getPriceChange(currentStock)!.change >= 0 ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3" />
+                        )}
+                        {getPriceChange(currentStock)!.change >= 0 ? "+" : ""}
+                        {getPriceChange(currentStock)!.changePercent.toFixed(2)}%
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Founding Date */}
+                <div className="mb-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-medium">Founded: {formatFoundingDate(currentStock.date_founded)}</span>
+                </div>
+
+                {/* Description */}
+                {currentStock.description && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Info className="w-5 h-5 text-muted-foreground" />
+                      <p className="text-sm font-semibold text-foreground">About</p>
                     </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                      {currentStock.description}
+                    </p>
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">Cosmic Alignment</span>
-                    <span className="text-xs font-medium text-accent">{currentStock.alignment}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${currentStock.alignment}%` }}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground text-center leading-relaxed mb-6">{currentStock.reason}</p>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 justify-center">
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={handleDislike}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDislike()
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
                     className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
                   >
@@ -366,7 +491,12 @@ function DiscoveryPageContent() {
                   </Button>
                   <Button
                     size="lg"
-                    onClick={handleLike}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLike()
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
                     className="w-14 h-14 rounded-full bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-400 hover:text-green-300 transition-all duration-200 hover:scale-110"
                   >
@@ -433,14 +563,18 @@ function DiscoveryPageContent() {
                 setCurrentIndex(0)
                 setLikedStocks([])
                 setDislikedStocks([])
+                fetchStocks()
               }}
               size="sm"
             >
-              Start Over
+              Refresh Stocks
             </Button>
           </div>
         )}
       </div>
+
+      {/* Alignment Info Modal */}
+      <AlignmentInfoModal open={showInfoModal} onOpenChange={setShowInfoModal} />
     </div>
   )
 }

@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,33 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { User, Mail, Calendar, Sparkles, TrendingUp, Bell, Lock, Palette } from "lucide-react"
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isLoading && !user && mounted) {
-      router.push("/login")
-    }
-  }, [user, isLoading, router, mounted])
-
-  if (isLoading || !mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading settings...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) return null
+  const { user } = useAuth()
 
   return (
     <div className="min-h-screen pt-20 pb-8 px-4">
@@ -228,6 +204,14 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsPageContent />
+    </ProtectedRoute>
   )
 }
 

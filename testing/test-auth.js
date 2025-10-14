@@ -16,18 +16,28 @@ const testUser = {
 // Helper function to make requests
 async function makeRequest(url, options = {}) {
   try {
+    // Properly merge headers
+    const { headers: optionsHeaders, ...restOptions } = options
+    const mergedHeaders = {
+      'Content-Type': 'application/json',
+      ...optionsHeaders
+    }
+    
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        ...options.headers
-      },
-      ...options
+      ...restOptions,
+      headers: mergedHeaders
     })
     
-    const data = await response.json()
+    // Try to parse JSON, but handle cases where response is not JSON
+    let data
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json()
+    } else {
+      const text = await response.text()
+      data = { error: 'Non-JSON response', text: text.substring(0, 200) }
+    }
+    
     return { response, data }
   } catch (error) {
     console.error('Request failed:', error)

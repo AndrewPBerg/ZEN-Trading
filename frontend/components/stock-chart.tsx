@@ -1,108 +1,320 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+import { getStockHistory, type StockHistoryData } from "@/lib/api/stocks"
+import { useTheme } from "next-themes"
 
-// Mock chart data
-const generateChartData = (ticker: string) => {
-  const basePrice = ticker === "AAPL" ? 175 : 250
-  const data = []
-
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-
-    const variation = (Math.random() - 0.5) * 10
-    const price = basePrice + variation + (Math.random() - 0.5) * 20
-
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      price: Math.max(price, basePrice * 0.8),
-      volume: Math.floor(Math.random() * 50000000) + 10000000,
-    })
-  }
-
-  return data
-}
+const TIMEFRAMES = ['1D', '5D', '1W', '1M', '3M', '1Y', '5Y'] as const
+type Timeframe = typeof TIMEFRAMES[number]
 
 interface StockChartProps {
   ticker: string
+  alignmentScore?: number
 }
 
-export function StockChart({ ticker }: StockChartProps) {
-  const data = generateChartData(ticker)
+export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('1M')
+  const [data, setData] = useState<StockHistoryData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { theme, systemTheme } = useTheme()
+  const currentTheme = theme === 'system' ? systemTheme : theme
+
+  useEffect(() => {
+    fetchData()
+  }, [ticker, selectedTimeframe])
+
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await getStockHistory(ticker, selectedTimeframe)
+      setData(response.data)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load chart data'
+      setError(errorMessage)
+      console.error('Failed to fetch stock history:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatXAxis = (timestamp: string) => {
+    const date = new Date(timestamp)
+    
+    switch (selectedTimeframe) {
+      case '1D':
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      case '5D':
+      case '1W':
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      case '1M':
+      case '3M':
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      case '1Y':
+        return date.toLocaleDateString('en-US', { month: 'short' })
+      case '5Y':
+        return date.toLocaleDateString('en-US', { year: '2-digit', month: 'short' })
+      default:
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+  }
+
+  // Get alignment gradient ID based on score
+  const getAlignmentGradientId = () => {
+    if (alignmentScore >= 80) return 'alignmentHigh'
+    if (alignmentScore >= 50) return 'alignmentMed'
+    return 'alignmentLow'
+  }
+
+  // Get alignment color for UI elements
+  const getAlignmentColor = () => {
+    if (alignmentScore >= 80) return "hsl(var(--accent))"
+    if (alignmentScore >= 50) return "hsl(var(--primary))"
+    return "hsl(var(--destructive))"
+  }
+
+  const alignmentGradientId = getAlignmentGradientId()
+  const alignmentColor = getAlignmentColor()
+
+  // Detect key points (local minima/maxima and significant moves)
+  const detectKeyPoints = () => {
+    if (data.length < 3) return new Set<number>()
+    
+    const keyPoints = new Set<number>()
+    
+    for (let i = 1; i < data.length - 1; i++) {
+      const prev = data[i - 1].close
+      const curr = data[i].close
+      const next = data[i + 1].close
+      
+      // Local maximum
+      if (curr > prev && curr > next) {
+        keyPoints.add(i)
+      }
+      // Local minimum
+      if (curr < prev && curr < next) {
+        keyPoints.add(i)
+      }
+      
+      // Significant price movement (>5% from previous)
+      const priceChange = Math.abs((curr - prev) / prev)
+      if (priceChange > 0.05) {
+        keyPoints.add(i)
+      }
+    }
+    
+    return keyPoints
+  }
+
+  const keyPoints = detectKeyPoints()
+
+  const calculateChange = () => {
+    if (data.length < 2) return { amount: 0, percent: 0 }
+    
+    const firstValue = data[0].close
+    const lastValue = data[data.length - 1].close
+    const amount = lastValue - firstValue
+    const percent = (amount / firstValue) * 100
+    
+    return { amount, percent }
+  }
+
+  const change = calculateChange()
+  const isPositive = change.amount >= 0
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload
+      const date = new Date(label)
+      
       return (
         <div className="bg-background/90 backdrop-blur-sm border border-border/50 rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="text-sm text-primary">
-            Price: <span className="font-semibold">${payload[0].value.toFixed(2)}</span>
+          <p className="text-xs text-muted-foreground mb-1">
+            {date.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric',
+              hour: selectedTimeframe === '1D' ? 'numeric' : undefined,
+              minute: selectedTimeframe === '1D' ? '2-digit' : undefined
+            })}
           </p>
+          <div className="space-y-1">
+            <p className="text-sm text-foreground font-semibold">
+              Close: ${data.close.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Open: ${data.open.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              High: ${data.high.toFixed(2)} / Low: ${data.low.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Vol: {(data.volume / 1000000).toFixed(1)}M
+            </p>
+          </div>
+          <div className="mt-2 pt-2 border-t border-border/50">
+            <p className="text-xs font-medium" style={{ color: alignmentColor }}>
+              Alignment: {alignmentScore}%
+            </p>
+          </div>
         </div>
       )
     }
     return null
   }
 
+  // Custom dot for key points
+  const CustomDot = (props: any) => {
+    const { cx, cy, index } = props
+    if (!keyPoints.has(index)) return null
+    
+    const isMaxima = index > 0 && index < data.length - 1 && 
+                     data[index].close > data[index - 1].close && 
+                     data[index].close > data[index + 1].close
+    
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={isMaxima ? "hsl(var(--accent))" : alignmentColor}
+        stroke="hsl(var(--background))"
+        strokeWidth={2}
+        opacity={0.8}
+      />
+    )
+  }
+
   return (
     <div className="space-y-4">
+      {/* Header with alignment badge and change */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground">Price Chart (30 Days)</h3>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full" />
-          <span className="text-xs text-muted-foreground">Cosmic Trend</span>
+        <div>
+          <h3 className="font-semibold text-foreground">Price Chart</h3>
+          {!loading && !error && data.length > 0 && (
+            <div className={`flex items-center gap-2 text-sm mt-1`}>
+              <span className={`font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                {isPositive ? '+' : ''}${Math.abs(change.amount).toFixed(2)} ({isPositive ? '+' : ''}{change.percent.toFixed(2)}%)
+              </span>
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="text-xs font-medium" style={{ color: alignmentColor }}>
+                {alignmentScore}% Aligned
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <defs>
-              <linearGradient id="cosmicGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--primary))" />
-                <stop offset="100%" stopColor="hsl(var(--secondary))" />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="date"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              domain={["dataMin - 5", "dataMax + 5"]}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="price"
-              stroke="url(#cosmicGradient)"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{
-                r: 4,
-                fill: "hsl(var(--accent))",
-                stroke: "hsl(var(--background))",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* Timeframe Selector */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-2">
+        {TIMEFRAMES.map((timeframe) => (
+          <Button
+            key={timeframe}
+            variant={selectedTimeframe === timeframe ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedTimeframe(timeframe)}
+            className={`text-xs px-3 py-1 ${
+              selectedTimeframe === timeframe 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background/50 hover:bg-accent'
+            }`}
+          >
+            {timeframe}
+          </Button>
+        ))}
       </div>
 
+      {/* Chart or Loading/Error State */}
+      {loading ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      ) : data.length === 0 ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">No data available</p>
+        </div>
+      ) : (
+        <div className="h-64 w-full recharts-theme-wrapper" key={`stock-chart-${ticker}-${currentTheme}`}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <defs>
+                {/* High alignment gradient (80-100) */}
+                <linearGradient id="alignmentHigh" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(142, 76%, 36%)" }} />
+                </linearGradient>
+
+                {/* Medium alignment gradient (50-79) */}
+                <linearGradient id="alignmentMed" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--primary))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))" }} />
+                </linearGradient>
+
+                {/* Low alignment gradient (0-49) */}
+                <linearGradient id="alignmentLow" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--destructive))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--destructive))" }} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="timestamp"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tickFormatter={formatXAxis}
+                minTickGap={30}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                domain={['dataMin - 5', 'dataMax + 5']}
+                tickFormatter={(value) => `$${value.toFixed(0)}`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="close"
+                stroke={`url(#${alignmentGradientId})`}
+                strokeWidth={2.5}
+                dot={<CustomDot />}
+                activeDot={{
+                  r: 5,
+                  fill: alignmentColor,
+                  stroke: "hsl(var(--background))",
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Legend */}
       <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-          <span>Cosmic alignment: Strong</span>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: alignmentColor }} />
+          <span>
+            {alignmentScore >= 80 ? 'High Alignment' : alignmentScore >= 50 ? 'Medium Alignment' : 'Low Alignment'}
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-secondary rounded-full animate-pulse delay-300" />
-          <span>Trend: Ascending</span>
-        </div>
+        {keyPoints.size > 0 && (
+          <>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(var(--accent))" }} />
+              <span>Key Points</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

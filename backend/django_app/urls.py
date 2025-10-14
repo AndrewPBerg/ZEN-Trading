@@ -30,6 +30,11 @@ api_urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
+    # Stock endpoints (real-time market data)
+    path('stocks/', views.StockListView.as_view(), name='stock-list'),
+    path('stocks/<str:ticker>/history/', views.StockHistoryView.as_view(), name='stock-history'),
+    path('stocks/<str:ticker>/', views.StockDetailView.as_view(), name='stock-detail'),
+    
     # Class-based views
     path('users/', views.UserListCreateView.as_view(), name='user-list-create'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
@@ -44,6 +49,29 @@ api_urlpatterns = [
     
     # Onboarding endpoint
     path('onboarding/', views.OnboardingView.as_view(), name='onboarding'),
+    
+    # Holdings endpoint
+    path('holdings/', views.UserHoldingsView.as_view(), name='user-holdings'),
+    
+    # Portfolio summary endpoint
+    path('portfolio/', views.PortfolioSummaryView.as_view(), name='portfolio-summary'),
+    
+    # Portfolio history endpoint
+    path('portfolio/history/', views.PortfolioHistoryView.as_view(), name='portfolio-history'),
+    
+    # Zodiac sign matching endpoints
+    path('zodiac/matched-stocks/', views.ZodiacMatchedStocksView.as_view(), name='zodiac-matched-stocks'),
+    path('zodiac/matching-rules/', views.ZodiacSignMatchingListView.as_view(), name='zodiac-matching-rules'),
+    
+    # User preferences (watchlist and dislike list)
+    path('watchlist/', views.UserWatchlistView.as_view(), name='user-watchlist'),
+    path('dislike-list/', views.UserDislikeListView.as_view(), name='user-dislike-list'),
+    
+    # Horoscope endpoint
+    path('horoscope/', views.DailyHoroscopeView.as_view(), name='daily-horoscope'),
+    
+    # Market status (public endpoint)
+    path('market/status/', views.market_status, name='market-status'),
 ]
 
 urlpatterns = [

@@ -9,8 +9,9 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
 import { ZodiacDetector } from "@/components/zodiac-detector"
-import { ArrowRight, Sparkles, Star } from "lucide-react"
+import { ArrowRight, Sparkles, Star, DollarSign } from "lucide-react"
 import { submitOnboarding } from "@/lib/api/onboarding"
 import type { OnboardingData } from "@/lib/api/onboarding"
 import { createDemoUser, isDemoMode, setDemoMode } from "@/lib/demo-mode"
@@ -29,6 +30,7 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState({
     birthDate: "",
     investingVibe: "",
+    startingBalance: 100000,
   })
   const [detectedZodiac, setDetectedZodiac] = useState<{
     sign: string
@@ -64,6 +66,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
+          starting_balance: formData.startingBalance.toFixed(2),
         })
         
         console.log("Demo onboarding complete:", demoData)
@@ -78,6 +81,7 @@ export default function OnboardingPage() {
           zodiac_symbol: detectedZodiac.symbol,
           zodiac_element: detectedZodiac.element,
           investing_style: formData.investingVibe,
+          starting_balance: formData.startingBalance,
         }
 
         const result = await submitOnboarding(onboardingData)
@@ -132,19 +136,15 @@ export default function OnboardingPage() {
               <div className="space-y-2">
                 <Label htmlFor="birthDate" className="text-sm font-medium text-foreground">
                   Date of Birth
+                  <span className="text-xs text-muted-foreground">Must be at least 18 years old</span>
                 </Label>
                 <Input
                   id="birthDate"
                   type="date"
                   value={formData.birthDate}
                   min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split("T")[0]}
-                  max={new Date().toISOString().split("T")[0]}
-                  onFocus={e => {
-                    if (!e.target.value) {
-                      // Set default value to earliest selectable date if empty
-                      e.target.value = new Date(new Date().setFullYear(new Date().getFullYear() - 20)).toISOString().split("T")[0]
-                    }
-                  }}
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}
+                  
                   onChange={e => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
                   className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground dark:text-foreground [&::-webkit-calendar-picker-indicator]:dark:invert [&::-webkit-calendar-picker-indicator]:dark:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:border-primary/70 dark:hover:border-primary/80"
                 />
@@ -175,14 +175,41 @@ export default function OnboardingPage() {
                         value={vibe.value}
                         className="focus:bg-primary/10 dark:focus:bg-primary/20 focus:text-foreground"
                       >
-                        <div className="flex flex-col items-center text-center">
-                          <span className="font-medium text-foreground">{vibe.label}</span>
-                          <span className="text-xs text-muted-foreground">{vibe.description}</span>
+                        <div className="w-full flex flex-col items-center justify-center text-center">
+                          <span className="w-full font-medium text-foreground flex center">{vibe.label}</span>
+                          <span className="w-full text-xs text-muted-foreground flex center">{vibe.description}</span>
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Starting Balance Selection */}
+          <Card className="p-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-primary/20 dark:border-primary/30">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium text-foreground">Starting Account Balance</Label>
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 px-3 py-1.5 rounded-lg border border-primary/20 dark:border-primary/30">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  <span className="text-lg font-bold text-foreground">
+                    {formData.startingBalance.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <Slider
+                value={[formData.startingBalance]}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, startingBalance: value[0] }))}
+                min={10000}
+                max={1000000}
+                step={10000}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>$10,000</span>
+                <span>$1,000,000</span>
               </div>
             </div>
           </Card>

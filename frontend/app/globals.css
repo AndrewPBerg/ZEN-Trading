@@ -209,3 +209,40 @@
 .animate-twinkle {
   animation: twinkle 3s ease-in-out infinite;
 }
+
+/* Recharts theme-aware wrapper */
+.recharts-theme-wrapper {
+  /* Define theme colors as custom properties that recharts can use */
+  --recharts-primary: hsl(var(--primary));
+  --recharts-secondary: hsl(var(--secondary));
+  --recharts-accent: hsl(var(--accent));
+  --recharts-destructive: hsl(var(--destructive));
+  --recharts-muted: hsl(var(--muted-foreground));
+  --recharts-background: hsl(var(--background));
+  --recharts-foreground: hsl(var(--foreground));
+}
+
+/* Force recharts SVG elements to update on theme change */
+.recharts-theme-wrapper .recharts-surface {
+  color-scheme: inherit;
+}
+
+/* Make recharts text elements respect theme */
+.recharts-theme-wrapper .recharts-text,
+.recharts-theme-wrapper .recharts-cartesian-axis-tick-value {
+  fill: var(--recharts-muted) !important;
+}
+
+.recharts-theme-wrapper .recharts-label {
+  fill: var(--recharts-foreground);
+}
+
+/* Theme-aware recharts tooltip */
+.recharts-theme-wrapper .recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* Ensure gradients update with theme */
+.recharts-theme-wrapper linearGradient stop {
+  transition: stop-color 0.3s ease;
+}

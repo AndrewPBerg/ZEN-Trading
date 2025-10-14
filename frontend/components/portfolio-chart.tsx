@@ -1,44 +1,136 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+import { useState, useEffect } from "react"
+import { LineChart, Line, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, ReferenceDot } from "recharts"
+import { Button } from "@/components/ui/button"
+import { Loader2, Star } from "lucide-react"
+import { getPortfolioHistory, type PortfolioHistoryPoint } from "@/lib/api/holdings"
+import { useTheme } from "next-themes"
 
-// Mock portfolio performance data
-const generatePortfolioData = () => {
-  const data = []
-  let baseValue = 12000
+const TIMEFRAMES = ['1D', '5D', '1W', '1M', '3M', '1Y', '5Y'] as const
+type Timeframe = typeof TIMEFRAMES[number]
 
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-
-    const variation = (Math.random() - 0.4) * 500 // Slight upward bias
-    baseValue += variation
-    const vibeIndex = Math.max(60, Math.min(95, 78 + (Math.random() - 0.5) * 20))
-
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      value: Math.max(baseValue, 10000),
-      vibeIndex: Math.round(vibeIndex),
-    })
-  }
-
-  return data
+interface PortfolioChartProps {
+  accountStartDate?: string | null
 }
 
-export function PortfolioChart() {
-  const data = generatePortfolioData()
+export function PortfolioChart({ accountStartDate }: PortfolioChartProps) {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('1M')
+  const [data, setData] = useState<PortfolioHistoryPoint[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { theme, systemTheme } = useTheme()
+  const currentTheme = theme === 'system' ? systemTheme : theme
+
+  useEffect(() => {
+    fetchData()
+  }, [selectedTimeframe])
+
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await getPortfolioHistory(selectedTimeframe)
+      setData(response.data)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load chart data'
+      
+      // If portfolio not found, user hasn't completed onboarding
+      if (errorMessage.includes('Portfolio history not found')) {
+        setError('Complete onboarding to see your portfolio history')
+      } else {
+        setError(errorMessage)
+      }
+      
+      console.error('Failed to fetch portfolio history:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Get vibe gradient ID based on vibe index
+  const getVibeGradientId = (vibeIndex: number) => {
+    if (vibeIndex < 40) return 'vibeBackgroundLow'
+    if (vibeIndex < 70) return 'vibeBackgroundMed'
+    return 'vibeBackgroundHigh'
+  }
+
+  // Calculate average vibe index for background color
+  const averageVibeIndex = data.length > 0 
+    ? data.reduce((sum, point) => sum + (point.cosmic_vibe_index || 50), 0) / data.length 
+    : 50
+
+  const formatXAxis = (timestamp: string) => {
+    const date = new Date(timestamp)
+    
+    switch (selectedTimeframe) {
+      case '1D':
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      case '5D':
+      case '1W':
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' })
+      case '1M':
+      case '3M':
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      case '1Y':
+        return date.toLocaleDateString('en-US', { month: 'short' })
+      case '5Y':
+        return date.toLocaleDateString('en-US', { year: '2-digit', month: 'short' })
+      default:
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+  }
+
+  const calculateChange = () => {
+    if (data.length < 2) return { amount: 0, percent: 0 }
+    
+    const firstValue = data[0].portfolio_value
+    const lastValue = data[data.length - 1].portfolio_value
+    const amount = lastValue - firstValue
+    const percent = (amount / firstValue) * 100
+    
+    return { amount, percent }
+  }
+
+  const change = calculateChange()
+  const isPositive = change.amount >= 0
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const portfolioPayload = payload.find((p: any) => p.dataKey === 'portfolio_value')
+      const vibePayload = payload.find((p: any) => p.dataKey === 'cosmic_vibe_index')
+      const value = portfolioPayload?.value
+      const vibeIndex = vibePayload?.value || portfolioPayload?.payload?.cosmic_vibe_index
+      const date = new Date(label)
+      
+      // Determine vibe color
+      let vibeColor = 'hsl(var(--primary))'
+      if (vibeIndex < 40) vibeColor = 'hsl(var(--destructive))'
+      else if (vibeIndex >= 70) vibeColor = 'hsl(var(--accent))'
+      
       return (
         <div className="bg-background/90 backdrop-blur-sm border border-border/50 rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium text-foreground">{label}</p>
-          <p className="text-sm text-primary">
-            Value: <span className="font-semibold">${payload[0].value.toLocaleString()}</span>
+          <p className="text-xs text-muted-foreground mb-1">
+            {date.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric',
+              hour: selectedTimeframe === '1D' ? 'numeric' : undefined,
+              minute: selectedTimeframe === '1D' ? '2-digit' : undefined
+            })}
           </p>
-          <p className="text-sm text-accent">
-            Vibe Index: <span className="font-semibold">{payload[1]?.value || payload[0].payload.vibeIndex}%</span>
-          </p>
+          {value !== undefined && (
+            <p className="text-sm text-foreground font-semibold">
+              ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          )}
+          {vibeIndex !== undefined && (
+            <p className="text-xs mt-1 font-medium flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: vibeColor }} />
+              <span style={{ color: vibeColor }}>Cosmic Vibe: {vibeIndex}%</span>
+            </p>
+          )}
         </div>
       )
     }
@@ -47,99 +139,226 @@ export function PortfolioChart() {
 
   return (
     <div className="space-y-4">
+      {/* Header with Change Badge */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground">Portfolio Performance</h3>
-        <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full" />
-            <span className="text-muted-foreground">Value</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-accent rounded-full" />
-            <span className="text-muted-foreground">Vibe Index</span>
-          </div>
+        <div>
+          <h3 className="font-semibold text-foreground">Portfolio Performance</h3>
+          {!loading && !error && data.length > 0 && (
+            <div className={`flex items-center gap-1 text-sm mt-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+              <span className="font-medium">
+                {isPositive ? '+' : ''}${Math.abs(change.amount).toFixed(2)}
+              </span>
+              <span className="text-xs">
+                ({isPositive ? '+' : ''}{change.percent.toFixed(2)}%)
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <defs>
-              <linearGradient id="portfolioGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--primary))" />
-                <stop offset="100%" stopColor="hsl(var(--secondary))" />
-              </linearGradient>
-              <linearGradient id="vibeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="date"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-            />
-            <YAxis
-              yAxisId="value"
-              orientation="left"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              domain={["dataMin - 500", "dataMax + 500"]}
-            />
-            <YAxis
-              yAxisId="vibe"
-              orientation="right"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              domain={[50, 100]}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              yAxisId="value"
-              type="monotone"
-              dataKey="value"
-              stroke="url(#portfolioGradient)"
-              strokeWidth={3}
-              dot={false}
-              activeDot={{
-                r: 4,
-                fill: "hsl(var(--primary))",
-                stroke: "hsl(var(--background))",
-                strokeWidth: 2,
-              }}
-            />
-            <Line
-              yAxisId="vibe"
-              type="monotone"
-              dataKey="vibeIndex"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
-              activeDot={{
-                r: 3,
-                fill: "hsl(var(--accent))",
-                stroke: "hsl(var(--background))",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* Timeframe Selector */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-2">
+        {TIMEFRAMES.map((timeframe) => (
+          <Button
+            key={timeframe}
+            variant={selectedTimeframe === timeframe ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedTimeframe(timeframe)}
+            className={`text-xs px-3 py-1 ${
+              selectedTimeframe === timeframe 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background/50 hover:bg-accent'
+            }`}
+          >
+            {timeframe}
+          </Button>
+        ))}
       </div>
 
-      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-          <span>Portfolio trending upward</span>
+      {/* Chart or Loading/Error State */}
+      {loading ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-accent rounded-full animate-pulse delay-300" />
-          <span>Cosmic alignment strong</span>
+      ) : error ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
-      </div>
+      ) : data.length === 0 ? (
+        <div className="h-64 w-full flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">No data available</p>
+        </div>
+      ) : (
+        <div className="h-64 w-full recharts-theme-wrapper" key={`portfolio-chart-${currentTheme}`}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 5, right: 45, left: 5, bottom: 5 }}>
+              <defs>
+                {/* Portfolio value gradient */}
+                <linearGradient id="portfolioGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: isPositive ? "hsl(var(--accent))" : "hsl(var(--destructive))" }} />
+                  <stop offset="100%" style={{ stopColor: isPositive ? "hsl(var(--primary))" : "hsl(var(--destructive))" }} />
+                </linearGradient>
+                
+                {/* Vibe index background gradients - Low */}
+                <linearGradient id="vibeBackgroundLow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--destructive))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--destructive))", stopOpacity: 0.05 }} />
+                </linearGradient>
+
+                {/* Vibe index background gradients - Medium */}
+                <linearGradient id="vibeBackgroundMed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.05 }} />
+                </linearGradient>
+
+                {/* Vibe index background gradients - High */}
+                <linearGradient id="vibeBackgroundHigh" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))", stopOpacity: 0.2 }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--accent))", stopOpacity: 0.05 }} />
+                </linearGradient>
+
+                {/* Vibe index line gradient */}
+                <linearGradient id="vibeLineGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" style={{ stopColor: "hsl(var(--accent))" }} />
+                  <stop offset="50%" style={{ stopColor: "hsl(var(--secondary))" }} />
+                  <stop offset="100%" style={{ stopColor: "hsl(var(--primary))" }} />
+                </linearGradient>
+              </defs>
+
+              {/* Account start date line with star */}
+              {accountStartDate && (() => {
+                const startDataPoint = data.find(point => {
+                  const pointDate = new Date(point.timestamp).toDateString()
+                  const accountDate = new Date(accountStartDate).toDateString()
+                  return pointDate === accountDate
+                })
+                
+                if (startDataPoint) {
+                  return (
+                    <>
+                      <ReferenceLine
+                        x={startDataPoint.timestamp}
+                        stroke="hsl(var(--accent))"
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
+                        yAxisId="portfolio"
+                        label={{
+                          value: "Account Start",
+                          position: "top",
+                          fill: "hsl(var(--accent))",
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      />
+                      <ReferenceDot
+                        x={startDataPoint.timestamp}
+                        y={startDataPoint.portfolio_value}
+                        yAxisId="portfolio"
+                        r={8}
+                        fill="hsl(var(--accent))"
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                        shape={(props: any) => {
+                          const { cx, cy } = props
+                          return (
+                            <text
+                              x={cx}
+                              y={cy}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="hsl(var(--background))"
+                              fontSize={12}
+                              fontWeight="bold"
+                            >
+                              ★
+                            </text>
+                          )
+                        }}
+                      />
+                    </>
+                  )
+                }
+                return null
+              })()}
+
+              <XAxis
+                dataKey="timestamp"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tickFormatter={formatXAxis}
+                minTickGap={selectedTimeframe === '1Y' ? 80 : selectedTimeframe === '5Y' ? 100 : 30}
+              />
+              
+              {/* Primary Y-axis for portfolio value */}
+              <YAxis
+                yAxisId="portfolio"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                domain={['dataMin - 1000', 'dataMax + 1000']}
+              />
+              
+              {/* Secondary Y-axis for vibe index */}
+              <YAxis
+                yAxisId="vibe"
+                orientation="right"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "hsl(var(--accent))" }}
+                domain={[0, 100]}
+                tickFormatter={(value) => `${value}%`}
+              />
+
+              <Tooltip content={<CustomTooltip />} />
+
+              {/* Vibe index background area */}
+              <Area
+                yAxisId="vibe"
+                type="monotone"
+                dataKey="cosmic_vibe_index"
+                fill={`url(#${getVibeGradientId(averageVibeIndex)})`}
+                stroke="none"
+                fillOpacity={1}
+              />
+
+              {/* Portfolio value line */}
+              <Line
+                yAxisId="portfolio"
+                type="monotone"
+                dataKey="portfolio_value"
+                stroke="url(#portfolioGradient)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{
+                  r: 5,
+                  fill: isPositive ? "hsl(var(--accent))" : "hsl(var(--destructive))",
+                  stroke: "hsl(var(--background))",
+                  strokeWidth: 2,
+                }}
+              />
+
+              {/* Vibe index overlay line */}
+              <Line
+                yAxisId="vibe"
+                type="monotone"
+                dataKey="cosmic_vibe_index"
+                stroke="url(#vibeLineGradient)"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+                activeDot={{
+                  r: 4,
+                  fill: "hsl(var(--accent))",
+                  stroke: "hsl(var(--background))",
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }

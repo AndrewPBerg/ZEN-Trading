@@ -21,7 +21,19 @@ if (typeof window !== 'undefined') {
 
 
 // Types
-interface User {
+export interface UserProfile {
+  zodiac_sign: string
+  zodiac_symbol: string
+  zodiac_element: string
+  date_of_birth: string
+  investing_style: string
+  onboarding_completed: boolean
+  starting_balance: string
+  created_at: string
+  updated_at: string
+}
+
+export interface User {
   id: number
   email: string
   username: string
@@ -29,6 +41,7 @@ interface User {
   last_name: string
   date_joined: string
   is_active: boolean
+  profile?: UserProfile
 }
 
 interface AuthTokens {
@@ -227,6 +240,78 @@ export const logout = (): void => {
 
 export const getCurrentUser = (): User | null => {
   return getStoredUser()
+}
+
+/**
+ * Fetch the current user from the API and update localStorage
+ * This ensures we have the latest user profile data
+ */
+export const fetchCurrentUser = async (): Promise<User | null> => {
+  const tokens = getStoredTokens()
+  if (!tokens?.access) {
+    console.log('🔐 No access token, cannot fetch current user')
+    return null
+  }
+
+  try {
+    const url = `${API_BASE_URL}/users/me/`
+    console.log('🔐 Fetching current user from:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokens.access}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    console.log('🔐 User fetch response status:', response.status)
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired, try to refresh
+        console.log('🔐 Token expired, attempting refresh...')
+        const newTokens = await refreshToken()
+        if (newTokens) {
+          // Retry with new token
+          const retryResponse = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${newTokens.access}`,
+              'Content-Type': 'application/json',
+            },
+          })
+          
+          if (retryResponse.ok) {
+            const user: User = await retryResponse.json()
+            setStoredUser(user)
+            console.log('🔐 User fetched successfully after token refresh:', user)
+            return user
+          }
+        }
+        // Refresh failed, logout
+        logout()
+        return null
+      }
+      
+      let error
+      try {
+        error = await response.json()
+      } catch {
+        error = { detail: 'Failed to fetch user data' }
+      }
+      console.error('🔐 Failed to fetch user:', error)
+      return null
+    }
+
+    const user: User = await response.json()
+    setStoredUser(user)
+    console.log('🔐 User fetched successfully:', user)
+    return user
+  } catch (error) {
+    console.error('🔐 Error fetching current user:', error)
+    return null
+  }
 }
 
 export const getCurrentTokens = (): AuthTokens | null => {

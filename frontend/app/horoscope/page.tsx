@@ -166,6 +166,7 @@ const investmentStyleInsights = {
 export default function HoroscopePage() {
   const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetchingHoroscope, setIsFetchingHoroscope] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [horoscopeData, setHoroscopeData] = useState<DailyHoroscope | null>(null)
 
@@ -185,28 +186,59 @@ export default function HoroscopePage() {
   const horoscope = staticHoroscopeData[userSign as keyof typeof staticHoroscopeData] || staticHoroscopeData.Leo
   const styleInfo = investmentStyleInsights[investingStyle as keyof typeof investmentStyleInsights] || investmentStyleInsights.balanced
 
+  console.log('🌟 HoroscopePage state:', {
+    hasUser: !!user,
+    hasProfile: !!user?.profile,
+    zodiacSign: user?.profile?.zodiac_sign,
+    investingStyle: user?.profile?.investing_style,
+    isLoading,
+    isFetchingHoroscope,
+    hasHoroscopeData: !!horoscopeData,
+  })
+
+
   useEffect(() => {
     const fetchHoroscope = async () => {
+      // If no user profile yet, just mark as not loading and return
       if (!user?.profile?.zodiac_sign) {
+        console.log('🌟 No zodiac sign yet, waiting for user profile...')
         setIsLoading(false)
         return
       }
 
-      setIsLoading(true)
+      console.log('🌟 Fetching horoscope for:', user.profile.zodiac_sign, user.profile.investing_style)
+      setIsFetchingHoroscope(true)
       setError(null)
 
       try {
-        const data = await getDailyHoroscope()
+        const data = await getDailyHoroscope(true) // Force refresh to bypass cache
+        console.log('🌟 Horoscope data received in component:', data)
         setHoroscopeData(data)
-      } catch (err) {
-        console.error("Failed to fetch horoscope:", err)
-        setError(err instanceof Error ? err.message : "Failed to load horoscope")
-      } finally {
         setIsLoading(false)
+      } catch (err) {
+        console.error("🌟 Failed to fetch horoscope:", err)
+        setError(err instanceof Error ? err.message : "Failed to load horoscope")
+        setIsLoading(false)
+      } finally {
+        setIsFetchingHoroscope(false)
       }
     }
 
+    // Initial fetch
+    console.log('🌟 Effect running, user:', user?.username, 'zodiac:', user?.profile?.zodiac_sign)
     fetchHoroscope()
+
+    // Set up refresh interval
+    // Use 1 second when loading user data, 5 seconds when user is loaded
+    const refreshInterval = !user?.profile?.zodiac_sign ? 1000 : 5000
+    console.log('🌟 Setting up interval with', refreshInterval, 'ms')
+    const intervalId = setInterval(fetchHoroscope, refreshInterval)
+
+    // Cleanup interval on unmount
+    return () => {
+      console.log('🌟 Cleaning up interval')
+      clearInterval(intervalId)
+    }
   }, [user])
 
   const getVibeColor = (score: number) => {
@@ -220,11 +252,8 @@ export default function HoroscopePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-20 pb-8 flex items-center justify-center">
         <Card className="p-8 max-w-md mx-4 text-center">
-          <Sparkles className="w-12 h-12 mx-auto mb-4 text-primary" />
-          <h2 className="text-xl font-bold mb-2">Complete Your Cosmic Profile</h2>
-          <p className="text-muted-foreground">
-            Please complete onboarding to unlock your personalized daily horoscope and cosmic trading guidance.
-          </p>
+          <Loader2 className="w-10 h-10 mx-auto mb-4 text-primary animate-spin" />
+          <h2 className="text-xl font-bold mb-2">Hold on while we fetch you fresh data</h2>
         </Card>
       </div>
     )
@@ -291,14 +320,23 @@ export default function HoroscopePage() {
           {/* Your Daily Forecast */}
           <Card className="p-5 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/30 backdrop-blur-sm">
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h3 className="text-base font-semibold text-foreground">Your Daily Forecast</h3>
+              <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h3 className="text-base font-semibold text-foreground">Your Daily Forecast</h3>
+                </div>
+                {isFetchingHoroscope && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Updating...</span>
+                  </div>
+                )}
               </div>
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground ml-2">Generating your cosmic forecast...</p>
                 </div>
               ) : error ? (
                 <div className="flex items-center gap-3 py-6 text-muted-foreground">

@@ -17,6 +17,115 @@ from django_app.utils.horoscope_generator import (
 logger = logging.getLogger(__name__)
 
 
+def check_and_generate_horoscopes():
+    """
+    Check if horoscopes exist for each user today, and generate missing ones.
+    This runs every 15 seconds via Django-Q2 to ensure horoscopes are available for active users.
+    
+    This is efficient - only generates horoscopes for actual users, not all combinations.
+    """
+    from django_app.models import UserProfile
+    
+    today = date.today()
+    
+    # Get all users with complete profiles (zodiac_sign and investing_style)
+    users_needing_horoscopes = UserProfile.objects.filter(
+        zodiac_sign__isnull=False,
+        investing_style__isnull=False
+    ).exclude(
+        zodiac_sign='',
+        investing_style=''
+    )
+    
+    if users_needing_horoscopes.count() == 0:
+        logger.debug("No users with complete profiles found")
+        return
+    
+    # Find users who don't have today's horoscope yet
+    users_missing_horoscopes = []
+    for profile in users_needing_horoscopes:
+        if not DailyHoroscope.objects.filter(
+            zodiac_sign=profile.zodiac_sign,
+            investing_style=profile.investing_style,
+            date=today
+        ).exists():
+            users_missing_horoscopes.append(profile)
+    
+    if not users_missing_horoscopes:
+        logger.debug(f"All {users_needing_horoscopes.count()} users have horoscopes for {today}")
+        return
+    
+    logger.info(f"Generating horoscopes for {len(users_missing_horoscopes)} user(s)...")
+    
+    try:
+        # Scrape horoscopes once (all 12 signs)
+        logger.info("Scraping daily horoscopes from astrology.com...")
+        daily_horoscopes = asyncio.run(scrape_daily_horoscopes())
+        logger.info(f"Successfully scraped horoscopes for {len(daily_horoscopes)} zodiac signs")
+        
+        # Get formatted date for AI prompt
+        today_formatted = get_date_formatted()
+        
+        # Track unique combinations to avoid duplicate generation
+        generated_combinations = set()
+        generated_count = 0
+        error_count = 0
+        
+        for profile in users_missing_horoscopes:
+            combo_key = f"{profile.zodiac_sign}_{profile.investing_style}"
+            
+            # Skip if we already generated this combination in this run
+            if combo_key in generated_combinations:
+                continue
+            
+            try:
+                # Double-check it doesn't exist (in case another worker created it)
+                if DailyHoroscope.objects.filter(
+                    zodiac_sign=profile.zodiac_sign,
+                    investing_style=profile.investing_style,
+                    date=today
+                ).exists():
+                    continue
+                
+                # Get display name for investing style
+                style_display = get_investing_style_display(profile.investing_style)
+                
+                # Generate financial horoscope
+                horoscope_text = generate_financial_horoscope(
+                    daily_horoscopes=daily_horoscopes,
+                    today=today_formatted,
+                    zodiac_sign=profile.zodiac_sign,
+                    investing_style=style_display
+                )
+                
+                # Save to database
+                DailyHoroscope.objects.create(
+                    zodiac_sign=profile.zodiac_sign,
+                    investing_style=profile.investing_style,
+                    date=today,
+                    horoscope_text=horoscope_text
+                )
+                
+                generated_combinations.add(combo_key)
+                generated_count += 1
+                logger.info(f"Generated horoscope for {profile.zodiac_sign} - {profile.investing_style}")
+                
+            except Exception as e:
+                error_count += 1
+                logger.error(f"Error generating horoscope for {profile.zodiac_sign} - {profile.investing_style}: {str(e)}")
+        
+        logger.info(f"Horoscope generation complete. Generated: {generated_count}, Errors: {error_count}")
+        
+        # Clean up old horoscopes (keep only today's)
+        deleted_count, _ = DailyHoroscope.objects.filter(date__lt=today).delete()
+        if deleted_count > 0:
+            logger.info(f"Deleted {deleted_count} old horoscope(s)")
+        
+    except Exception as e:
+        logger.error(f"Error in check_and_generate_horoscopes: {str(e)}")
+        # Don't raise - this will retry in 15 seconds
+
+
 def update_stock_prices():
     """
     Update current prices for all stocks in the database.

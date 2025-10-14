@@ -13,23 +13,29 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Setting up horoscope generation schedule...'))
         
         # Remove existing horoscope generation schedules to avoid duplicates
-        deleted_count, _ = Schedule.objects.filter(
+        deleted_count_old, _ = Schedule.objects.filter(
             func='django_app.tasks.generate_daily_horoscopes'
         ).delete()
         
-        if deleted_count > 0:
-            self.stdout.write(self.style.WARNING(f'Removed {deleted_count} existing horoscope schedule(s)'))
+        deleted_count_new, _ = Schedule.objects.filter(
+            func='django_app.tasks.check_and_generate_horoscopes'
+        ).delete()
         
-        # Create new schedule for daily horoscope generation at 12:00 AM EST
+        total_deleted = deleted_count_old + deleted_count_new
+        if total_deleted > 0:
+            self.stdout.write(self.style.WARNING(f'Removed {total_deleted} existing horoscope schedule(s)'))
+        
+        # Create new schedule to check and generate horoscopes every 15 seconds
         schedule = Schedule.objects.create(
-            func='django_app.tasks.generate_daily_horoscopes',
-            schedule_type=Schedule.CRON,
-            cron='0 0 * * *',  # Run at midnight (12:00 AM) every day
-            name='Daily Horoscope Generation',
+            func='django_app.tasks.check_and_generate_horoscopes',
+            schedule_type=Schedule.MINUTES,
+            minutes=0.25,  # 15 seconds (0.25 minutes)
+            name='Check and Generate User Horoscopes',
             repeats=-1  # Repeat indefinitely
         )
         
         self.stdout.write(self.style.SUCCESS(f'✓ Created horoscope schedule: {schedule.name}'))
-        self.stdout.write(self.style.SUCCESS(f'  Schedule: {schedule.cron} (Daily at 12:00 AM)'))
+        self.stdout.write(self.style.SUCCESS('  Schedule: Every 15 seconds'))
         self.stdout.write(self.style.SUCCESS('  Task will run automatically via qcluster'))
+        self.stdout.write(self.style.SUCCESS('  Generates horoscopes ONLY for actual users (efficient)'))
 

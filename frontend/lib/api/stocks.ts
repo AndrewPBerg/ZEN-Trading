@@ -784,20 +784,26 @@ export interface DailyHoroscope {
 
 /**
  * Get daily horoscope for the authenticated user
- * Uses 10-minute caching to minimize API calls
+ * Uses 15-second caching to match background worker schedule
  */
 export const getDailyHoroscope = async (forceRefresh: boolean = false): Promise<DailyHoroscope> => {
+  console.log('🌟 getDailyHoroscope called, forceRefresh:', forceRefresh)
+  
   // Check cache first (unless force refresh)
   if (!forceRefresh) {
     const cached = getCache<DailyHoroscope>('daily_horoscope')
     if (cached) {
-      console.log('Using cached daily horoscope')
+      console.log('🌟 Using cached daily horoscope')
       return cached
     }
   }
 
   // Check if in demo mode
-  if (isDemoMode()) {
+  const inDemoMode = isDemoMode()
+  console.log('🌟 Demo mode check:', inDemoMode)
+  
+  if (inDemoMode) {
+    console.log('🌟 In demo mode - returning demo horoscope data')
     // Return demo horoscope data
     const demoHoroscope: DailyHoroscope = {
       id: 1,
@@ -808,23 +814,25 @@ export const getDailyHoroscope = async (forceRefresh: boolean = false): Promise<
       created_at: new Date().toISOString(),
     }
     
-    // Cache demo data for 10 minutes
-    setCache('daily_horoscope', demoHoroscope, 600)
+    // Cache demo data for 15 seconds
+    setCache('daily_horoscope', demoHoroscope, 15)
     return demoHoroscope
   }
 
   const url = `${API_BASE_URL}/horoscope/`
-  console.log('Fetching daily horoscope from:', url)
+  console.log('🌟 NOT in demo mode - fetching daily horoscope from:', url)
 
   const response = await authenticatedFetch(url, {
     method: 'GET',
   })
 
+  console.log('🌟 Horoscope API response status:', response.status)
+
   if (!response.ok) {
     let error
     try {
       error = await response.json()
-      console.log('Daily horoscope error response:', error)
+      console.error('🌟 Daily horoscope error response:', error)
     } catch (parseError) {
       console.error('Failed to parse error response:', parseError)
       error = { detail: `Server error (${response.status})` }
@@ -842,10 +850,10 @@ export const getDailyHoroscope = async (forceRefresh: boolean = false): Promise<
   }
 
   const result: DailyHoroscope = await response.json()
-  console.log('Daily horoscope:', result)
+  console.log('🌟 Daily horoscope received:', result)
 
-  // Cache the result for 10 minutes
-  setCache('daily_horoscope', result, 600)
+  // Cache the result for 15 seconds
+  setCache('daily_horoscope', result, 15)
 
   return result
 }

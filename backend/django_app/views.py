@@ -1357,10 +1357,23 @@ class DailyHoroscopeView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
                 
             except DailyHoroscope.DoesNotExist:
-                return Response({
-                    'error': 'Horoscope not available',
-                    'detail': f'No horoscope has been generated for {profile.zodiac_sign} - {profile.investing_style} today. Please try again later.'
-                }, status=status.HTTP_404_NOT_FOUND)
+                # Generate horoscope on-demand if it doesn't exist yet
+                # (fallback in case background worker hasn't run yet)
+                try:
+                    from django_app.tasks import generate_single_horoscope
+                    horoscope = generate_single_horoscope(
+                        zodiac_sign=profile.zodiac_sign,
+                        investing_style=profile.investing_style
+                    )
+                    
+                    serializer = DailyHoroscopeSerializer(horoscope)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                    
+                except Exception as gen_error:
+                    return Response({
+                        'error': 'Horoscope generation failed',
+                        'detail': f'Unable to generate horoscope: {str(gen_error)}'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         except Exception as e:
             return Response({

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getCurrentUser, isAuthenticated, logout as authLogout } from "@/lib/api/auth"
+import { getCurrentUser, isAuthenticated, logout as authLogout, fetchCurrentUser } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser, clearDemoMode } from "@/lib/demo-mode"
 
 interface UserProfile {
@@ -39,11 +39,18 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       // Re-check auth state (in case of changes)
       if (isAuthenticated()) {
-        const currentUser = getCurrentUser()
-        setUser(currentUser)
+        console.log('🔐 useAuth: Fetching fresh user data from API...')
+        const freshUser = await fetchCurrentUser()
+        if (freshUser) {
+          setUser(freshUser)
+        } else {
+          // Fallback to localStorage if API call fails
+          const currentUser = getCurrentUser()
+          setUser(currentUser)
+        }
       } 
       else if (isDemoMode()) {
         const demoUser = getCompleteDemoUser()
@@ -54,7 +61,20 @@ export function useAuth() {
       }
     }
 
+    // Initial check
     checkAuth()
+
+    // Refresh user data every 5 seconds to pick up profile changes
+    const refreshInterval = setInterval(() => {
+      if (isAuthenticated()) {
+        console.log('🔐 useAuth: Periodic user refresh...')
+        fetchCurrentUser().then(freshUser => {
+          if (freshUser) {
+            setUser(freshUser)
+          }
+        })
+      }
+    }, 5000) // 5 seconds
 
     // Listen for storage changes (e.g., when user logs in/out in another tab)
     const handleStorageChange = (e: StorageEvent) => {
@@ -65,7 +85,11 @@ export function useAuth() {
     }
 
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    
+    return () => {
+      clearInterval(refreshInterval)
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const logout = () => {

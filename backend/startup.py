@@ -134,23 +134,21 @@ def setup_horoscope_schedule():
     run_command(['setup_horoscope_schedule'], 'Setup horoscope schedule')
 
 
-def check_and_generate_horoscopes():
-    """Check if horoscopes exist for today, and generate if missing (backfill)"""
+def check_horoscope_status():
+    """Check horoscope status without blocking (informational only)"""
     try:
         today = date_type.today()
         horoscope_count = DailyHoroscope.objects.filter(date=today).count()
         
         log(f"Current horoscopes for today ({today}): {horoscope_count}", BLUE)
         
-        # If no horoscopes exist for today, generate them
         if horoscope_count == 0:
-            log("No horoscopes found for today - generating (backfill)...", YELLOW)
-            run_command(['generate_horoscopes'], 'Generate horoscopes')
+            log("No horoscopes yet - worker will generate them per user (efficient!)", YELLOW)
         else:
-            log(f"Horoscopes already exist for today ({horoscope_count} entries)", GREEN)
+            log(f"Horoscopes exist for {horoscope_count} user combination(s)", GREEN)
             
     except Exception as e:
-        log(f"Error in check_and_generate_horoscopes: {str(e)}", RED)
+        log(f"Error checking horoscope status: {str(e)}", RED)
 
 def start_qcluster():
     """Start Django-Q2 cluster in background"""
@@ -263,22 +261,23 @@ def main():
         # Step 5: Set up price update schedule
         setup_price_updates()
         
-        # Step 6: Set up horoscope generation schedule
+        # Step 6: Set up horoscope generation schedule (runs every 15 seconds)
         setup_horoscope_schedule()
         
-        # Step 7: Check and backfill horoscopes if needed
-        check_and_generate_horoscopes()
-        
-        # Step 8: Start qcluster worker
+        # Step 7: Start qcluster worker (non-blocking - handles horoscope generation)
         qcluster_process = start_qcluster()
         
         if qcluster_process is None:
             log("Failed to start qcluster - exiting", RED)
             sys.exit(1)
         
-        # Step 9: Start Gunicorn (blocking)
+        # Step 8: Check horoscope status (informational only - non-blocking)
+        check_horoscope_status()
+        
+        # Step 9: Start Gunicorn immediately (blocking)
         log("=" * 60, GREEN)
         log("All services started successfully!", GREEN)
+        log("Background worker will handle horoscope generation", GREEN)
         log("=" * 60, GREEN)
         
         start_gunicorn()

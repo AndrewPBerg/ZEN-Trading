@@ -87,7 +87,7 @@ export function CombinedHoldingsChart({ tickers, holdings = [] }: CombinedHoldin
         </div>
       </div>
 
-      <div className="h-80 w-full">
+      <div className="h-80 w-full recharts-theme-wrapper" key={`combined-chart-${currentTheme}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <XAxis

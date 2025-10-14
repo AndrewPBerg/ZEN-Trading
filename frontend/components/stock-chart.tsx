@@ -243,7 +243,7 @@ export function StockChart({ ticker, alignmentScore = 65 }: StockChartProps) {
           <p className="text-sm text-muted-foreground">No data available</p>
         </div>
       ) : (
-        <div className="h-64 w-full">
+        <div className="h-64 w-full recharts-theme-wrapper" key={`stock-chart-${ticker}-${currentTheme}`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <defs>

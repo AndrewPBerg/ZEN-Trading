@@ -704,7 +704,7 @@ export const getStockHistory = async (
   }
 
   try {
-    const response = await authenticatedFetch(`${API_BASE_URL}/stocks/${ticker}/history?timeframe=${timeframe}`)
+    const response = await authenticatedFetch(`${API_BASE_URL}/stocks/${ticker}/history/?timeframe=${timeframe}`)
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Failed to fetch stock history' }))

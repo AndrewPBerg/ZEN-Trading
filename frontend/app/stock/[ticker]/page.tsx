@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,7 @@ import { ArrowLeft, Star, TrendingUp, TrendingDown, Plus, ShoppingCart, Share2, 
 import { getStockByTicker, type Stock } from "@/lib/api/stocks"
 import { useRouter } from "next/navigation"
 
-export default function StockDetailPage({ params }: { params: { ticker: string } }) {
+export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const [activeTab, setActiveTab] = useState("market")
   const [isWatchlisted, setIsWatchlisted] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
@@ -21,7 +21,8 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const ticker = params.ticker.toUpperCase()
+  const unwrappedParams = use(params)
+  const ticker = unwrappedParams.ticker.toUpperCase()
 
   useEffect(() => {
     fetchStockData()
@@ -75,8 +76,8 @@ export default function StockDetailPage({ params }: { params: { ticker: string }
     )
   }
 
-  const currentPrice = stock.current_price || 0
-  const previousClose = stock.previous_close || currentPrice
+  const currentPrice = Number(stock.current_price) || 0
+  const previousClose = Number(stock.previous_close) || currentPrice
   const change = currentPrice - previousClose
   const changePercent = previousClose ? (change / previousClose) * 100 : 0
   const isPositive = change >= 0

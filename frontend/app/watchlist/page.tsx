@@ -19,7 +19,6 @@ import {
   ArrowRightLeft,
   ExternalLink,
   Heart,
-  X as XIcon,
   Sparkles,
   Info,
 } from "lucide-react"
@@ -59,14 +58,10 @@ const ZODIAC_EMOJIS: Record<string, string> = {
   Pisces: "♓",
 }
 
-type TabType = "liked" | "disliked" | "all"
-
 function WatchlistPageContent() {
   const router = useRouter()
   const { user } = useAuth()
-  const [selectedTabs, setSelectedTabs] = useState<TabType[]>(["liked"])
   const [watchlist, setWatchlist] = useState<StockPreferenceWithDetails[]>([])
-  const [disliked, setDisliked] = useState<StockPreferenceWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
@@ -102,7 +97,7 @@ function WatchlistPageContent() {
       const data = await getWatchlistWithDetails()
       console.log("Fetched watchlist data:", data)
       setWatchlist(data.watchlist)
-      setDisliked(data.disliked)
+      // Note: We don't store disliked data since we're not displaying it
       
       // Also fetch portfolio data for cosmic impact calculations
       await fetchPortfolio()
@@ -119,25 +114,6 @@ function WatchlistPageContent() {
     fetchData()
   }, [])
 
-  // Toggle tab selection
-  const toggleTab = (tab: TabType) => {
-    setSelectedTabs((prev) => {
-      if (prev.includes(tab)) {
-        // Don't allow deselecting all tabs
-        if (prev.length === 1) return prev
-        return prev.filter((t) => t !== tab)
-      }
-      return [...prev, tab]
-    })
-  }
-
-  // Check if a tab is selected
-  const isTabSelected = (tab: TabType) => selectedTabs.includes(tab)
-
-  // Check if a section should be shown
-  const shouldShowSection = (section: "liked" | "disliked") => {
-    return selectedTabs.includes("all") || selectedTabs.includes(section)
-  }
 
   // Move stock to watchlist
   const moveToWatchlist = async (ticker: string) => {
@@ -431,7 +407,7 @@ function WatchlistPageContent() {
   }
 
   // Loading state - only show on initial load, not during refreshes
-  if (isLoading && watchlist.length === 0 && disliked.length === 0) {
+  if (isLoading && watchlist.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative pt-20 pb-8">
         <div className="relative z-10 max-w-4xl mx-auto px-4">
@@ -504,7 +480,7 @@ function WatchlistPageContent() {
                 </p>
               </div>
             </div>
-            {isLoading && (watchlist.length > 0 || disliked.length > 0) && (
+            {isLoading && watchlist.length > 0 && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 Updating...
@@ -513,123 +489,45 @@ function WatchlistPageContent() {
           </div>
         </div>
 
-        {/* Multi-select tabs */}
-        <Card className="p-2 mb-6 bg-card/80 backdrop-blur-sm border-primary/20">
-          <div className="flex gap-2">
-            <Button
-              variant={isTabSelected("liked") ? "default" : "ghost"}
-              size="sm"
-              onClick={() => toggleTab("liked")}
-              className={
-                isTabSelected("liked")
-                  ? "bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-400 border border-green-500/30"
-                  : ""
-              }
-            >
-              <Heart className="w-4 h-4 mr-2" />
-              Liked ({watchlist.length})
-            </Button>
-            <Button
-              variant={isTabSelected("disliked") ? "default" : "ghost"}
-              size="sm"
-              onClick={() => toggleTab("disliked")}
-              className={
-                isTabSelected("disliked")
-                  ? "bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-400 border border-red-500/30"
-                  : ""
-              }
-            >
-              <XIcon className="w-4 h-4 mr-2" />
-              Disliked ({disliked.length})
-            </Button>
-            <Button
-              variant={isTabSelected("all") ? "default" : "ghost"}
-              size="sm"
-              onClick={() => toggleTab("all")}
-              className={
-                isTabSelected("all")
-                  ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-accent border border-accent/30"
-                  : ""
-              }
-            >
-              <Star className="w-4 h-4 mr-2" />
-              All ({watchlist.length + disliked.length})
-            </Button>
-          </div>
-        </Card>
 
         {/* Liked stocks section */}
-        {shouldShowSection("liked") && (
-          <div className="mb-8 animate-in fade-in duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <Heart className="w-5 h-5 text-green-400" />
-              <h2 className="text-xl font-semibold text-foreground">Liked Stocks</h2>
-              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
-                {watchlist.length}
-              </Badge>
-            </div>
-
-            {watchlist.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {watchlist.map((item) => renderStockCard(item, "watchlist"))}
-              </div>
-            ) : (
-              <Card className="p-8 text-center bg-card/50">
-                <div className="space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center">
-                    <Heart className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">No liked stocks yet</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Discover stocks aligned with your cosmic energy in the Discovery page
-                    </p>
-                    <Button
-                      onClick={() => router.push("/discovery")}
-                      className="bg-gradient-to-r from-primary to-secondary text-white"
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Discover Stocks
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            )}
+        <div className="mb-8 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2 mb-4">
+            <Heart className="w-5 h-5 text-green-400" />
+            <h2 className="text-xl font-semibold text-foreground">Liked Stocks</h2>
+            <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
+              {watchlist.length}
+            </Badge>
           </div>
-        )}
 
-        {/* Disliked stocks section */}
-        {shouldShowSection("disliked") && (
-          <div className="mb-8 animate-in fade-in duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <XIcon className="w-5 h-5 text-red-400" />
-              <h2 className="text-xl font-semibold text-foreground">Disliked Stocks</h2>
-              <Badge variant="secondary" className="bg-red-500/20 text-red-400 border-red-500/30">
-                {disliked.length}
-              </Badge>
+          {watchlist.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {watchlist.map((item) => renderStockCard(item, "watchlist"))}
             </div>
-
-            {disliked.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {disliked.map((item) => renderStockCard(item, "dislike"))}
-              </div>
-            ) : (
-              <Card className="p-8 text-center bg-card/50">
-                <div className="space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-full flex items-center justify-center">
-                    <XIcon className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-2">No disliked stocks</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Stocks you pass on during discovery will appear here
-                    </p>
-                  </div>
+          ) : (
+            <Card className="p-8 text-center bg-card/50">
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center">
+                  <Heart className="w-8 h-8 text-muted-foreground" />
                 </div>
-              </Card>
-            )}
-          </div>
-        )}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">No liked stocks yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Discover stocks aligned with your cosmic energy in the Discovery page
+                  </p>
+                  <Button
+                    onClick={() => router.push("/discovery")}
+                    className="bg-gradient-to-r from-primary to-secondary text-white"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Discover Stocks
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+
       </div>
 
       {/* Alignment Info Modal */}

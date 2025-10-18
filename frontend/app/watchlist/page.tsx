@@ -33,7 +33,7 @@ import {
 } from "@/lib/api/stocks"
 import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { toast } from "sonner"
-
+import { XIcon } from "lucide-react"
 // Element colors
 const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Fire: { bg: "bg-red-500/20", text: "text-red-400", border: "border-red-500/30" },

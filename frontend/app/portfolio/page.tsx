@@ -444,26 +444,28 @@ function PortfolioPageContent() {
                                   {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
                                 </span>
                               </div>
-                              <StockSparkline 
-                                ticker={holding.ticker} 
-                                isPositive={isHoldingPositive}
-                                purchaseDate={holding.purchase_date}
-                                accountStartDate={accountStartDate}
-                              />
                             </div>
                           </div>
 
+                          {/* Alignment info moved here */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Star className={`w-4 h-4 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
-                              <span className={`text-sm font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
+                              <Star className={`w-3 h-3 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
+                              <span className={`text-xs font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
                                 {Number(holding.alignment_score ?? 0)}% Aligned
                               </span>
                             </div>
-                            <Badge className={getMatchTypeColor(holding.match_type)}>
+                            <Badge className={`text-xs px-2 py-0 ${getMatchTypeColor(holding.match_type)}`}>
                               {holding.match_type === 'same_sign' ? 'Same Sign' : holding.match_type}
                             </Badge>
                           </div>
+
+                          <StockSparkline 
+                            ticker={holding.ticker} 
+                            isPositive={isHoldingPositive}
+                            purchaseDate={holding.purchase_date}
+                            accountStartDate={accountStartDate}
+                          />
 
                           {Number(holding.alignment_score ?? 0) >= 85 && (
                             <div className="flex items-center gap-1 text-xs text-accent">
@@ -473,23 +475,21 @@ function PortfolioPageContent() {
                           )}
                         </div>
 
-                        {/* Sell Button - Always visible on mobile, hover on desktop */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleOpenSellModal(holding)
-                          }}
-                          className={cn(
-                            "absolute bottom-2 right-2 h-7 px-2 text-xs",
-                            "bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500",
-                            "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
-                          )}
-                        >
-                          <ShoppingBag className="w-3 h-3 mr-1" />
-                          Sell
-                        </Button>
+                        {/* Sell Button - Part of normal content flow */}
+                        <div className="pt-2 border-t border-border/50">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleOpenSellModal(holding)
+                            }}
+                            className="w-full h-8 text-xs bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500"
+                          >
+                            <ShoppingBag className="w-3 h-3 mr-1" />
+                            Sell
+                          </Button>
+                        </div>
                       </Card>
                     )
                   })}

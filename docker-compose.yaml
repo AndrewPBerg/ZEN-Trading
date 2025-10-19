@@ -56,31 +56,6 @@ services:
       retries: 3
       start_period: 40s
 
-  testing:
-    build:
-      context: ./testing
-      dockerfile: DOCKERFILE
-    ports:
-      - "42061:42061"
-    environment:
-      - PORT=42061
-      - DATABASE_URL=postgresql://zenuser:zenpass@pgsql:5432/zentrading
-    depends_on:
-      pgsql:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_healthy
-    networks:
-      - zen-trading-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:42061/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   # PostgreSQL 18-alpine database
   pgsql:
     image: postgres:16-alpine

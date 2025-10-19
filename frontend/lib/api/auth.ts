@@ -255,6 +255,7 @@ export const logout = (): void => {
   clearStoredTokens()
 }
 
+
 export const getCurrentUser = (): User | null => {
   return getStoredUser()
 }

@@ -485,7 +485,7 @@ function DiscoveryPageContent() {
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
-                    className="w-14 h-14 rounded-full bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
+                    className="w-14 h-14 rounded-full bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110 dark:bg-red-500/30 dark:hover:bg-red-500/40 dark:border-red-500/60"
                   >
                     <X className="w-6 h-6" />
                   </Button>

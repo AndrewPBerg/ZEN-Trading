@@ -163,6 +163,7 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
   console.log('API_BASE_URL:', API_BASE_URL)
   console.log('Full constructed URL:', url)
   console.log('Request data:', data)
+  console.log('Request data JSON:', JSON.stringify(data))
   
   try {
     const response = await fetch(url, {
@@ -176,12 +177,15 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
     console.log('Register response status:', response.status)
     console.log('Register response URL:', response.url)
     console.log('Register response headers:', Object.fromEntries(response.headers.entries()))
+    console.log('Response ok:', response.ok)
 
     if (!response.ok) {
       let error
       try {
-        error = await response.json()
-        console.log('Full error response:', error)
+        const responseText = await response.text()
+        console.log('Raw error response text:', responseText)
+        error = JSON.parse(responseText)
+        console.log('Parsed error response:', error)
         
         // Django REST framework validation errors come in this format
         if (error && typeof error === 'object') {
@@ -197,6 +201,8 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
         }
       } catch (parseError) {
         console.error('Failed to parse error response:', parseError)
+        console.error('Response status:', response.status)
+        console.error('Response statusText:', response.statusText)
         error = { detail: `Server error (${response.status}): Network error or server unavailable` }
       }
       throw new Error(error.detail || error.message || 'Registration failed')

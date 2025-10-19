@@ -164,74 +164,91 @@ export const register = async (data: RegisterData): Promise<{ user: User; tokens
   console.log('Full constructed URL:', url)
   console.log('Request data:', data)
   
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-  
-  console.log('Register response status:', response.status)
-  console.log('Register response URL:', response.url)
-  console.log('Register response headers:', Object.fromEntries(response.headers.entries()))
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    
+    console.log('Register response status:', response.status)
+    console.log('Register response URL:', response.url)
+    console.log('Register response headers:', Object.fromEntries(response.headers.entries()))
 
-  if (!response.ok) {
-    let error
-    try {
-      error = await response.json()
-      console.log('Full error response:', error)
-      
-      // Django REST framework validation errors come in this format
-      if (error && typeof error === 'object') {
-        // If it's field validation errors, format them nicely
-        const fieldErrors = Object.entries(error).map(([field, messages]) => {
-          if (Array.isArray(messages)) {
-            return `${field}: ${messages.join(', ')}`
-          }
-          return `${field}: ${messages}`
-        }).join(' | ')
+    if (!response.ok) {
+      let error
+      try {
+        error = await response.json()
+        console.log('Full error response:', error)
         
-        throw new Error(fieldErrors || JSON.stringify(error))
+        // Django REST framework validation errors come in this format
+        if (error && typeof error === 'object') {
+          // If it's field validation errors, format them nicely
+          const fieldErrors = Object.entries(error).map(([field, messages]) => {
+            if (Array.isArray(messages)) {
+              return `${field}: ${messages.join(', ')}`
+            }
+            return `${field}: ${messages}`
+          }).join(' | ')
+          
+          throw new Error(fieldErrors || JSON.stringify(error))
+        }
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError)
+        error = { detail: `Server error (${response.status}): Network error or server unavailable` }
       }
-    } catch (parseError) {
-      console.error('Failed to parse error response:', parseError)
-      error = { detail: `Server error (${response.status}): Network error or server unavailable` }
+      throw new Error(error.detail || error.message || 'Registration failed')
     }
-    throw new Error(error.detail || error.message || 'Registration failed')
-  }
 
-  const user: User = await response.json()
-  
-  // Auto-login after registration
-  const loginResponse = await fetch(`${API_BASE_URL}/auth/token/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: data.email,
-      password: data.password
-    }),
-  })
+    const user: User = await response.json()
+    
+    // Auto-login after registration
+    const loginResponse = await fetch(`${API_BASE_URL}/auth/token/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password
+      }),
+    })
 
-  if (!loginResponse.ok) {
-    let error
-    try {
-      error = await loginResponse.json()
-    } catch {
-      error = { detail: 'Registration successful but auto-login failed' }
+    if (!loginResponse.ok) {
+      let error
+      try {
+        error = await loginResponse.json()
+      } catch {
+        error = { detail: 'Registration successful but auto-login failed' }
+      }
+      throw new Error(error.detail || 'Registration successful but auto-login failed')
     }
-    throw new Error(error.detail || 'Registration successful but auto-login failed')
-  }
 
-  const tokens: AuthTokens = await loginResponse.json()
-  
-  // Store tokens and user data
-  setStoredTokens(tokens)
-  setStoredUser(user)
-  
-  return { user, tokens }
+    const tokens: AuthTokens = await loginResponse.json()
+    
+    // Store tokens and user data
+    setStoredTokens(tokens)
+    setStoredUser(user)
+    
+    return { user, tokens }
+  } catch (fetchError) {
+    console.error('Network error during registration:', fetchError)
+    
+    // Check if it's a network error
+    if (fetchError instanceof TypeError && fetchError.message.includes('fetch')) {
+      throw new Error('Failed to connect to server. Please check your internet connection and try again.')
+    }
+    
+    // Check if it's a CORS error
+    if (fetchError instanceof TypeError && fetchError.message.includes('CORS')) {
+      throw new Error('CORS error: Unable to connect to the server. Please contact support.')
+    }
+    
+    // Re-throw other errors
+    throw fetchError
+  }
 }
 
 export const logout = (): void => {

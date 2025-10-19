@@ -77,7 +77,25 @@ export default function SignupPage() {
       router.push("/onboarding")
     } catch (err: any) {
       console.error("Registration failed:", err)
-      setError(err.message || "Registration failed. Please try again.")
+      
+      // Provide more specific error messages
+      let errorMessage = "Registration failed. Please try again."
+      
+      if (err.message.includes("Failed to connect to server")) {
+        errorMessage = "Unable to connect to the server. Please check your internet connection and try again."
+      } else if (err.message.includes("CORS error")) {
+        errorMessage = "Connection error. Please refresh the page and try again."
+      } else if (err.message.includes("email")) {
+        errorMessage = "Email validation error. Please check your email address."
+      } else if (err.message.includes("username")) {
+        errorMessage = "Username validation error. Please choose a different username."
+      } else if (err.message.includes("password")) {
+        errorMessage = "Password validation error. Please check your password requirements."
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -99,7 +117,7 @@ export default function SignupPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
           className="text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

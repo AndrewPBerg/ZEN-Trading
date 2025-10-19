@@ -6,6 +6,7 @@ import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { AnimatedStars } from "@/components/animated-stars"
 import { Footer } from "@/components/footer"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "ZEN Trader",
@@ -51,6 +52,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster />
         </div>
       </body>
     </html>

@@ -143,7 +143,11 @@ function OnboardingPageContent() {
                   type="date"
                   value={formData.birthDate}
                   min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split("T")[0]}
-                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}
+                  max={(() => {
+                    const today = new Date();
+                    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+                    return maxDate.toISOString().split("T")[0];
+                  })()}
                   
                   onChange={e => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
                   className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground dark:text-foreground [&::-webkit-calendar-picker-indicator]:dark:invert [&::-webkit-calendar-picker-indicator]:dark:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:border-primary/70 dark:hover:border-primary/80"

@@ -3,11 +3,16 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Star, Sparkles, Moon, Sun } from "lucide-react"
-import { useState } from "react"
+import { Star, Sparkles, Moon, Sun, AlertTriangle, ExternalLink } from "lucide-react"
+import { useState, useEffect } from "react"
+import { checkApiHealth } from "@/lib/api/health"
+import { setDemoMode } from "@/lib/demo-mode"
 
 export default function WelcomeScreen() {
   const [isAnimating, setIsAnimating] = useState(false)
+  const [apiUnavailable, setApiUnavailable] = useState(false)
+  const [isCheckingApi, setIsCheckingApi] = useState(true)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const handleGetStarted = () => {
     setIsAnimating(true)
@@ -17,14 +22,67 @@ export default function WelcomeScreen() {
   const handleDemoMode = () => {
     setIsAnimating(true)
     // Enable demo mode and redirect to onboarding
-    localStorage.setItem("zenTraderDemoMode", "true")
+    setDemoMode(true)
     window.location.href = "/onboarding?mode=demo"
   }
+
+  // Check API health on component mount with lazy loading
+  useEffect(() => {
+    const checkApi = async () => {
+      try {
+        const { isHealthy } = await checkApiHealth()
+        setApiUnavailable(!isHealthy)
+        
+        // Auto-enable demo mode if API is unavailable
+        if (!isHealthy) {
+          setDemoMode(true)
+        }
+      } catch (error) {
+        console.error('Failed to check API health:', error)
+        setApiUnavailable(true)
+        setDemoMode(true)
+      } finally {
+        setIsCheckingApi(false)
+        // Add a small delay to prevent immediate clicking
+        setTimeout(() => setIsLoaded(true), 1000)
+      }
+    }
+
+    checkApi()
+  }, [])
 
   return (
     <div className="h-screen bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex flex-col items-center justify-center px-6 relative overflow-hidden">
       {/* Theme Toggle */}
       <ThemeToggle />
+      
+      {/* API Unavailable Warning Banner */}
+      {!isCheckingApi && apiUnavailable && (
+        <div className="fixed top-4 left-4 right-4 z-50 mx-auto max-w-2xl">
+          <Card className="p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/5 border-orange-500/30 backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <h3 className="font-semibold text-orange-600 dark:text-orange-400">
+                  No API Found - Demo Mode Active
+                </h3>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  You're using the demo application with limited functionality. For full access with real-time data and authentication, run locally from:
+                </p>
+                <a
+                  href="https://github.com/AndrewPBerg/ZEN-Trading/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  GitHub Repository
+                </a>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
       
       {/* Cosmic Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -110,22 +168,33 @@ export default function WelcomeScreen() {
             Try Demo (Virgo)
           </Button>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
-              onClick={() => window.location.href = "/signup"}
-            >
-              Sign Up
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent"
-              onClick={() => window.location.href = "/login"}
-            >
-              Log In
-            </Button>
-          </div>
+          {/* Only show auth buttons if API is available and component is loaded */}
+          {!apiUnavailable && isLoaded && (
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
+                onClick={() => window.location.href = "/signup"}
+              >
+                Sign Up
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent"
+                onClick={() => window.location.href = "/login"}
+              >
+                Log In
+              </Button>
+            </div>
+          )}
+          
+          {/* Show loading state while checking API */}
+          {isCheckingApi && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <span className="text-sm">Checking connection...</span>
+            </div>
+          )}
         </div>
 
       </div>

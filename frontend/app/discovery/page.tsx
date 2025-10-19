@@ -13,7 +13,9 @@ import { useAuth } from "@/hooks/use-auth"
 import Link from "next/link"
 import { isDemoMode } from "@/lib/demo-mode"
 import { getZodiacMatchedStocks, addToWatchlist, addToDislikeList, type Stock } from "@/lib/api/stocks"
+import { getOnboardingStatus } from "@/lib/api/onboarding"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 // Zodiac sign emojis
 const ZODIAC_EMOJIS: Record<string, string> = {
@@ -41,6 +43,7 @@ const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string 
 
 function DiscoveryPageContent() {
   const { user } = useAuth()
+  const router = useRouter()
   const [isDemo, setIsDemo] = useState(false)
   const [stocks, setStocks] = useState<Stock[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -55,35 +58,73 @@ function DiscoveryPageContent() {
   const [error, setError] = useState<string | null>(null)
   const [userSign, setUserSign] = useState<string>("")
   const [showInfoModal, setShowInfoModal] = useState(false)
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null)
 
   useEffect(() => {
-    // Clear demo mode if user has real auth tokens
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('zenTraderTokens')
-      if (stored) {
-        try {
-          const tokens = JSON.parse(stored)
-          if (tokens.access) {
-            // User has real tokens, clear demo mode
-            localStorage.removeItem('zenTraderDemoMode')
-            localStorage.removeItem('zenTraderDemoUser')
-            localStorage.removeItem('zenTraderDemoProfile')
-            localStorage.removeItem('zenTraderDemoHoldings')
-            localStorage.removeItem('zenTraderDemoWatchlist')
-            localStorage.removeItem('zenTraderDemoDislikeList')
-            // Clear the zodiac cache to force fresh data
-            localStorage.removeItem('cache_zodiac_matched_stocks')
+    const initializePage = async () => {
+      // Clear demo mode if user has real auth tokens
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('zenTraderTokens')
+        if (stored) {
+          try {
+            const tokens = JSON.parse(stored)
+            if (tokens.access) {
+              // User has real tokens, clear demo mode
+              localStorage.removeItem('zenTraderDemoMode')
+              localStorage.removeItem('zenTraderDemoUser')
+              localStorage.removeItem('zenTraderDemoProfile')
+              localStorage.removeItem('zenTraderDemoHoldings')
+              localStorage.removeItem('zenTraderDemoWatchlist')
+              localStorage.removeItem('zenTraderDemoDislikeList')
+              // Clear the zodiac cache to force fresh data
+              localStorage.removeItem('cache_zodiac_matched_stocks')
+            }
+          } catch (e) {
+            console.error('Error checking tokens:', e)
           }
-        } catch (e) {
-          console.error('Error checking tokens:', e)
         }
       }
+      
+      const isDemoModeActive = isDemoMode()
+      setIsDemo(isDemoModeActive)
+      
+      // Check onboarding status for authenticated users
+      if (!isDemoModeActive && user) {
+        try {
+          const onboardingStatus = await getOnboardingStatus()
+          setOnboardingCompleted(onboardingStatus.onboarding_completed)
+          
+          // If onboarding not completed, redirect to onboarding
+          if (!onboardingStatus.onboarding_completed) {
+            router.push('/onboarding')
+            return
+          }
+        } catch (error) {
+          console.error('Failed to check onboarding status:', error)
+          // If we can't check onboarding status, assume it's not completed
+          router.push('/onboarding')
+          return
+        }
+      } else if (isDemoModeActive) {
+        // Demo mode - onboarding is always completed
+        setOnboardingCompleted(true)
+      }
+      
+      // Only fetch stocks if onboarding is completed
+      if (isDemoModeActive || onboardingCompleted) {
+        fetchStocks()
+      }
     }
-    setIsDemo(isDemoMode())
-    fetchStocks()
-  }, [])
+    
+    initializePage()
+  }, [user, router])
 
   const fetchStocks = async () => {
+    // Don't fetch if onboarding not completed
+    if (onboardingCompleted === false) {
+      return
+    }
+    
     setIsLoading(true)
     setError(null)
     try {
@@ -293,6 +334,20 @@ function DiscoveryPageContent() {
     const change = currentPrice - previousClose
     const changePercent = (change / previousClose) * 100
     return { change, changePercent }
+  }
+
+  // Show loading while checking onboarding status
+  if (onboardingCompleted === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 dark:from-primary/5 dark:via-background dark:to-secondary/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
+            <Sparkles className="w-6 h-6 text-white animate-spin" />
+          </div>
+          <p className="text-muted-foreground">Checking your cosmic profile...</p>
+        </div>
+      </div>
+    )
   }
 
   if (isLoading) {

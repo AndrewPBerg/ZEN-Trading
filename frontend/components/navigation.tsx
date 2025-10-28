@@ -136,36 +136,38 @@ export function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-100/95 via-indigo-100/95 to-purple-100/95 dark:from-purple-900/95 dark:via-indigo-900/95 dark:to-purple-900/95 backdrop-blur-lg border-b border-purple-300/40 dark:border-purple-500/20">
-      <div className="relative flex items-center justify-between px-6 py-3">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg">
+      <div className="relative flex items-center justify-between px-6 py-4">
         {/* Navigation Items */}
-        <div className="flex items-center gap-1 z-10">
+        <div className="flex items-center gap-2 z-10">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
+                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? "text-purple-900 dark:text-gold-400 bg-purple-300/70 dark:bg-purple-300/50"
-                    : "text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30"
-
+                    ? "text-primary bg-primary/10 shadow-md"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                 }`}
               >
                 <Icon 
                   size={20} 
                   className={`transition-all duration-300 ${
-                    isActive ? "drop-shadow-lg scale-110" : "group-hover:scale-125"
+                    isActive ? "scale-110 drop-shadow-sm" : "group-hover:scale-110"
                   }`} 
                 />
                 <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
                   isActive 
-                    ? "max-w-20 ml-2 opacity-100 text-purple-900 dark:text-gold-400" 
-                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
+                    ? "max-w-24 ml-0 opacity-100" 
+                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-24 group-hover:ml-0 group-hover:opacity-100"
                 }`}>
                   {label}
                 </span>
+                {isActive && (
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/20 to-transparent animate-pulse-glow" />
+                )}
               </Link>
             )
           })}
@@ -173,31 +175,31 @@ export function Navigation() {
 
         {/* Center: Demo Mode Warning Bubble - Absolutely Centered */}
         {mounted && isDemo && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg pointer-events-none">
-            <AlertTriangle className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs font-medium text-white whitespace-nowrap">
-              Demo Mode Active: No Live Data
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg pointer-events-none animate-pulse">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-sm font-medium whitespace-nowrap">
+              Demo Mode Active
             </span>
           </div>
         )}
 
         {/* Right Side: Market Status, Theme Toggle & User Menu */}
-        <div className="flex items-center gap-2 z-10">
+        <div className="flex items-center gap-3 z-10">
           {/* Market Status Indicator */}
           {mounted && marketStatus && (
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className="text-xs text-purple-800 dark:text-purple-300 font-medium">
+                <div className={`w-2.5 h-2.5 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className="text-sm font-medium text-foreground">
                   {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
                 </span>
               </div>
-              <div className="border-l border-purple-300/40 dark:border-purple-500/20 pl-3">
-                <div className="text-xs">
-                  <span className="text-purple-700 dark:text-purple-400 font-medium">
+              <div className="border-l border-border/50 pl-3">
+                <div className="text-sm">
+                  <span className="text-muted-foreground font-medium">
                     {marketStatus.is_open ? 'Closes' : 'Opens'}:
                   </span>
-                  <span className="text-purple-600 dark:text-purple-300 ml-1">
+                  <span className="text-foreground ml-1">
                     {(() => {
                       const nextEventDate = new Date(marketStatus.next_event_time)
                       const today = new Date()
@@ -240,7 +242,7 @@ export function Navigation() {
               onClick={toggleTheme}
               variant="ghost"
               size="sm"
-              className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+              className="text-muted-foreground hover:text-primary hover:bg-primary/5 p-2 transition-all duration-300 hover:scale-110 rounded-xl"
               aria-label="Toggle theme"
             >
               {isDark ? (
@@ -258,31 +260,31 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+                  className="text-muted-foreground hover:text-primary hover:bg-primary/5 p-2 transition-all duration-300 hover:scale-110 rounded-xl"
                 >
                   <User size={20} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 bg-white/95 dark:bg-purple-950/95 border-purple-200 dark:border-purple-500/30">
+              <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur-xl border-border/50 shadow-xl">
                 {isDemo ? (
                   <>
                     {hasAuth && (
                       <>
                         <DropdownMenuItem 
                           onClick={() => router.push("/settings")}
-                          className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                          className="cursor-pointer text-foreground focus:bg-primary/10 focus:text-primary rounded-lg mx-1 my-0.5"
                         >
-                          <Settings className="w-4 h-4 mr-2" />
+                          <Settings className="w-4 h-4 mr-3" />
                           Settings
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                        <DropdownMenuSeparator className="bg-border/50 my-1" />
                       </>
                     )}
                     <DropdownMenuItem 
                       onClick={handleLogout} 
-                      className="text-orange-600 dark:text-orange-400 focus:text-orange-700 dark:focus:text-orange-300 cursor-pointer focus:bg-orange-100 dark:focus:bg-purple-800/30"
+                      className="text-orange-600 focus:text-orange-700 cursor-pointer focus:bg-orange-100 rounded-lg mx-1 my-0.5"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-4 h-4 mr-3" />
                       Exit Demo
                     </DropdownMenuItem>
                   </>
@@ -290,17 +292,17 @@ export function Navigation() {
                   <>
                     <DropdownMenuItem 
                       onClick={() => router.push("/settings")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/10 focus:text-primary rounded-lg mx-1 my-0.5"
                     >
-                      <Settings className="w-4 h-4 mr-2" />
+                      <Settings className="w-4 h-4 mr-3" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                    <DropdownMenuSeparator className="bg-border/50 my-1" />
                     <DropdownMenuItem 
                       onClick={handleLogout} 
-                      className="text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 cursor-pointer focus:bg-red-100 dark:focus:bg-purple-800/30"
+                      className="text-destructive focus:text-destructive cursor-pointer focus:bg-destructive/10 rounded-lg mx-1 my-0.5"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-4 h-4 mr-3" />
                       Logout
                     </DropdownMenuItem>
                   </>
@@ -308,16 +310,16 @@ export function Navigation() {
                   <>
                     <DropdownMenuItem 
                       onClick={() => router.push("/login")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/10 focus:text-primary rounded-lg mx-1 my-0.5"
                     >
-                      <User className="w-4 h-4 mr-2" />
+                      <User className="w-4 h-4 mr-3" />
                       Login
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => router.push("/signup")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/10 focus:text-primary rounded-lg mx-1 my-0.5"
                     >
-                      <User className="w-4 h-4 mr-2" />
+                      <User className="w-4 h-4 mr-3" />
                       Sign Up
                     </DropdownMenuItem>
                   </>

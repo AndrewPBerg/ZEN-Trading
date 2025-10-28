@@ -4,76 +4,76 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to cosmic/zodiac theme colors */
-  --background: oklch(1 0 0); /* Pure white */
-  --foreground: oklch(0.25 0 0); /* Dark gray for text */
-  --card: oklch(0.98 0 0); /* Very light gray for cards */
-  --card-foreground: oklch(0.25 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0 0);
-  --primary: oklch(0.45 0.15 285); /* Deep purple #6b5b95 */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.65 0.15 220); /* Turquoise #3ab0e7 */
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.75 0.15 85); /* Gold #d4af37 */
-  --accent-foreground: oklch(0.25 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0 0);
-  --input: oklch(1 0 0);
-  --ring: oklch(0.65 0.15 220); /* Turquoise for focus */
-  --chart-1: oklch(0.45 0.15 285); /* Deep purple */
-  --chart-2: oklch(0.65 0.15 220); /* Turquoise */
-  --chart-3: oklch(0.75 0.15 85); /* Gold */
-  --chart-4: oklch(0.35 0.1 300); /* Darker purple */
-  --chart-5: oklch(0.55 0.12 200); /* Lighter blue */
-  --radius: 0.75rem; /* More rounded for boho feel */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.25 0 0);
-  --sidebar-primary: oklch(0.45 0.15 285);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.65 0.15 220);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.92 0 0);
-  --sidebar-ring: oklch(0.45 0.15 285);
+  /* Enhanced cosmic/zodiac theme colors with better contrast */
+  --background: 0 0% 100%; /* Pure white */
+  --foreground: 222.2 84% 4.9%; /* Dark gray for text */
+  --card: 0 0% 100%; /* Pure white for cards */
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 262.1 83.3% 57.8%; /* Enhanced purple */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%; /* Light gray */
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 45 93% 47%; /* Gold */
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 262.1 83.3% 57.8%; /* Purple for focus */
+  --chart-1: 262.1 83.3% 57.8%; /* Purple */
+  --chart-2: 200 98% 39%; /* Turquoise */
+  --chart-3: 45 93% 47%; /* Gold */
+  --chart-4: 300 100% 25%; /* Darker purple */
+  --chart-5: 200 100% 50%; /* Lighter blue */
+  --radius: 0.75rem; /* More rounded for modern feel */
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 262.1 83.3% 57.8%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 200 98% 39%;
+  --sidebar-accent-foreground: 222.2 84% 4.9%;
+  --sidebar-border: 214.3 31.8% 91.4%;
+  --sidebar-ring: 262.1 83.3% 57.8%;
 }
 
 .dark {
-  /* Updated dark mode for cosmic theme */
-  --background: oklch(0.15 0.05 285); /* Dark purple background */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.2 0.05 285);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.15 0.05 285);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.65 0.15 285); /* Lighter purple for dark mode */
-  --primary-foreground: oklch(0.15 0 0);
-  --secondary: oklch(0.7 0.15 220); /* Brighter turquoise */
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.25 0.05 285);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.8 0.15 85); /* Brighter gold */
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.6 0.25 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.25 0.05 285);
-  --input: oklch(0.2 0.05 285);
-  --ring: oklch(0.7 0.15 220);
-  --chart-1: oklch(0.65 0.15 285);
-  --chart-2: oklch(0.7 0.15 220);
-  --chart-3: oklch(0.8 0.15 85);
-  --chart-4: oklch(0.55 0.12 300);
-  --chart-5: oklch(0.6 0.12 200);
-  --sidebar: oklch(0.18 0.05 285);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.65 0.15 285);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
-  --sidebar-accent: oklch(0.7 0.15 220);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.25 0.05 285);
-  --sidebar-ring: oklch(0.65 0.15 285);
+  /* Enhanced dark mode for cosmic theme */
+  --background: 222.2 84% 4.9%; /* Dark background */
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 262.1 83.3% 57.8%; /* Purple */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217.2 32.6% 17.5%; /* Dark gray */
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 45 93% 47%; /* Gold */
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 262.1 83.3% 57.8%;
+  --chart-1: 262.1 83.3% 57.8%; /* Purple */
+  --chart-2: 200 98% 39%; /* Turquoise */
+  --chart-3: 45 93% 47%; /* Gold */
+  --chart-4: 300 100% 25%; /* Darker purple */
+  --chart-5: 200 100% 50%; /* Lighter blue */
+  --sidebar: 222.2 84% 4.9%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 262.1 83.3% 57.8%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 200 98% 39%;
+  --sidebar-accent-foreground: 222.2 84% 4.9%;
+  --sidebar-border: 217.2 32.6% 17.5%;
+  --sidebar-ring: 262.1 83.3% 57.8%;
 }
 
 @theme inline {
@@ -169,10 +169,9 @@
   }
 }
 
-/* Adding custom animations for stars */
+/* Enhanced custom animations for cosmic theme */
 @keyframes shimmer {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0.4;
     transform: scale(1);
   }
@@ -183,8 +182,7 @@
 }
 
 @keyframes twinkle {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0.3;
     transform: scale(1) rotate(0deg);
   }
@@ -202,12 +200,81 @@
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(var(--primary));
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-shimmer {
   animation: shimmer 2s ease-in-out infinite;
 }
 
 .animate-twinkle {
   animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out;
 }
 
 /* Recharts theme-aware wrapper */

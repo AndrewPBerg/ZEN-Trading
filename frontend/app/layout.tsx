@@ -42,7 +42,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex flex-col min-h-full">
+      <body className="flex flex-col min-h-full bg-background text-foreground">
         <div className="fixed inset-0 z-0">
           <AnimatedStars />
         </div>

@@ -52,30 +52,30 @@ export default function WelcomeScreen() {
   }, [])
 
   return (
-    <div className="h-screen bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex flex-col items-center justify-center px-6 relative overflow-hidden">
       {/* Theme Toggle */}
       <ThemeToggle />
       
       {/* API Unavailable Warning Banner */}
       {!isCheckingApi && apiUnavailable && (
-        <div className="fixed top-4 left-4 right-4 z-50 mx-auto max-w-2xl">
-          <Card className="p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/5 border-orange-500/30 backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <h3 className="font-semibold text-orange-600 dark:text-orange-400">
+        <div className="fixed top-20 left-4 right-4 z-50 mx-auto max-w-2xl animate-fade-in-up">
+          <Card className="p-6 bg-gradient-to-r from-orange-500/10 to-yellow-500/5 border-orange-500/30 backdrop-blur-xl shadow-xl">
+            <div className="flex items-start gap-4">
+              <AlertTriangle className="w-6 h-6 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 space-y-3">
+                <h3 className="font-semibold text-orange-600 dark:text-orange-400 text-lg">
                   No API Found - Demo Mode Active
                 </h3>
-                <p className="text-sm text-orange-700 dark:text-orange-300">
+                <p className="text-sm text-orange-700 dark:text-orange-300 leading-relaxed">
                   You're using the demo application with limited functionality. For full access with real-time data and authentication, run locally from:
                 </p>
                 <a
                   href="https://github.com/AndrewPBerg/ZEN-Trading/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors hover:underline"
                 >
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-4 h-4" />
                   GitHub Repository
                 </a>
               </div>
@@ -94,93 +94,81 @@ export default function WelcomeScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="text-center space-y-8 w-full max-w-2xl mx-auto relative z-10">
+      <div className="text-center space-y-12 w-full max-w-3xl mx-auto relative z-10 animate-fade-in-up">
         {/* Logo Section */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="relative">
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center shadow-2xl animate-float">
               <div className="relative">
-                <Star className="w-8 h-8 text-white" fill="currentColor" />
+                <Star className="w-12 h-12 text-white" fill="currentColor" />
                 <Sparkles
-                  className={`w-4 h-4 text-accent absolute -top-1 -right-1 transition-transform duration-500 ${isAnimating ? "scale-150 rotate-180" : ""}`}
+                  className={`w-6 h-6 text-accent absolute -top-2 -right-2 transition-all duration-500 ${isAnimating ? "scale-150 rotate-180" : ""}`}
                 />
               </div>
             </div>
-            <div />
+            <div className="absolute inset-0 w-32 h-32 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-xl animate-pulse-glow" />
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <div className="space-y-4">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-gradient-x">
               ZEN Traders
             </h1>
-            <p className="text-muted-foreground text-lg font-medium">Where Markets Meet Your Stars</p>
+            <p className="text-muted-foreground text-xl font-medium">Where Markets Meet Your Stars</p>
           </div>
         </div>
 
         {/* Feature Highlights */}
-        <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                <Moon className="w-4 h-4 text-primary" />
+        <Card className="p-8 bg-card/90 backdrop-blur-xl border-border/50 shadow-xl">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                <Moon className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground">Zodiac-aligned stock recommendations</span>
+              <span className="text-base text-muted-foreground group-hover:text-foreground transition-colors">Zodiac-aligned stock recommendations</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                <Star className="w-4 h-4 text-secondary" />
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 bg-secondary/20 rounded-2xl flex items-center justify-center group-hover:bg-secondary/30 transition-colors">
+                <Star className="w-6 h-6 text-secondary" />
               </div>
-              <span className="text-sm text-muted-foreground">Daily cosmic market insights</span>
+              <span className="text-base text-muted-foreground group-hover:text-foreground transition-colors">Daily cosmic market insights</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                <Sun className="w-4 h-4 text-accent" />
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                <Sun className="w-6 h-6 text-accent" />
               </div>
-              <span className="text-sm text-muted-foreground">Mystical portfolio tracking</span>
+              <span className="text-base text-muted-foreground group-hover:text-foreground transition-colors">Mystical portfolio tracking</span>
             </div>
           </div>
         </Card>
 
         {/* Action Buttons */}
-        <div className="space-y-4">
-          {/* <Button
-            onClick={handleGetStarted}
-            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold py-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-            disabled={isAnimating}
-          >
-            {isAnimating ? (
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 animate-spin" />
-                Aligning your stars...
-              </div>
-            ) : (
-              "Begin Your Cosmic Journey"
-            )}
-          </Button> */}
-
+        <div className="space-y-6">
           <Button
             onClick={handleDemoMode}
-            variant="outline"
-            className="w-full border-accent/50 text-accent hover:bg-accent/10 bg-transparent font-medium py-4 rounded-xl"
+            variant="cosmic"
+            size="xl"
+            className="w-full"
             disabled={isAnimating}
           >
-            <Star className="w-4 h-4 mr-2" />
+            <Star className="w-6 h-6 mr-3" />
             Try Demo (Virgo)
           </Button>
 
           {/* Only show auth buttons if API is available and component is loaded */}
           {!apiUnavailable && isLoaded && (
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Button
                 variant="outline"
-                className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
+                size="lg"
+                className="flex-1"
                 onClick={() => window.location.href = "/signup"}
               >
                 Sign Up
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent"
+                size="lg"
+                className="flex-1"
                 onClick={() => window.location.href = "/login"}
               >
                 Log In
@@ -190,9 +178,9 @@ export default function WelcomeScreen() {
           
           {/* Show loading state while checking API */}
           {isCheckingApi && (
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <span className="text-sm">Checking connection...</span>
+            <div className="flex items-center justify-center gap-3 text-muted-foreground">
+              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <span className="text-base">Checking connection...</span>
             </div>
           )}
         </div>

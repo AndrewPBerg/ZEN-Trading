@@ -348,23 +348,23 @@ export function BuyStockModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200 max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-transparent hover:[&::-webkit-scrollbar-thumb]:bg-primary/30 dark:[&::-webkit-scrollbar-thumb]:bg-primary/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-primary/40">
+      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200 max-h-[90vh] overflow-y-auto mx-4 sm:mx-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-transparent hover:[&::-webkit-scrollbar-thumb]:bg-primary/30 dark:[&::-webkit-scrollbar-thumb]:bg-primary/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-primary/40">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <ShoppingCart className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 text-foreground text-lg sm:text-xl">
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Buy {ticker}</span>
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription className="text-muted-foreground text-sm sm:text-base">
             {stockData?.company_name || "Configure your purchase"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 transition-all duration-200">
           {/* Live Quote Display */}
-          <div className="bg-muted/30 dark:bg-muted/20 border border-border/50 dark:border-border/30 rounded-lg p-4 space-y-2">
+          <div className="bg-muted/30 dark:bg-muted/20 border border-border/50 dark:border-border/30 rounded-lg p-3 sm:p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">Market Price</span>
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Market Price</span>
                 {isLoadingPrice && (
                   <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                 )}
@@ -378,20 +378,20 @@ export function BuyStockModal({
             
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-2xl sm:text-3xl font-bold text-foreground">
                   ${formatCurrency(currentPrice)}
                 </p>
                 {priceChange !== 0 && (
                   <div className={cn(
-                    "flex items-center gap-1 text-sm font-medium",
+                    "flex items-center gap-1 text-xs sm:text-sm font-medium",
                     isPricePositive 
                       ? "text-green-600 dark:text-green-400" 
                       : "text-red-600 dark:text-red-400"
                   )}>
                     {isPricePositive ? (
-                      <TrendingUp className="w-4 h-4" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                     ) : (
-                      <TrendingDown className="w-4 h-4" />
+                      <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
                     )}
                     <span>
                       {isPricePositive ? "+" : ""}
@@ -440,7 +440,7 @@ export function BuyStockModal({
 
           {/* Buy Method Toggle */}
           <div className="space-y-3">
-            <Label className="text-foreground">Buy Method</Label>
+            <Label className="text-foreground text-sm sm:text-base">Buy Method</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -451,10 +451,11 @@ export function BuyStockModal({
                   setDisplayAmount("")
                 }}
                 className={cn(
+                  "text-xs sm:text-sm h-10",
                   buyMethod === "dollars" && "bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary"
                 )}
               >
-                <DollarSign className="w-4 h-4 mr-2" />
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Dollar Amount
               </Button>
               <Button
@@ -469,7 +470,7 @@ export function BuyStockModal({
                   buyMethod === "shares" && "bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary"
                 )}
               >
-                <TrendingUp className="w-4 h-4 mr-2" />
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Shares
               </Button>
             </div>
@@ -477,7 +478,7 @@ export function BuyStockModal({
 
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-foreground">
+            <Label htmlFor="amount" className="text-foreground text-sm sm:text-base">
               {buyMethod === "dollars" ? "Dollar Amount" : "Number of Shares"}
             </Label>
             <div className="relative">
@@ -489,13 +490,13 @@ export function BuyStockModal({
                 value={displayAmount}
                 onChange={(e) => handleAmountChange(e.target.value)}
                 className={cn(
-                  "text-lg font-semibold bg-background dark:bg-muted/10 text-foreground border-border",
+                  "text-base sm:text-lg font-semibold bg-background dark:bg-muted/10 text-foreground border-border h-10",
                   buyMethod === "dollars" && "pl-6"
                 )}
                 disabled={isSubmitting}
               />
               {buyMethod === "dollars" && (
-                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
               )}
             </div>
             {buyMethod === "dollars" && (
@@ -519,11 +520,11 @@ export function BuyStockModal({
           {/* Order Summary - Reserved space for smooth transitions */}
           <div className="min-h-[180px] transition-all duration-300">
             {parsedAmount > 0 && !isNaN(parsedAmount) && (
-              <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-4 space-y-2 border border-primary/20 dark:border-primary/30 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-3 sm:p-4 space-y-2 border border-primary/20 dark:border-primary/30 animate-in fade-in slide-in-from-top-2 duration-300">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Order Summary
                 </p>
-                <div className="space-y-1.5 text-sm">
+                <div className="space-y-1.5 text-xs sm:text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shares</span>
                     <span className="font-semibold text-foreground">
@@ -535,7 +536,7 @@ export function BuyStockModal({
                     <span className="font-semibold text-foreground">${formatCurrency(currentPrice)}</span>
                   </div>
                   <Separator className="my-2 bg-border" />
-                  <div className="flex justify-between text-base">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="font-semibold text-foreground">Estimated Total</span>
                     <span className="font-bold text-foreground">
                       ${formatCurrency(estimatedTotal)}
@@ -658,7 +659,7 @@ export function BuyStockModal({
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 border-border hover:border-border hover:bg-background dark:hover:bg-card"
+              className="flex-1 border-border hover:border-border hover:bg-background dark:hover:bg-card h-10 text-sm sm:text-base"
             >
               Cancel
             </Button>
@@ -666,16 +667,16 @@ export function BuyStockModal({
               type="button"
               onClick={handlePurchase}
               disabled={!canSubmit}
-              className="flex-1 bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-primary to-secondary text-white dark:text-white hover:from-primary hover:to-secondary disabled:opacity-50 h-10 text-sm sm:text-base"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin" />
                   Placing Order...
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Confirm Purchase
                 </>
               )}

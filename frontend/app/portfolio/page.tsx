@@ -250,21 +250,21 @@ function PortfolioPageContent() {
   const isPositive = Number(portfolio.total_gain_loss ?? 0) >= 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-20 pb-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-16 sm:pt-20 pb-4">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
-        <div className="absolute top-40 right-12 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse delay-500" />
-        <div className="absolute bottom-32 left-16 w-1 h-1 bg-primary rounded-full animate-pulse delay-1000" />
-        <div className="absolute bottom-20 right-8 w-2 h-2 bg-accent rounded-full animate-pulse delay-700" />
+        <div className="absolute top-20 left-4 sm:left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
+        <div className="absolute top-40 right-6 sm:right-12 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse delay-500" />
+        <div className="absolute bottom-32 left-8 sm:left-16 w-1 h-1 bg-primary rounded-full animate-pulse delay-1000" />
+        <div className="absolute bottom-20 right-4 sm:right-8 w-2 h-2 bg-accent rounded-full animate-pulse delay-700" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="mb-4">
+        <div className="mb-4 sm:mb-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
-            <p className="text-sm text-muted-foreground">Your stellar investment journey</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Your stellar investment journey</p>
           </div>
         </div>
 
@@ -294,17 +294,17 @@ function PortfolioPageContent() {
           )}
 
           {/* Portfolio Summary Card - Always Visible */}
-          <Card className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
+          <Card className="p-3 sm:p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
             <div className="space-y-2">
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">
+                <div className="text-xl sm:text-2xl font-bold text-foreground">
                   ${Number(portfolio.total_portfolio_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div
                   className={`flex items-center justify-center gap-1 mt-1 ${isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                  <span className="font-medium">
+                  {isPositive ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  <span className="font-medium text-sm sm:text-base">
                     {isPositive ? "+" : ""}${Math.abs(Number(portfolio.total_gain_loss ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? "+" : ""}
                     {Number(portfolio.total_gain_loss_percent ?? 0).toFixed(2)}%)
                   </span>
@@ -328,7 +328,7 @@ function PortfolioPageContent() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Star className="w-3 h-3 text-accent" fill="currentColor" />
-                    <span className={`text-sm font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
+                    <span className={`text-xs sm:text-sm font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
                       {Number(portfolio.cosmic_vibe_index ?? 0)}%
                     </span>
                   </div>
@@ -369,10 +369,10 @@ function PortfolioPageContent() {
             )}>
               {/* Holdings List */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-foreground">Your Holdings</h2>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground">Your Holdings</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <Badge variant="outline" className="text-xs w-fit">
                       {portfolio.holdings.length} Position{portfolio.holdings.length !== 1 ? 's' : ''}
                     </Badge>
                     <div className="flex items-center gap-2">
@@ -390,7 +390,7 @@ function PortfolioPageContent() {
 
                 <div className={cn(
                   "grid gap-3 transition-all duration-500",
-                  hasSelections ? "grid-cols-1" : "sm:grid-cols-2"
+                  hasSelections ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
                 )}>
                   {portfolio.holdings.map((holding) => {
                     const isHoldingPositive = Number(holding.gain_loss ?? 0) >= 0
@@ -400,7 +400,7 @@ function PortfolioPageContent() {
                       <Card
                         key={holding.ticker}
                         className={cn(
-                          "p-3 transition-all duration-300 group relative",
+                          "p-3 sm:p-4 transition-all duration-300 group relative",
                           "hover:shadow-lg",
                           isSelected && "ring-2 ring-primary shadow-lg",
                           `bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`
@@ -411,14 +411,14 @@ function PortfolioPageContent() {
                           onClick={() => toggleHolding(holding.ticker)}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-background/80 rounded-full flex items-center justify-center text-lg">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-background/80 rounded-full flex items-center justify-center text-sm sm:text-lg flex-shrink-0">
                                 {elementIcons[holding.element as keyof typeof elementIcons]}
                               </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-bold text-foreground">{holding.ticker}</h3>
-                                  <Badge variant="outline" className="text-xs px-2 py-0">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1 sm:gap-2">
+                                  <h3 className="font-bold text-foreground text-sm sm:text-base truncate">{holding.ticker}</h3>
+                                  <Badge variant="outline" className="text-xs px-1.5 sm:px-2 py-0 flex-shrink-0">
                                     {holding.zodiac_sign}
                                   </Badge>
                                 </div>
@@ -428,8 +428,8 @@ function PortfolioPageContent() {
                               </div>
                             </div>
 
-                            <div className="text-right flex flex-col items-end gap-1">
-                              <p className="font-bold text-foreground">
+                            <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                              <p className="font-bold text-foreground text-sm sm:text-base">
                                 ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </p>
                               <div
@@ -484,7 +484,7 @@ function PortfolioPageContent() {
                               e.stopPropagation()
                               handleOpenSellModal(holding)
                             }}
-                            className="w-full h-8 text-xs bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500"
+                            className="w-full h-8 sm:h-9 text-xs bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500"
                           >
                             <ShoppingBag className="w-3 h-3 mr-1" />
                             Sell

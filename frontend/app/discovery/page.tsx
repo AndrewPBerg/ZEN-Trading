@@ -387,12 +387,12 @@ function DiscoveryPageContent() {
   return (
     <div className="h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden flex flex-col pt-16">
       {/* Header */}
-      <div className="px-6 py-4 flex-shrink-0">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-foreground">Discovery</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">Discovery</h1>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -402,7 +402,7 @@ function DiscoveryPageContent() {
                   <Info className="w-4 h-4 text-muted-foreground hover:text-accent transition-colors" />
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {userSign && `${ZODIAC_EMOJIS[userSign] || ""} ${userSign} matches`}
               </p>
             </div>
@@ -510,8 +510,8 @@ function DiscoveryPageContent() {
                 )}
 
                 {/* Founding Date */}
-                <div className="mb-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
+                <div className="mb-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="font-medium">Founded: {formatFoundingDate(currentStock.date_founded)}</span>
                 </div>
 
@@ -522,14 +522,14 @@ function DiscoveryPageContent() {
                       <Info className="w-5 h-5 text-muted-foreground" />
                       <p className="text-sm font-semibold text-foreground">About</p>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">
                       {currentStock.description}
                     </p>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 justify-center">
+                <div className="flex gap-3 sm:gap-4 justify-center">
                   <Button
                     size="lg"
                     variant="outline"
@@ -540,9 +540,9 @@ function DiscoveryPageContent() {
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
-                    className="w-14 h-14 rounded-full bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110 dark:bg-red-500/30 dark:hover:bg-red-500/40 dark:border-red-500/60"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110 dark:bg-red-500/30 dark:hover:bg-red-500/40 dark:border-red-500/60"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
                   </Button>
                   <Button
                     size="lg"
@@ -553,9 +553,9 @@ function DiscoveryPageContent() {
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     disabled={isAnimating || isDragging}
-                    className="w-14 h-14 rounded-full bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-400 hover:text-green-300 transition-all duration-200 hover:scale-110"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-400 hover:text-green-300 transition-all duration-200 hover:scale-110"
                   >
-                    <Heart className="w-6 h-6" />
+                    <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
                   </Button>
                 </div>
               </Card>

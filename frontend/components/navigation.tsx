@@ -136,46 +136,48 @@ export function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-100/95 via-indigo-100/95 to-purple-100/95 dark:from-purple-900/95 dark:via-indigo-900/95 dark:to-purple-900/95 backdrop-blur-lg border-b border-purple-300/40 dark:border-purple-500/20">
-      <div className="relative flex items-center justify-between px-6 py-3">
-        {/* Navigation Items */}
-        <div className="flex items-center gap-1 z-10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 dark:from-primary/20 dark:via-secondary/10 dark:to-primary/20 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 glass">
+      <div className="relative flex items-center justify-between px-6 py-4">
+        {/* Enhanced Navigation Items */}
+        <div className="flex items-center gap-2 z-10">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
+                className={`group relative flex items-center gap-0 px-4 py-3 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? "text-purple-900 dark:text-gold-400 bg-purple-300/70 dark:bg-purple-300/50"
-                    : "text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30"
-
+                    ? "text-primary-foreground bg-primary shadow-cosmic scale-105"
+                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10 dark:hover:bg-primary/20 hover:scale-105"
                 }`}
               >
                 <Icon 
-                  size={20} 
+                  size={22} 
                   className={`transition-all duration-300 ${
-                    isActive ? "drop-shadow-lg scale-110" : "group-hover:scale-125"
+                    isActive ? "drop-shadow-lg scale-110 animate-pulse-slow" : "group-hover:scale-125 group-hover:animate-pulse"
                   }`} 
                 />
-                <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
+                <span className={`overflow-hidden transition-all duration-300 text-sm font-semibold whitespace-nowrap ${
                   isActive 
-                    ? "max-w-20 ml-2 opacity-100 text-purple-900 dark:text-gold-400" 
-                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
+                    ? "max-w-24 ml-3 opacity-100 text-primary-foreground" 
+                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-24 group-hover:ml-3 group-hover:opacity-100"
                 }`}>
                   {label}
                 </span>
+                {isActive && (
+                  <div className="absolute -bottom-1 left-1/2 w-1 h-1 bg-accent rounded-full -translate-x-1/2 animate-pulse" />
+                )}
               </Link>
             )
           })}
         </div>
 
-        {/* Center: Demo Mode Warning Bubble - Absolutely Centered */}
+        {/* Enhanced Demo Mode Warning Bubble */}
         {mounted && isDemo && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg pointer-events-none">
-            <AlertTriangle className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs font-medium text-white whitespace-nowrap">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/40 shadow-cosmic-lg pointer-events-none animate-pulse-slow">
+            <AlertTriangle className="w-4 h-4 text-white animate-wiggle" />
+            <span className="text-sm font-semibold text-white whitespace-nowrap">
               Demo Mode Active: No Live Data
             </span>
           </div>
@@ -183,21 +185,21 @@ export function Navigation() {
 
         {/* Right Side: Market Status, Theme Toggle & User Menu */}
         <div className="flex items-center gap-2 z-10">
-          {/* Market Status Indicator */}
+          {/* Enhanced Market Status Indicator */}
           {mounted && marketStatus && (
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20">
+            <div className="flex items-center gap-4 px-4 py-2 rounded-xl bg-card/80 dark:bg-card/90 border border-primary/20 dark:border-primary/30 glass">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className="text-xs text-purple-800 dark:text-purple-300 font-medium">
+                <div className={`w-3 h-3 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse shadow-glow' : 'bg-red-500'}`} />
+                <span className="text-sm text-foreground font-semibold">
                   {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
                 </span>
               </div>
-              <div className="border-l border-purple-300/40 dark:border-purple-500/20 pl-3">
-                <div className="text-xs">
-                  <span className="text-purple-700 dark:text-purple-400 font-medium">
+              <div className="border-l border-primary/20 dark:border-primary/30 pl-4">
+                <div className="text-sm">
+                  <span className="text-muted-foreground font-medium">
                     {marketStatus.is_open ? 'Closes' : 'Opens'}:
                   </span>
-                  <span className="text-purple-600 dark:text-purple-300 ml-1">
+                  <span className="text-foreground ml-2 font-semibold">
                     {(() => {
                       const nextEventDate = new Date(marketStatus.next_event_time)
                       const today = new Date()
@@ -234,36 +236,36 @@ export function Navigation() {
             </div>
           )}
           
-          {/* Theme Toggle */}
+          {/* Enhanced Theme Toggle */}
           {mounted && (
             <Button
               onClick={toggleTheme}
               variant="ghost"
               size="sm"
-              className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+              className="text-muted-foreground hover:text-foreground hover:bg-primary/10 dark:hover:bg-primary/20 p-3 transition-all duration-300 hover:scale-110 rounded-xl"
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-5 w-5 animate-pulse-slow" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-5 w-5 animate-float-gentle" />
               )}
             </Button>
           )}
 
-          {/* User Menu - Always visible, shows login options when not authenticated */}
+          {/* Enhanced User Menu */}
           {mounted && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+                  className="text-muted-foreground hover:text-foreground hover:bg-primary/10 dark:hover:bg-primary/20 p-3 transition-all duration-300 hover:scale-110 rounded-xl"
                 >
-                  <User size={20} />
+                  <User size={20} className="animate-float-gentle" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 bg-white/95 dark:bg-purple-950/95 border-purple-200 dark:border-purple-500/30">
+              <DropdownMenuContent align="end" className="w-48 bg-card/95 dark:bg-card/95 border-primary/20 dark:border-primary/30 glass backdrop-blur-xl">
                 {isDemo ? (
                   <>
                     {hasAuth && (

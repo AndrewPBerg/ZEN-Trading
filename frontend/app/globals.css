@@ -4,76 +4,76 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to cosmic/zodiac theme colors */
-  --background: oklch(1 0 0); /* Pure white */
-  --foreground: oklch(0.25 0 0); /* Dark gray for text */
-  --card: oklch(0.98 0 0); /* Very light gray for cards */
-  --card-foreground: oklch(0.25 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0 0);
-  --primary: oklch(0.45 0.15 285); /* Deep purple #6b5b95 */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.65 0.15 220); /* Turquoise #3ab0e7 */
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.75 0.15 85); /* Gold #d4af37 */
-  --accent-foreground: oklch(0.25 0 0);
+  /* Enhanced cosmic/zodiac theme colors with better contrast and depth */
+  --background: oklch(0.99 0.005 285); /* Slightly warm white */
+  --foreground: oklch(0.15 0.02 285); /* Deep purple-tinted dark */
+  --card: oklch(0.98 0.01 285); /* Very light purple-tinted white */
+  --card-foreground: oklch(0.15 0.02 285);
+  --popover: oklch(0.99 0.005 285);
+  --popover-foreground: oklch(0.15 0.02 285);
+  --primary: oklch(0.45 0.18 285); /* Rich deep purple */
+  --primary-foreground: oklch(0.98 0.01 285);
+  --secondary: oklch(0.65 0.18 220); /* Vibrant turquoise */
+  --secondary-foreground: oklch(0.98 0.01 285);
+  --muted: oklch(0.96 0.01 285);
+  --muted-foreground: oklch(0.45 0.05 285);
+  --accent: oklch(0.75 0.18 85); /* Rich gold */
+  --accent-foreground: oklch(0.15 0.02 285);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0 0);
-  --input: oklch(1 0 0);
-  --ring: oklch(0.65 0.15 220); /* Turquoise for focus */
-  --chart-1: oklch(0.45 0.15 285); /* Deep purple */
-  --chart-2: oklch(0.65 0.15 220); /* Turquoise */
-  --chart-3: oklch(0.75 0.15 85); /* Gold */
-  --chart-4: oklch(0.35 0.1 300); /* Darker purple */
-  --chart-5: oklch(0.55 0.12 200); /* Lighter blue */
-  --radius: 0.75rem; /* More rounded for boho feel */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.25 0 0);
-  --sidebar-primary: oklch(0.45 0.15 285);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.65 0.15 220);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.92 0 0);
-  --sidebar-ring: oklch(0.45 0.15 285);
+  --destructive-foreground: oklch(0.98 0.01 285);
+  --border: oklch(0.92 0.01 285);
+  --input: oklch(0.99 0.005 285);
+  --ring: oklch(0.65 0.18 220); /* Turquoise for focus */
+  --chart-1: oklch(0.45 0.18 285); /* Deep purple */
+  --chart-2: oklch(0.65 0.18 220); /* Turquoise */
+  --chart-3: oklch(0.75 0.18 85); /* Gold */
+  --chart-4: oklch(0.35 0.12 300); /* Darker purple */
+  --chart-5: oklch(0.55 0.15 200); /* Lighter blue */
+  --radius: 0.875rem; /* More rounded for modern feel */
+  --sidebar: oklch(0.98 0.01 285);
+  --sidebar-foreground: oklch(0.15 0.02 285);
+  --sidebar-primary: oklch(0.45 0.18 285);
+  --sidebar-primary-foreground: oklch(0.98 0.01 285);
+  --sidebar-accent: oklch(0.65 0.18 220);
+  --sidebar-accent-foreground: oklch(0.98 0.01 285);
+  --sidebar-border: oklch(0.92 0.01 285);
+  --sidebar-ring: oklch(0.45 0.18 285);
 }
 
 .dark {
-  /* Updated dark mode for cosmic theme */
-  --background: oklch(0.15 0.05 285); /* Dark purple background */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.2 0.05 285);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.15 0.05 285);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.65 0.15 285); /* Lighter purple for dark mode */
-  --primary-foreground: oklch(0.15 0 0);
-  --secondary: oklch(0.7 0.15 220); /* Brighter turquoise */
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.25 0.05 285);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.8 0.15 85); /* Brighter gold */
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.6 0.25 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.25 0.05 285);
-  --input: oklch(0.2 0.05 285);
-  --ring: oklch(0.7 0.15 220);
-  --chart-1: oklch(0.65 0.15 285);
-  --chart-2: oklch(0.7 0.15 220);
-  --chart-3: oklch(0.8 0.15 85);
-  --chart-4: oklch(0.55 0.12 300);
-  --chart-5: oklch(0.6 0.12 200);
-  --sidebar: oklch(0.18 0.05 285);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.65 0.15 285);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
-  --sidebar-accent: oklch(0.7 0.15 220);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.25 0.05 285);
-  --sidebar-ring: oklch(0.65 0.15 285);
+  /* Enhanced dark mode for cosmic theme with better contrast */
+  --background: oklch(0.12 0.08 285); /* Deep cosmic purple */
+  --foreground: oklch(0.95 0.01 285); /* Slightly warm white */
+  --card: oklch(0.18 0.08 285); /* Darker purple cards */
+  --card-foreground: oklch(0.95 0.01 285);
+  --popover: oklch(0.15 0.08 285);
+  --popover-foreground: oklch(0.95 0.01 285);
+  --primary: oklch(0.7 0.18 285); /* Brighter purple for dark mode */
+  --primary-foreground: oklch(0.12 0.08 285);
+  --secondary: oklch(0.75 0.18 220); /* Vibrant turquoise */
+  --secondary-foreground: oklch(0.12 0.08 285);
+  --muted: oklch(0.25 0.08 285);
+  --muted-foreground: oklch(0.7 0.05 285);
+  --accent: oklch(0.85 0.18 85); /* Bright gold */
+  --accent-foreground: oklch(0.12 0.08 285);
+  --destructive: oklch(0.65 0.25 25);
+  --destructive-foreground: oklch(0.95 0.01 285);
+  --border: oklch(0.25 0.08 285);
+  --input: oklch(0.18 0.08 285);
+  --ring: oklch(0.75 0.18 220);
+  --chart-1: oklch(0.7 0.18 285);
+  --chart-2: oklch(0.75 0.18 220);
+  --chart-3: oklch(0.85 0.18 85);
+  --chart-4: oklch(0.6 0.15 300);
+  --chart-5: oklch(0.65 0.15 200);
+  --sidebar: oklch(0.15 0.08 285);
+  --sidebar-foreground: oklch(0.95 0.01 285);
+  --sidebar-primary: oklch(0.7 0.18 285);
+  --sidebar-primary-foreground: oklch(0.12 0.08 285);
+  --sidebar-accent: oklch(0.75 0.18 220);
+  --sidebar-accent-foreground: oklch(0.12 0.08 285);
+  --sidebar-border: oklch(0.25 0.08 285);
+  --sidebar-ring: oklch(0.7 0.18 285);
 }
 
 @theme inline {
@@ -169,7 +169,7 @@
   }
 }
 
-/* Adding custom animations for stars */
+/* Enhanced cosmic animations and effects */
 @keyframes shimmer {
   0%,
   100% {
@@ -202,12 +202,195 @@
   }
 }
 
+@keyframes cosmic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3);
+  }
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-shimmer {
   animation: shimmer 2s ease-in-out infinite;
 }
 
 .animate-twinkle {
   animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-cosmic-pulse {
+  animation: cosmic-pulse 3s ease-in-out infinite;
+}
+
+.animate-aurora {
+  animation: aurora 8s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+/* Modern glass morphism effects */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced cosmic gradients */
+.cosmic-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--secondary)) 25%, 
+    hsl(var(--accent)) 50%, 
+    hsl(var(--primary)) 75%, 
+    hsl(var(--secondary)) 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.cosmic-text {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)), 
+    hsl(var(--secondary)), 
+    hsl(var(--accent)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Modern card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced button styles */
+.btn-cosmic {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)), 
+    hsl(var(--secondary)));
+  background-size: 200% 200%;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cosmic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.btn-cosmic:hover::before {
+  left: 100%;
+}
+
+.btn-cosmic:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+/* Enhanced focus states */
+.focus-cosmic:focus {
+  outline: none;
+  ring: 2px solid hsl(var(--ring));
+  ring-offset: 2px;
+  ring-offset-color: hsl(var(--background));
+}
+
+/* Modern loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    hsl(var(--muted)) 25%, 
+    hsl(var(--muted) / 0.5) 50%, 
+    hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
 /* Recharts theme-aware wrapper */

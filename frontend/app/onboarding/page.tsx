@@ -102,41 +102,47 @@ function OnboardingPageContent() {
   const isFormValid = formData.birthDate && formData.investingVibe && detectedZodiac
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 dark:from-primary/5 dark:via-background dark:to-secondary/5 p-6 pb-20">
-      {/* Cosmic Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 dark:from-primary/5 dark:via-background dark:to-secondary/5 p-6 pb-20 relative overflow-hidden">
+      {/* Enhanced Cosmic Background */}
+      <div className="absolute inset-0 bg-stars opacity-20 dark:opacity-30" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 animate-aurora" />
+      
+      {/* Enhanced Cosmic Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-32 left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
-        <div className="absolute top-20 right-12 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse delay-500" />
-        <div className="absolute bottom-40 left-16 w-1 h-1 bg-primary rounded-full animate-pulse delay-1000" />
-        <div className="absolute bottom-60 right-8 w-2 h-2 bg-accent rounded-full animate-pulse delay-700" />
+        <div className="absolute top-32 left-8 w-2 h-2 bg-accent rounded-full animate-twinkle shadow-cosmic" />
+        <div className="absolute top-20 right-12 w-2.5 h-2.5 bg-secondary rounded-full animate-float-gentle shadow-cosmic" />
+        <div className="absolute bottom-40 left-16 w-2 h-2 bg-primary rounded-full animate-shimmer shadow-cosmic" />
+        <div className="absolute bottom-60 right-8 w-3 h-3 bg-accent rounded-full animate-pulse-slow shadow-cosmic" />
+        <div className="absolute top-1/2 left-1/4 w-1.5 h-1.5 bg-secondary rounded-full animate-twinkle delay-300" />
+        <div className="absolute bottom-1/3 right-1/3 w-1 h-1 bg-primary rounded-full animate-float-gentle delay-700" />
       </div>
 
-      <div className="max-w-md mx-auto pt-8 relative z-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <Star className="w-6 h-6 text-primary-foreground" fill="currentColor" />
+      <div className="max-w-md mx-auto pt-8 relative z-10 animate-fade-in-up">
+        {/* Enhanced Header */}
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 mx-auto bg-cosmic-gradient rounded-full flex items-center justify-center mb-6 shadow-cosmic-lg animate-cosmic-pulse">
+            <Star className="w-8 h-8 text-primary-foreground drop-shadow-lg" fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to Your Cosmic Journey</h1>
-          <p className="text-muted-foreground">Let's align your trading with the stars</p>
+          <h1 className="text-3xl font-bold cosmic-text mb-3 animate-gradient-shift">Welcome to Your Cosmic Journey</h1>
+          <p className="text-muted-foreground text-lg">Let's align your trading with the stars</p>
           {isDemo && (
-            <div className="mt-3">
-              <span className="text-xs bg-accent/20 text-accent px-3 py-1 rounded-full border border-accent/30">
+            <div className="mt-4">
+              <span className="text-sm bg-accent/20 text-accent px-4 py-2 rounded-full border border-accent/30 font-medium animate-pulse-slow">
                 Demo Mode
               </span>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
-          <Card className="p-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-primary/20 dark:border-primary/30">
-            <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Enhanced Personal Information */}
+          <Card className="p-8 bg-card/90 dark:bg-card/95 backdrop-blur-md border-primary/30 dark:border-primary/40 glass card-hover animate-fade-in-up">
+            <div className="space-y-6">
               {/* Date of Birth */}
-              <div className="space-y-2">
-                <Label htmlFor="birthDate" className="text-sm font-medium text-foreground">
+              <div className="space-y-3">
+                <Label htmlFor="birthDate" className="text-base font-semibold text-foreground">
                   Date of Birth
-                  <span className="text-xs text-muted-foreground">Must be at least 18 years old</span>
+                  <span className="block text-sm text-muted-foreground mt-1">Must be at least 18 years old</span>
                 </Label>
                 <Input
                   id="birthDate"
@@ -150,7 +156,7 @@ function OnboardingPageContent() {
                   })()}
                   
                   onChange={e => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
-                  className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground dark:text-foreground [&::-webkit-calendar-picker-indicator]:dark:invert [&::-webkit-calendar-picker-indicator]:dark:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:border-primary/70 dark:hover:border-primary/80"
+                  className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground dark:text-foreground [&::-webkit-calendar-picker-indicator]:dark:invert [&::-webkit-calendar-picker-indicator]:dark:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:border-primary/70 dark:hover:border-primary/80 focus-cosmic rounded-xl py-3 text-base"
                 />
               </div>
             </div>
@@ -159,29 +165,29 @@ function OnboardingPageContent() {
           {/* Zodiac Detection */}
           {formData.birthDate && <ZodiacDetector birthDate={formData.birthDate} onZodiacDetected={setDetectedZodiac} />}
 
-          {/* Investing Vibe Selection */}
-          <Card className="p-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-primary/20 dark:border-primary/30">
-            <div className="space-y-4 flex flex-col items-center">
-              <Label className="text-sm font-medium text-foreground text-center">What's your investing vibe?</Label>
+          {/* Enhanced Investing Vibe Selection */}
+          <Card className="p-8 bg-card/90 dark:bg-card/95 backdrop-blur-md border-primary/30 dark:border-primary/40 glass card-hover animate-fade-in-up">
+            <div className="space-y-6 flex flex-col items-center">
+              <Label className="text-lg font-semibold text-foreground text-center">What's your investing vibe?</Label>
               <div className="w-full flex justify-center">
                 <Select
                   value={formData.investingVibe}
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, investingVibe: value }))}
                 >
-                  <SelectTrigger className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground hover:border-primary/70 dark:hover:border-primary/80 w-full max-w-xs mx-auto text-center" 
+                  <SelectTrigger className="bg-background dark:bg-input border-border dark:border-border/70 focus:border-primary dark:focus:border-primary text-foreground hover:border-primary/70 dark:hover:border-primary/80 w-full max-w-sm mx-auto text-center focus-cosmic rounded-xl py-3 text-base" 
                     style={{ textAlign: 'center' }}>
                     <SelectValue placeholder="Choose your cosmic trading style" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover dark:bg-popover border-border dark:border-border/70">
+                  <SelectContent className="bg-popover dark:bg-popover border-border dark:border-border/70 glass backdrop-blur-xl">
                     {investingVibes.map((vibe) => (
                       <SelectItem 
                         key={vibe.value} 
                         value={vibe.value}
-                        className="focus:bg-primary/10 dark:focus:bg-primary/20 focus:text-foreground"
+                        className="focus:bg-primary/10 dark:focus:bg-primary/20 focus:text-foreground rounded-lg"
                       >
-                        <div className="w-full flex flex-col items-center justify-center text-center">
-                          <span className="w-full font-medium text-foreground flex center">{vibe.label}</span>
-                          <span className="w-full text-xs text-muted-foreground flex center">{vibe.description}</span>
+                        <div className="w-full flex flex-col items-center justify-center text-center py-2">
+                          <span className="w-full font-semibold text-foreground">{vibe.label}</span>
+                          <span className="w-full text-sm text-muted-foreground mt-1">{vibe.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -191,15 +197,15 @@ function OnboardingPageContent() {
             </div>
           </Card>
 
-          {/* Starting Balance Selection */}
-          <Card className="p-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-primary/20 dark:border-primary/30">
-            <div className="space-y-4">
+          {/* Enhanced Starting Balance Selection */}
+          <Card className="p-8 bg-card/90 dark:bg-card/95 backdrop-blur-md border-primary/30 dark:border-primary/40 glass card-hover animate-fade-in-up">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium text-foreground">Starting Account Balance</Label>
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 px-3 py-1.5 rounded-lg border border-primary/20 dark:border-primary/30">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                  <span className="text-lg font-bold text-foreground">
-                    {formData.startingBalance.toLocaleString()}
+                <Label className="text-lg font-semibold text-foreground">Starting Account Balance</Label>
+                <div className="flex items-center gap-2 bg-cosmic-gradient px-4 py-2 rounded-xl border border-primary/30 shadow-cosmic">
+                  <DollarSign className="w-5 h-5 text-primary-foreground animate-pulse-slow" />
+                  <span className="text-xl font-bold text-primary-foreground">
+                    ${formData.startingBalance.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -211,28 +217,30 @@ function OnboardingPageContent() {
                 step={10000}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-sm text-muted-foreground font-medium">
                 <span>$10,000</span>
                 <span>$1,000,000</span>
               </div>
             </div>
           </Card>
 
-          {/* Continue Button */}
+          {/* Enhanced Continue Button */}
           <Button
             type="submit"
+            variant="cosmic"
+            size="lg"
             disabled={!isFormValid || isSubmitting}
-            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground dark:text-primary-foreground font-semibold py-6 rounded-xl shadow-lg dark:shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
+            className="w-full animate-fade-in-up"
           >
             {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 animate-spin" />
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 animate-spin" />
                 Aligning your cosmic profile...
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 Enter the Trading Universe
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5 animate-pulse-slow" />
               </div>
             )}
           </Button>

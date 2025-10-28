@@ -121,22 +121,73 @@ export default function WelcomeScreen() {
         <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary/20 flex items-center justify-center" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}>
                 <Moon className="w-4 h-4 text-primary" />
               </div>
               <span className="text-sm text-muted-foreground">Zodiac-aligned stock recommendations</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-secondary/20 flex items-center justify-center" style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}>
                 <Star className="w-4 h-4 text-secondary" />
               </div>
               <span className="text-sm text-muted-foreground">Daily cosmic market insights</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-accent/20 flex items-center justify-center" style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }}>
                 <Sun className="w-4 h-4 text-accent" />
               </div>
               <span className="text-sm text-muted-foreground">Mystical portfolio tracking</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* Design Testing Links */}
+        <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-center">Explore New Astrological Designs</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <a 
+                href="/testing-constellation" 
+                className="p-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">Constellation</div>
+                <div className="text-xs text-muted-foreground">Star maps & cosmic grids</div>
+              </a>
+              <a 
+                href="/testing-tarot" 
+                className="p-3 bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">Tarot Oracle</div>
+                <div className="text-xs text-muted-foreground">Divine guidance & cards</div>
+              </a>
+              <a 
+                href="/testing-geometric" 
+                className="p-3 bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">Geometric</div>
+                <div className="text-xs text-muted-foreground">Sharp lines & shapes</div>
+              </a>
+              <a 
+                href="/testing-cosmic" 
+                className="p-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">Cosmic Universe</div>
+                <div className="text-xs text-muted-foreground">Planets & solar system</div>
+              </a>
+              <a 
+                href="/testing-minimal" 
+                className="p-3 bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">Minimal</div>
+                <div className="text-xs text-muted-foreground">Clean & simple</div>
+              </a>
+              <a 
+                href="/testing-constellation" 
+                className="p-3 bg-accent/10 hover:bg-accent/20 border border-accent/30 rounded-lg text-center transition-all duration-300 hover:scale-105"
+              >
+                <div className="text-sm font-medium">More Coming</div>
+                <div className="text-xs text-muted-foreground">Additional designs</div>
+              </a>
             </div>
           </div>
         </Card>

@@ -299,24 +299,24 @@ export function SellStockModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200 max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-orange-500/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-transparent hover:[&::-webkit-scrollbar-thumb]:bg-orange-500/30 dark:[&::-webkit-scrollbar-thumb]:bg-orange-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-orange-500/40">
+      <DialogContent className="sm:max-w-lg bg-background/95 dark:bg-card/95 backdrop-blur-sm border-border dark:border-primary/20 transition-all duration-200 max-h-[90vh] overflow-y-auto mx-4 sm:mx-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-orange-500/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-transparent hover:[&::-webkit-scrollbar-thumb]:bg-orange-500/30 dark:[&::-webkit-scrollbar-thumb]:bg-orange-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-orange-500/40">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <ShoppingBag className="w-5 h-5 text-orange-500" />
+          <DialogTitle className="flex items-center gap-2 text-foreground text-lg sm:text-xl">
+            <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
             <span>Sell {holding.ticker}</span>
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription className="text-muted-foreground text-sm sm:text-base">
             {stockData?.company_name || holding.company_name || "Configure your sale"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 transition-all duration-200">
           {/* Current Position Summary */}
-          <div className="bg-muted/30 dark:bg-muted/20 border border-border/50 dark:border-border/30 rounded-lg p-4 space-y-2">
+          <div className="bg-muted/30 dark:bg-muted/20 border border-border/50 dark:border-border/30 rounded-lg p-3 sm:p-4 space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Your Position
             </p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
               <div>
                 <span className="text-muted-foreground">Shares Owned</span>
                 <p className="font-semibold text-foreground">
@@ -404,7 +404,7 @@ export function SellStockModal({
 
           {/* Sell Method Toggle */}
           <div className="space-y-3">
-            <Label className="text-foreground">Sell Method</Label>
+            <Label className="text-foreground text-sm sm:text-base">Sell Method</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -415,10 +415,11 @@ export function SellStockModal({
                   setDisplayAmount("")
                 }}
                 className={cn(
+                  "text-xs sm:text-sm h-10",
                   sellMethod === "shares" && "bg-gradient-to-r from-orange-500 to-red-500 text-white dark:text-white hover:from-orange-500 hover:to-red-500"
                 )}
               >
-                <TrendingDown className="w-4 h-4 mr-2" />
+                <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Shares
               </Button>
               <Button
@@ -430,10 +431,11 @@ export function SellStockModal({
                   setDisplayAmount("")
                 }}
                 className={cn(
+                  "text-xs sm:text-sm h-10",
                   sellMethod === "dollars" && "bg-gradient-to-r from-orange-500 to-red-500 text-white dark:text-white hover:from-orange-500 hover:to-red-500"
                 )}
               >
-                <DollarSign className="w-4 h-4 mr-2" />
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Dollar Amount
               </Button>
             </div>

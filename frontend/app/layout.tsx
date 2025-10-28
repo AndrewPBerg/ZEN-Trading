@@ -7,6 +7,7 @@ import { Navigation } from "@/components/navigation"
 import { AnimatedStars } from "@/components/animated-stars"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
+import { ResponsiveLayoutWrapper } from "@/components/responsive-layout-wrapper"
 
 export const metadata: Metadata = {
   title: "ZEN Trader",
@@ -48,9 +49,9 @@ export default function RootLayout({
         </div>
         <div className="relative z-10 flex flex-col min-h-screen">
           <Navigation />
-          <main className="flex-1 pt-16 sm:pt-20">
+          <ResponsiveLayoutWrapper>
             {children}
-          </main>
+          </ResponsiveLayoutWrapper>
           <Footer />
           <Toaster />
         </div>

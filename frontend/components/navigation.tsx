@@ -136,7 +136,7 @@ export function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-100/95 via-indigo-100/95 to-purple-100/95 dark:from-purple-900/95 dark:via-indigo-900/95 dark:to-purple-900/95 backdrop-blur-lg border-b border-purple-300/40 dark:border-purple-500/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 dark:from-primary/20 dark:via-secondary/20 dark:to-accent/20 backdrop-blur-lg border-b border-primary/30 dark:border-primary/50">
       <div className="relative flex items-center justify-between px-6 py-3">
         {/* Navigation Items */}
         <div className="flex items-center gap-1 z-10">
@@ -146,10 +146,10 @@ export function Navigation() {
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
+                className={`group relative flex items-center gap-0 px-3 py-2 transition-all duration-300 ${
                   isActive
-                    ? "text-purple-900 dark:text-gold-400 bg-purple-300/70 dark:bg-purple-300/50"
-                    : "text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30"
+                    ? "text-primary-foreground bg-primary/80 dark:bg-primary/60"
+                    : "text-foreground hover:text-primary hover:bg-primary/20 dark:hover:bg-primary/10"
 
                 }`}
               >
@@ -161,7 +161,7 @@ export function Navigation() {
                 />
                 <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
                   isActive 
-                    ? "max-w-20 ml-2 opacity-100 text-purple-900 dark:text-gold-400" 
+                    ? "max-w-20 ml-2 opacity-100 text-primary-foreground" 
                     : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
                 }`}>
                   {label}
@@ -185,19 +185,19 @@ export function Navigation() {
         <div className="flex items-center gap-2 z-10">
           {/* Market Status Indicator */}
           {mounted && marketStatus && (
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20">
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-card/80 backdrop-blur-sm border border-primary/30">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className="text-xs text-purple-800 dark:text-purple-300 font-medium">
+                <span className="text-xs text-foreground font-medium">
                   {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
                 </span>
               </div>
-              <div className="border-l border-purple-300/40 dark:border-purple-500/20 pl-3">
+              <div className="border-l border-primary/30 pl-3">
                 <div className="text-xs">
-                  <span className="text-purple-700 dark:text-purple-400 font-medium">
+                  <span className="text-muted-foreground font-medium">
                     {marketStatus.is_open ? 'Closes' : 'Opens'}:
                   </span>
-                  <span className="text-purple-600 dark:text-purple-300 ml-1">
+                  <span className="text-foreground ml-1">
                     {(() => {
                       const nextEventDate = new Date(marketStatus.next_event_time)
                       const today = new Date()
@@ -240,7 +240,7 @@ export function Navigation() {
               onClick={toggleTheme}
               variant="ghost"
               size="sm"
-              className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+              className="text-foreground hover:text-primary hover:bg-primary/20 p-2 transition-all duration-300 hover:scale-110"
               aria-label="Toggle theme"
             >
               {isDark ? (
@@ -258,29 +258,29 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+                  className="text-foreground hover:text-primary hover:bg-primary/20 p-2 transition-all duration-300 hover:scale-110"
                 >
                   <User size={20} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 bg-white/95 dark:bg-purple-950/95 border-purple-200 dark:border-purple-500/30">
+              <DropdownMenuContent align="end" className="w-40 bg-card/95 backdrop-blur-sm border-primary/30">
                 {isDemo ? (
                   <>
                     {hasAuth && (
                       <>
                         <DropdownMenuItem 
                           onClick={() => router.push("/settings")}
-                          className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                          className="cursor-pointer text-foreground focus:bg-primary/20 focus:text-primary"
                         >
                           <Settings className="w-4 h-4 mr-2" />
                           Settings
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                        <DropdownMenuSeparator className="bg-primary/20" />
                       </>
                     )}
                     <DropdownMenuItem 
                       onClick={handleLogout} 
-                      className="text-orange-600 dark:text-orange-400 focus:text-orange-700 dark:focus:text-orange-300 cursor-pointer focus:bg-orange-100 dark:focus:bg-purple-800/30"
+                      className="text-destructive focus:text-destructive-foreground cursor-pointer focus:bg-destructive/20"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Exit Demo
@@ -290,15 +290,15 @@ export function Navigation() {
                   <>
                     <DropdownMenuItem 
                       onClick={() => router.push("/settings")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/20 focus:text-primary"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-purple-200 dark:bg-purple-500/20" />
+                    <DropdownMenuSeparator className="bg-primary/20" />
                     <DropdownMenuItem 
                       onClick={handleLogout} 
-                      className="text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 cursor-pointer focus:bg-red-100 dark:focus:bg-purple-800/30"
+                      className="text-destructive focus:text-destructive-foreground cursor-pointer focus:bg-destructive/20"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
@@ -308,14 +308,14 @@ export function Navigation() {
                   <>
                     <DropdownMenuItem 
                       onClick={() => router.push("/login")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/20 focus:text-primary"
                     >
                       <User className="w-4 h-4 mr-2" />
                       Login
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => router.push("/signup")}
-                      className="cursor-pointer text-gray-700 dark:text-purple-200 focus:bg-purple-100 dark:focus:bg-purple-800/30 focus:text-purple-900 dark:focus:text-gold-300"
+                      className="cursor-pointer text-foreground focus:bg-primary/20 focus:text-primary"
                     >
                       <User className="w-4 h-4 mr-2" />
                       Sign Up

@@ -4,76 +4,130 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to cosmic/zodiac theme colors */
-  --background: oklch(1 0 0); /* Pure white */
-  --foreground: oklch(0.25 0 0); /* Dark gray for text */
-  --card: oklch(0.98 0 0); /* Very light gray for cards */
-  --card-foreground: oklch(0.25 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0 0);
-  --primary: oklch(0.45 0.15 285); /* Deep purple #6b5b95 */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.65 0.15 220); /* Turquoise #3ab0e7 */
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.75 0.15 85); /* Gold #d4af37 */
-  --accent-foreground: oklch(0.25 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0 0);
-  --input: oklch(1 0 0);
-  --ring: oklch(0.65 0.15 220); /* Turquoise for focus */
-  --chart-1: oklch(0.45 0.15 285); /* Deep purple */
-  --chart-2: oklch(0.65 0.15 220); /* Turquoise */
-  --chart-3: oklch(0.75 0.15 85); /* Gold */
-  --chart-4: oklch(0.35 0.1 300); /* Darker purple */
-  --chart-5: oklch(0.55 0.12 200); /* Lighter blue */
-  --radius: 0.75rem; /* More rounded for boho feel */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.25 0 0);
-  --sidebar-primary: oklch(0.45 0.15 285);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.65 0.15 220);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.92 0 0);
-  --sidebar-ring: oklch(0.45 0.15 285);
+  /* Astrological Design System - Light Mode */
+  --background: oklch(0.98 0.02 285); /* Cosmic white with subtle purple tint */
+  --foreground: oklch(0.15 0.05 285); /* Deep cosmic purple for text */
+  --card: oklch(0.95 0.03 285); /* Card background with cosmic tint */
+  --card-foreground: oklch(0.15 0.05 285);
+  --popover: oklch(0.98 0.02 285);
+  --popover-foreground: oklch(0.15 0.05 285);
+  
+  /* Zodiac Color Palette */
+  --primary: oklch(0.4 0.2 285); /* Deep cosmic purple - Pisces */
+  --primary-foreground: oklch(0.98 0.02 285);
+  --secondary: oklch(0.6 0.18 220); /* Mystic blue - Aquarius */
+  --secondary-foreground: oklch(0.98 0.02 285);
+  --accent: oklch(0.7 0.2 45); /* Solar gold - Leo */
+  --accent-foreground: oklch(0.15 0.05 285);
+  
+  /* Additional Zodiac Colors */
+  --zodiac-aries: oklch(0.6 0.25 15); /* Fiery red - Aries */
+  --zodiac-taurus: oklch(0.5 0.15 120); /* Earth green - Taurus */
+  --zodiac-gemini: oklch(0.65 0.2 60); /* Airy yellow - Gemini */
+  --zodiac-cancer: oklch(0.7 0.15 200); /* Water blue - Cancer */
+  --zodiac-leo: oklch(0.7 0.2 45); /* Solar gold - Leo */
+  --zodiac-virgo: oklch(0.6 0.1 100); /* Earth green - Virgo */
+  --zodiac-libra: oklch(0.7 0.15 320); /* Air pink - Libra */
+  --zodiac-scorpio: oklch(0.4 0.25 300); /* Deep purple - Scorpio */
+  --zodiac-sagittarius: oklch(0.6 0.2 30); /* Fire orange - Sagittarius */
+  --zodiac-capricorn: oklch(0.3 0.1 60); /* Earth brown - Capricorn */
+  --zodiac-aquarius: oklch(0.6 0.18 220); /* Air blue - Aquarius */
+  --zodiac-pisces: oklch(0.4 0.2 285); /* Water purple - Pisces */
+  
+  --muted: oklch(0.92 0.02 285);
+  --muted-foreground: oklch(0.5 0.05 285);
+  --destructive: oklch(0.6 0.25 15); /* Mars red */
+  --destructive-foreground: oklch(0.98 0.02 285);
+  --border: oklch(0.88 0.05 285);
+  --input: oklch(0.95 0.03 285);
+  --ring: oklch(0.6 0.18 220); /* Mystic blue for focus */
+  
+  /* Chart colors for different zodiac signs */
+  --chart-1: oklch(0.4 0.2 285); /* Pisces purple */
+  --chart-2: oklch(0.6 0.18 220); /* Aquarius blue */
+  --chart-3: oklch(0.7 0.2 45); /* Leo gold */
+  --chart-4: oklch(0.6 0.25 15); /* Aries red */
+  --chart-5: oklch(0.5 0.15 120); /* Taurus green */
+  --chart-6: oklch(0.65 0.2 60); /* Gemini yellow */
+  --chart-7: oklch(0.7 0.15 200); /* Cancer blue */
+  --chart-8: oklch(0.6 0.1 100); /* Virgo green */
+  --chart-9: oklch(0.7 0.15 320); /* Libra pink */
+  --chart-10: oklch(0.4 0.25 300); /* Scorpio deep purple */
+  --chart-11: oklch(0.6 0.2 30); /* Sagittarius orange */
+  --chart-12: oklch(0.3 0.1 60); /* Capricorn brown */
+  
+  --radius: 0.5rem; /* Sharp, geometric edges - no rounded corners */
+  --sidebar: oklch(0.95 0.03 285);
+  --sidebar-foreground: oklch(0.15 0.05 285);
+  --sidebar-primary: oklch(0.4 0.2 285);
+  --sidebar-primary-foreground: oklch(0.98 0.02 285);
+  --sidebar-accent: oklch(0.6 0.18 220);
+  --sidebar-accent-foreground: oklch(0.98 0.02 285);
+  --sidebar-border: oklch(0.88 0.05 285);
+  --sidebar-ring: oklch(0.4 0.2 285);
 }
 
 .dark {
-  /* Updated dark mode for cosmic theme */
-  --background: oklch(0.15 0.05 285); /* Dark purple background */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.2 0.05 285);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.15 0.05 285);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.65 0.15 285); /* Lighter purple for dark mode */
-  --primary-foreground: oklch(0.15 0 0);
-  --secondary: oklch(0.7 0.15 220); /* Brighter turquoise */
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.25 0.05 285);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.8 0.15 85); /* Brighter gold */
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.6 0.25 25);
-  --destructive-foreground: oklch(0.95 0 0);
+  /* Astrological Design System - Dark Mode */
+  --background: oklch(0.08 0.05 285); /* Deep cosmic space */
+  --foreground: oklch(0.95 0.02 285); /* Bright cosmic white */
+  --card: oklch(0.12 0.05 285); /* Dark cosmic cards */
+  --card-foreground: oklch(0.95 0.02 285);
+  --popover: oklch(0.08 0.05 285);
+  --popover-foreground: oklch(0.95 0.02 285);
+  
+  /* Zodiac Color Palette - Dark Mode (brighter, more vibrant) */
+  --primary: oklch(0.7 0.2 285); /* Bright cosmic purple - Pisces */
+  --primary-foreground: oklch(0.08 0.05 285);
+  --secondary: oklch(0.75 0.18 220); /* Bright mystic blue - Aquarius */
+  --secondary-foreground: oklch(0.08 0.05 285);
+  --accent: oklch(0.8 0.2 45); /* Bright solar gold - Leo */
+  --accent-foreground: oklch(0.08 0.05 285);
+  
+  /* Additional Zodiac Colors - Dark Mode */
+  --zodiac-aries: oklch(0.75 0.25 15); /* Bright fiery red - Aries */
+  --zodiac-taurus: oklch(0.65 0.15 120); /* Bright earth green - Taurus */
+  --zodiac-gemini: oklch(0.8 0.2 60); /* Bright airy yellow - Gemini */
+  --zodiac-cancer: oklch(0.8 0.15 200); /* Bright water blue - Cancer */
+  --zodiac-leo: oklch(0.8 0.2 45); /* Bright solar gold - Leo */
+  --zodiac-virgo: oklch(0.7 0.1 100); /* Bright earth green - Virgo */
+  --zodiac-libra: oklch(0.8 0.15 320); /* Bright air pink - Libra */
+  --zodiac-scorpio: oklch(0.6 0.25 300); /* Bright deep purple - Scorpio */
+  --zodiac-sagittarius: oklch(0.75 0.2 30); /* Bright fire orange - Sagittarius */
+  --zodiac-capricorn: oklch(0.5 0.1 60); /* Bright earth brown - Capricorn */
+  --zodiac-aquarius: oklch(0.75 0.18 220); /* Bright air blue - Aquarius */
+  --zodiac-pisces: oklch(0.7 0.2 285); /* Bright water purple - Pisces */
+  
+  --muted: oklch(0.2 0.05 285);
+  --muted-foreground: oklch(0.7 0.02 285);
+  --destructive: oklch(0.7 0.25 15); /* Bright Mars red */
+  --destructive-foreground: oklch(0.95 0.02 285);
   --border: oklch(0.25 0.05 285);
-  --input: oklch(0.2 0.05 285);
-  --ring: oklch(0.7 0.15 220);
-  --chart-1: oklch(0.65 0.15 285);
-  --chart-2: oklch(0.7 0.15 220);
-  --chart-3: oklch(0.8 0.15 85);
-  --chart-4: oklch(0.55 0.12 300);
-  --chart-5: oklch(0.6 0.12 200);
-  --sidebar: oklch(0.18 0.05 285);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.65 0.15 285);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
-  --sidebar-accent: oklch(0.7 0.15 220);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --input: oklch(0.12 0.05 285);
+  --ring: oklch(0.75 0.18 220); /* Bright mystic blue for focus */
+  
+  /* Chart colors for different zodiac signs - Dark Mode */
+  --chart-1: oklch(0.7 0.2 285); /* Bright Pisces purple */
+  --chart-2: oklch(0.75 0.18 220); /* Bright Aquarius blue */
+  --chart-3: oklch(0.8 0.2 45); /* Bright Leo gold */
+  --chart-4: oklch(0.75 0.25 15); /* Bright Aries red */
+  --chart-5: oklch(0.65 0.15 120); /* Bright Taurus green */
+  --chart-6: oklch(0.8 0.2 60); /* Bright Gemini yellow */
+  --chart-7: oklch(0.8 0.15 200); /* Bright Cancer blue */
+  --chart-8: oklch(0.7 0.1 100); /* Bright Virgo green */
+  --chart-9: oklch(0.8 0.15 320); /* Bright Libra pink */
+  --chart-10: oklch(0.6 0.25 300); /* Bright Scorpio deep purple */
+  --chart-11: oklch(0.75 0.2 30); /* Bright Sagittarius orange */
+  --chart-12: oklch(0.5 0.1 60); /* Bright Capricorn brown */
+  
+  --sidebar: oklch(0.1 0.05 285);
+  --sidebar-foreground: oklch(0.95 0.02 285);
+  --sidebar-primary: oklch(0.7 0.2 285);
+  --sidebar-primary-foreground: oklch(0.08 0.05 285);
+  --sidebar-accent: oklch(0.75 0.18 220);
+  --sidebar-accent-foreground: oklch(0.08 0.05 285);
   --sidebar-border: oklch(0.25 0.05 285);
-  --sidebar-ring: oklch(0.65 0.15 285);
+  --sidebar-ring: oklch(0.7 0.2 285);
 }
 
 @theme inline {
@@ -169,10 +223,9 @@
   }
 }
 
-/* Adding custom animations for stars */
+/* Astrological Animations */
 @keyframes shimmer {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0.4;
     transform: scale(1);
   }
@@ -183,8 +236,7 @@
 }
 
 @keyframes twinkle {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0.3;
     transform: scale(1) rotate(0deg);
   }
@@ -202,12 +254,166 @@
   }
 }
 
+@keyframes constellation-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-1deg);
+  }
+}
+
+@keyframes cosmic-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes zodiac-rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes star-trail {
+  0% {
+    transform: translateX(-100px) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100vw) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes cosmic-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--primary);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--primary), 0 0 60px var(--secondary);
+  }
+}
+
+@keyframes planet-orbit {
+  0% {
+    transform: rotate(0deg) translateX(50px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(50px) rotate(-360deg);
+  }
+}
+
 .animate-shimmer {
   animation: shimmer 2s ease-in-out infinite;
 }
 
 .animate-twinkle {
   animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-constellation-float {
+  animation: constellation-float 6s ease-in-out infinite;
+}
+
+.animate-cosmic-pulse {
+  animation: cosmic-pulse 4s ease-in-out infinite;
+}
+
+.animate-zodiac-rotation {
+  animation: zodiac-rotation 20s linear infinite;
+}
+
+.animate-star-trail {
+  animation: star-trail 3s linear infinite;
+}
+
+.animate-cosmic-glow {
+  animation: cosmic-glow 2s ease-in-out infinite;
+}
+
+.animate-planet-orbit {
+  animation: planet-orbit 10s linear infinite;
+}
+
+/* Geometric shapes for astrological design */
+.astro-triangle {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 17px solid var(--primary);
+}
+
+.astro-diamond {
+  width: 20px;
+  height: 20px;
+  background: var(--secondary);
+  transform: rotate(45deg);
+}
+
+.astro-hexagon {
+  width: 24px;
+  height: 14px;
+  background: var(--accent);
+  position: relative;
+}
+
+.astro-hexagon:before,
+.astro-hexagon:after {
+  content: "";
+  position: absolute;
+  width: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+}
+
+.astro-hexagon:before {
+  bottom: 100%;
+  border-bottom: 7px solid var(--accent);
+}
+
+.astro-hexagon:after {
+  top: 100%;
+  border-top: 7px solid var(--accent);
+}
+
+/* Constellation line patterns */
+.constellation-line {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+.constellation-line::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 10px,
+    var(--accent) 10px,
+    var(--accent) 12px
+  );
+  transform: translateY(-50%);
 }
 
 /* Recharts theme-aware wrapper */

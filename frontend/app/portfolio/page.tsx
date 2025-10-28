@@ -20,6 +20,7 @@ import { getPortfolioSummary, type PortfolioSummary } from "@/lib/api/holdings"
 import { getCurrentUser, type User } from "@/lib/api/auth"
 import { isDemoMode, getCompleteDemoUser } from "@/lib/demo-mode"
 import { cn } from "@/lib/utils"
+import { useResponsiveLayout } from "@/lib/responsive-utils"
 
 const elementColors = {
   Fire: "from-red-500/20 to-orange-500/20 border-red-500/30",
@@ -36,6 +37,26 @@ const elementIcons = {
 }
 
 function PortfolioPageContent() {
+  // Use responsive layout hook
+  const {
+    container,
+    cardPadding,
+    cardGap,
+    buttonPadding,
+    buttonText,
+    iconSmall,
+    iconMedium,
+    iconLarge,
+    heading,
+    subheading,
+    body,
+    caption,
+    flexDirection,
+    spaceY,
+    spaceX,
+    gridCols
+  } = useResponsiveLayout()
+
   // State for holdings selection
   const [selectedHoldings, setSelectedHoldings] = useState<Set<string>>(new Set())
   const [selectAll, setSelectAll] = useState(false)
@@ -250,7 +271,7 @@ function PortfolioPageContent() {
   const isPositive = Number(portfolio.total_gain_loss ?? 0) >= 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-16 sm:pt-20 pb-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-4">
       {/* Cosmic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-4 sm:left-8 w-1 h-1 bg-accent rounded-full animate-pulse" />
@@ -259,12 +280,12 @@ function PortfolioPageContent() {
         <div className="absolute bottom-20 right-4 sm:right-8 w-2 h-2 bg-accent rounded-full animate-pulse delay-700" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
+      <div className={`relative z-10 max-w-7xl mx-auto ${container}`}>
         {/* Header */}
         <div className="mb-4 sm:mb-6">
           <div className="text-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Cosmic Portfolio</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Your stellar investment journey</p>
+            <h1 className={`${subheading} font-bold text-foreground`}>Cosmic Portfolio</h1>
+            <p className={`${caption} text-muted-foreground`}>Your stellar investment journey</p>
           </div>
         </div>
 
@@ -294,61 +315,61 @@ function PortfolioPageContent() {
           )}
 
           {/* Portfolio Summary Card - Always Visible */}
-          <Card className="p-3 sm:p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm">
+          <Card className={`${cardPadding} bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 backdrop-blur-sm`}>
             <div className="space-y-2">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-foreground">
+                <div className={`${subheading} font-bold text-foreground`}>
                   ${Number(portfolio.total_portfolio_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div
                   className={`flex items-center justify-center gap-1 mt-1 ${isPositive ? "text-green-500" : "text-red-500"}`}
                 >
-                  {isPositive ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> : <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  <span className="font-medium text-sm sm:text-base">
+                  {isPositive ? <TrendingUp className={iconSmall} /> : <TrendingDown className={iconSmall} />}
+                  <span className={`font-medium ${body}`}>
                     {isPositive ? "+" : ""}${Math.abs(Number(portfolio.total_gain_loss ?? 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? "+" : ""}
                     {Number(portfolio.total_gain_loss_percent ?? 0).toFixed(2)}%)
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Total Portfolio Value</p>
+                <p className={`${caption} text-muted-foreground mt-1`}>Total Portfolio Value</p>
               </div>
 
               {/* Cosmic Vibe Index Meter with Info Icon */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-foreground">Cosmic Vibe Index</span>
+                    <span className={`${caption} font-medium text-foreground`}>Cosmic Vibe Index</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-4 w-4 p-0 hover:bg-transparent"
                       onClick={() => setShowInfoModal(true)}
                     >
-                      <Info className="w-3 h-3 text-muted-foreground hover:text-accent transition-colors" />
+                      <Info className={`${iconSmall} text-muted-foreground hover:text-accent transition-colors`} />
                     </Button>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-3 h-3 text-accent" fill="currentColor" />
-                    <span className={`text-xs sm:text-sm font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
+                    <Star className={`${iconSmall} text-accent`} fill="currentColor" />
+                    <span className={`${caption} font-bold ${getVibeColor(Number(portfolio.cosmic_vibe_index ?? 0))}`}>
                       {Number(portfolio.cosmic_vibe_index ?? 0)}%
                     </span>
                   </div>
                 </div>
                 <Progress value={Number(portfolio.cosmic_vibe_index ?? 0)} className="h-1.5" />
-                <p className="text-xs text-muted-foreground text-center">
+                <p className={`${caption} text-muted-foreground text-center`}>
                   {getAlignmentPhrase(Number(portfolio.overall_alignment_score ?? 0))}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
                 <div>
-                  <span className="text-xs text-muted-foreground">Cash Balance</span>
-                  <p className="font-medium text-foreground">
+                  <span className={`${caption} text-muted-foreground`}>Cash Balance</span>
+                  <p className={`font-medium text-foreground`}>
                     ${Number(portfolio.cash_balance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground">Stocks Value</span>
-                  <p className="font-medium text-foreground">
+                  <span className={`${caption} text-muted-foreground`}>Stocks Value</span>
+                  <p className={`font-medium text-foreground`}>
                     ${Number(portfolio.stocks_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -357,7 +378,7 @@ function PortfolioPageContent() {
           </Card>
 
           {/* Portfolio Chart */}
-          <Card className="p-4 bg-card/80 backdrop-blur-sm border-primary/20">
+          <Card className={`${cardPadding} bg-card/80 backdrop-blur-sm border-primary/20`}>
             <PortfolioChart accountStartDate={accountStartDate} />
           </Card>
 
@@ -369,10 +390,10 @@ function PortfolioPageContent() {
             )}>
               {/* Holdings List */}
               <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground">Your Holdings</h2>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <Badge variant="outline" className="text-xs w-fit">
+                <div className={`flex ${flexDirection} sm:items-center justify-between ${spaceX}`}>
+                  <h2 className={`${body} font-semibold text-foreground`}>Your Holdings</h2>
+                  <div className={`flex ${flexDirection} sm:items-center ${spaceX}`}>
+                    <Badge variant="outline" className={`${caption} w-fit`}>
                       {portfolio.holdings.length} Position{portfolio.holdings.length !== 1 ? 's' : ''}
                     </Badge>
                     <div className="flex items-center gap-2">
@@ -381,7 +402,7 @@ function PortfolioPageContent() {
                         checked={selectAll}
                         onCheckedChange={handleSelectAllChange}
                       />
-                      <Label htmlFor="select-all" className="text-xs cursor-pointer">
+                      <Label htmlFor="select-all" className={`${caption} cursor-pointer`}>
                         Select All
                       </Label>
                     </div>
@@ -390,7 +411,7 @@ function PortfolioPageContent() {
 
                 <div className={cn(
                   "grid gap-3 transition-all duration-500",
-                  hasSelections ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+                  hasSelections ? "grid-cols-1" : gridCols
                 )}>
                   {portfolio.holdings.map((holding) => {
                     const isHoldingPositive = Number(holding.gain_loss ?? 0) >= 0
@@ -400,7 +421,7 @@ function PortfolioPageContent() {
                       <Card
                         key={holding.ticker}
                         className={cn(
-                          "p-3 sm:p-4 transition-all duration-300 group relative",
+                          `${cardPadding} transition-all duration-300 group relative`,
                           "hover:shadow-lg",
                           isSelected && "ring-2 ring-primary shadow-lg",
                           `bg-gradient-to-br ${elementColors[holding.element as keyof typeof elementColors]} backdrop-blur-sm`
@@ -411,34 +432,34 @@ function PortfolioPageContent() {
                           onClick={() => toggleHolding(holding.ticker)}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-background/80 rounded-full flex items-center justify-center text-sm sm:text-lg flex-shrink-0">
+                            <div className={`flex items-center ${cardGap} min-w-0 flex-1`}>
+                              <div className={`${iconLarge} bg-background/80 rounded-full flex items-center justify-center ${body} flex-shrink-0`}>
                                 {elementIcons[holding.element as keyof typeof elementIcons]}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1 sm:gap-2">
-                                  <h3 className="font-bold text-foreground text-sm sm:text-base truncate">{holding.ticker}</h3>
-                                  <Badge variant="outline" className="text-xs px-1.5 sm:px-2 py-0 flex-shrink-0">
+                                <div className={`flex items-center ${cardGap}`}>
+                                  <h3 className={`font-bold text-foreground ${body} truncate`}>{holding.ticker}</h3>
+                                  <Badge variant="outline" className={`${caption} px-1.5 sm:px-2 py-0 flex-shrink-0`}>
                                     {holding.zodiac_sign}
                                   </Badge>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className={`${caption} text-muted-foreground`}>
                                   {Number(holding.quantity)} share{Number(holding.quantity) !== 1 ? 's' : ''}
                                 </p>
                               </div>
                             </div>
 
                             <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
-                              <p className="font-bold text-foreground text-sm sm:text-base">
+                              <p className={`font-bold text-foreground ${body}`}>
                                 ${Number(holding.current_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </p>
                               <div
-                                className={`flex items-center gap-1 text-xs ${isHoldingPositive ? "text-green-500" : "text-red-500"}`}
+                                className={`flex items-center gap-1 ${caption} ${isHoldingPositive ? "text-green-500" : "text-red-500"}`}
                               >
                                 {isHoldingPositive ? (
-                                  <TrendingUp className="w-3 h-3" />
+                                  <TrendingUp className={iconSmall} />
                                 ) : (
-                                  <TrendingDown className="w-3 h-3" />
+                                  <TrendingDown className={iconSmall} />
                                 )}
                                 <span>
                                   {isHoldingPositive ? "+" : ""}${Math.abs(Number(holding.gain_loss ?? 0)).toFixed(2)}
@@ -450,12 +471,12 @@ function PortfolioPageContent() {
                           {/* Alignment info moved here */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Star className={`w-3 h-3 ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
-                              <span className={`text-xs font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
+                              <Star className={`${iconSmall} ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`} fill="currentColor" />
+                              <span className={`${caption} font-medium ${getAlignmentColor(Number(holding.alignment_score ?? 0))}`}>
                                 {Number(holding.alignment_score ?? 0)}% Aligned
                               </span>
                             </div>
-                            <Badge className={`text-xs px-2 py-0 ${getMatchTypeColor(holding.match_type)}`}>
+                            <Badge className={`${caption} px-2 py-0 ${getMatchTypeColor(holding.match_type)}`}>
                               {holding.match_type === 'same_sign' ? 'Same Sign' : holding.match_type}
                             </Badge>
                           </div>
@@ -468,8 +489,8 @@ function PortfolioPageContent() {
                           />
 
                           {Number(holding.alignment_score ?? 0) >= 85 && (
-                            <div className="flex items-center gap-1 text-xs text-accent">
-                              <Sparkles className="w-3 h-3 animate-pulse" />
+                            <div className={`flex items-center gap-1 ${caption} text-accent`}>
+                              <Sparkles className={`${iconSmall} animate-pulse`} />
                               <span>Excellent Alignment!</span>
                             </div>
                           )}
@@ -484,9 +505,9 @@ function PortfolioPageContent() {
                               e.stopPropagation()
                               handleOpenSellModal(holding)
                             }}
-                            className="w-full h-8 sm:h-9 text-xs bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500"
+                            className={`w-full ${buttonPadding} ${caption} bg-background/90 hover:bg-orange-500 hover:text-white border-orange-500/50 hover:border-orange-500`}
                           >
-                            <ShoppingBag className="w-3 h-3 mr-1" />
+                            <ShoppingBag className={`${iconSmall} mr-1`} />
                             Sell
                           </Button>
                         </div>

@@ -5,12 +5,6 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
-  // For better debugging in Docker
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
 };
 
 export default nextConfig;

@@ -17,6 +17,8 @@ services:
       - SECRET_KEY=dev-secret-key-change-in-production
       - DJANGO_DEBUG=1
       - CLEAR_DB=true
+      - GUNICORN_WORKERS=8
+      - GUNICORN_THREADS=2
     command: ["uv", "run", "startup.py"]
     depends_on:
       pgsql:

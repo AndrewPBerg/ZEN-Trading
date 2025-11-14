@@ -102,6 +102,12 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": os.getenv("POSTGRES_HOST"),
         "PORT": os.getenv("POSTGRES_PORT"),
+        # Connection pooling settings for better performance
+        "CONN_MAX_AGE": 600,  # Keep connections alive for 10 minutes
+        "OPTIONS": {
+            "connect_timeout": 10,
+            "options": "-c statement_timeout=30000",  # 30 second query timeout
+        },
     }
 }
 

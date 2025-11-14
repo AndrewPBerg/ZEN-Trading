@@ -187,13 +187,40 @@ def start_qcluster():
     
     return qcluster_process
 
+def calculate_workers():
+    """Calculate optimal number of workers based on CPU cores"""
+    try:
+        import multiprocessing
+        cpu_count = multiprocessing.cpu_count()
+        # Recommended formula: (2 * CPU cores) + 1
+        # This provides good balance between concurrency and resource usage
+        calculated_workers = (2 * cpu_count) + 1
+        # Cap at reasonable maximum (16 workers) to avoid excessive memory usage
+        return min(calculated_workers, 16)
+    except:
+        # Fallback to 4 workers if we can't detect CPU count
+        return 4
+
 def start_gunicorn():
     """Start Gunicorn server in foreground"""
     log("Starting Gunicorn server...", BLUE)
     
     # Get port from environment or use default
     port = os.environ.get('PORT', '42069')
-    workers = os.environ.get('GUNICORN_WORKERS', '3')
+    
+    # Calculate workers: use env var if set, otherwise calculate based on CPU
+    workers_env = os.environ.get('GUNICORN_WORKERS')
+    if workers_env:
+        try:
+            workers = int(workers_env)
+        except ValueError:
+            log(f"Invalid GUNICORN_WORKERS value '{workers_env}', calculating automatically", YELLOW)
+            workers = calculate_workers()
+    else:
+        workers = calculate_workers()
+    
+    # Get threads per worker (for async I/O bound operations)
+    threads = os.environ.get('GUNICORN_THREADS', '2')
     
     # Check if gunicorn is available
     gunicorn_available = True
@@ -206,17 +233,24 @@ def start_gunicorn():
         gunicorn_available = False
     
     if gunicorn_available:
+        # Use gthread worker class for better I/O handling
+        # This is better for Django apps with database queries
         gunicorn_cmd = [
             'gunicorn',
             '--bind', f'0.0.0.0:{port}',
-            '--workers', workers,
+            '--workers', str(workers),
+            '--worker-class', 'gthread',
+            '--threads', str(threads),
             '--timeout', '120',
+            '--max-requests', '1000',  # Restart workers after 1000 requests to prevent memory leaks
+            '--max-requests-jitter', '50',  # Add randomness to prevent all workers restarting at once
             '--access-logfile', '-',
             '--error-logfile', '-',
+            '--log-level', 'info',
             'django_app.wsgi:application'
         ]
         
-        log(f"Starting Gunicorn on port {port} with {workers} workers", BLUE)
+        log(f"Starting Gunicorn on port {port} with {workers} workers, {threads} threads each", BLUE)
         
         # Start gunicorn in foreground (blocking)
         try:

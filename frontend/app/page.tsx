@@ -52,28 +52,28 @@ export default function WelcomeScreen() {
   }, [])
 
   return (
-    <div className="h-screen bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex flex-col items-center justify-center px-4 sm:px-6 relative overflow-hidden">
       {/* Theme Toggle */}
       <ThemeToggle />
       
       {/* API Unavailable Warning Banner */}
       {!isCheckingApi && apiUnavailable && (
         <div className="fixed top-4 left-4 right-4 z-50 mx-auto max-w-2xl">
-          <Card className="p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/5 border-orange-500/30 backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+          <Card className="p-3 sm:p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/5 border-orange-500/30 backdrop-blur-sm">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1 space-y-2">
-                <h3 className="font-semibold text-orange-600 dark:text-orange-400">
+                <h3 className="text-sm sm:text-base font-semibold text-orange-600 dark:text-orange-400">
                   No API Found - Demo Mode Active
                 </h3>
-                <p className="text-sm text-orange-700 dark:text-orange-300">
+                <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-300">
                   You're using the demo application with limited functionality. For full access with real-time data and authentication, run locally from:
                 </p>
                 <a
                   href="https://github.com/AndrewPBerg/ZEN-Trading/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
                   GitHub Repository
@@ -94,74 +94,59 @@ export default function WelcomeScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="text-center space-y-8 w-full max-w-2xl mx-auto relative z-10">
+      <div className="text-center space-y-6 sm:space-y-8 w-full max-w-2xl mx-auto relative z-10">
         {/* Logo Section */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="relative">
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
               <div className="relative">
-                <Star className="w-8 h-8 text-white" fill="currentColor" />
+                <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="currentColor" />
                 <Sparkles
-                  className={`w-4 h-4 text-accent absolute -top-1 -right-1 transition-transform duration-500 ${isAnimating ? "scale-150 rotate-180" : ""}`}
+                  className={`w-3 h-3 sm:w-4 sm:h-4 text-accent absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 transition-transform duration-500 ${isAnimating ? "scale-150 rotate-180" : ""}`}
                 />
               </div>
             </div>
             <div />
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               ZEN Traders
             </h1>
-            <p className="text-muted-foreground text-lg font-medium">Where Markets Meet Your Stars</p>
+            <p className="text-muted-foreground text-base sm:text-lg font-medium">Where Markets Meet Your Stars</p>
           </div>
         </div>
 
         {/* Feature Highlights */}
-        <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                <Moon className="w-4 h-4 text-primary" />
+        <Card className="p-4 sm:p-6 bg-card/80 backdrop-blur-sm border-primary/20">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Moon className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground">Zodiac-aligned stock recommendations</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Zodiac-aligned stock recommendations</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                <Star className="w-4 h-4 text-secondary" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-secondary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-secondary" />
               </div>
-              <span className="text-sm text-muted-foreground">Daily cosmic market insights</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Daily cosmic market insights</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                <Sun className="w-4 h-4 text-accent" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Sun className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
               </div>
-              <span className="text-sm text-muted-foreground">Mystical portfolio tracking</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Mystical portfolio tracking</span>
             </div>
           </div>
         </Card>
 
         {/* Action Buttons */}
-        <div className="space-y-4">
-          {/* <Button
-            onClick={handleGetStarted}
-            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold py-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-            disabled={isAnimating}
-          >
-            {isAnimating ? (
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 animate-spin" />
-                Aligning your stars...
-              </div>
-            ) : (
-              "Begin Your Cosmic Journey"
-            )}
-          </Button> */}
-
+        <div className="space-y-3 sm:space-y-4">
           <Button
             onClick={handleDemoMode}
             variant="outline"
-            className="w-full border-accent/50 text-accent hover:bg-accent/10 bg-transparent font-medium py-4 rounded-xl"
+            className="w-full border-accent/50 text-accent hover:bg-accent/10 bg-transparent font-medium py-3 sm:py-4 rounded-xl"
             disabled={isAnimating}
           >
             <Star className="w-4 h-4 mr-2" />
@@ -170,17 +155,17 @@ export default function WelcomeScreen() {
 
           {/* Only show auth buttons if API is available and component is loaded */}
           {!apiUnavailable && isLoaded && (
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
+                className="flex-1 border-primary/30 text-primary hover:bg-primary/10 bg-transparent py-3 sm:py-2"
                 onClick={() => window.location.href = "/signup"}
               >
                 Sign Up
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent"
+                className="flex-1 border-secondary/30 text-secondary hover:bg-secondary/10 bg-transparent py-3 sm:py-2"
                 onClick={() => window.location.href = "/login"}
               >
                 Log In

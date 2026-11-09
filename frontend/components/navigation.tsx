@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 import { isDemoMode } from "@/lib/demo-mode"
 import { getMarketStatus, type MarketStatusResponse } from "@/lib/api/market"
 import { cn } from "@/lib/utils"
+import { useIsMobile, useIsTablet, useDeviceType } from "@/hooks/use-mobile"
 
 const navItems = [
   { href: "/discovery", icon: TrendingUp, label: "Discovery" },
@@ -22,6 +23,10 @@ export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, isLoading: authLoading } = useAuth()
+  const isMobile = useIsMobile()
+  const isTablet = useIsTablet()
+  const deviceType = useDeviceType()
+  
   // Initialize theme state synchronously to match the blocking script in layout.tsx
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -137,16 +142,16 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-100/95 via-indigo-100/95 to-purple-100/95 dark:from-purple-900/95 dark:via-indigo-900/95 dark:to-purple-900/95 backdrop-blur-lg border-b border-purple-300/40 dark:border-purple-500/20">
-      <div className="relative flex items-center justify-between px-6 py-3">
+      <div className="relative flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3">
         {/* Navigation Items */}
-        <div className="flex items-center gap-1 z-10">
+        <div className="flex items-center gap-0.5 sm:gap-1 z-10">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex items-center gap-0 px-3 py-2 rounded-lg transition-all duration-300 ${
+                className={`group relative flex items-center gap-0 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all duration-300 ${
                   isActive
                     ? "text-purple-900 dark:text-gold-400 bg-purple-300/70 dark:bg-purple-300/50"
                     : "text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30"
@@ -154,15 +159,15 @@ export function Navigation() {
                 }`}
               >
                 <Icon 
-                  size={20} 
+                  size={isMobile ? 18 : 20} 
                   className={`transition-all duration-300 ${
                     isActive ? "drop-shadow-lg scale-110" : "group-hover:scale-125"
                   }`} 
                 />
-                <span className={`overflow-hidden transition-all duration-300 text-sm font-medium whitespace-nowrap ${
+                <span className={`overflow-hidden transition-all duration-300 text-xs sm:text-sm font-medium whitespace-nowrap ${
                   isActive 
-                    ? "max-w-20 ml-2 opacity-100 text-purple-900 dark:text-gold-400" 
-                    : "max-w-0 ml-0 opacity-0 group-hover:max-w-20 group-hover:ml-2 group-hover:opacity-100"
+                    ? `max-w-16 sm:max-w-20 ml-1.5 sm:ml-2 opacity-100 text-purple-900 dark:text-gold-400` 
+                    : `max-w-0 ml-0 opacity-0 group-hover:max-w-16 sm:group-hover:max-w-20 group-hover:ml-1.5 sm:group-hover:ml-2 group-hover:opacity-100`
                 }`}>
                   {label}
                 </span>
@@ -173,26 +178,29 @@ export function Navigation() {
 
         {/* Center: Demo Mode Warning Bubble - Absolutely Centered */}
         {mounted && isDemo && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg pointer-events-none">
-            <AlertTriangle className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs font-medium text-white whitespace-nowrap">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-orange-600/90 to-amber-600/90 border border-orange-500/30 shadow-lg pointer-events-none">
+            <AlertTriangle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+            <span className="text-xs font-medium text-white whitespace-nowrap hidden sm:inline">
               Demo Mode Active: No Live Data
+            </span>
+            <span className="text-xs font-medium text-white whitespace-nowrap sm:hidden">
+              Demo Mode
             </span>
           </div>
         )}
 
         {/* Right Side: Market Status, Theme Toggle & User Menu */}
-        <div className="flex items-center gap-2 z-10">
+        <div className="flex items-center gap-1 sm:gap-2 z-10">
           {/* Market Status Indicator */}
           {mounted && marketStatus && (
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <div className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-purple-200/50 dark:bg-purple-800/30 border border-purple-300/40 dark:border-purple-500/20 ${isMobile ? 'hidden sm:flex' : ''}`}>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${marketStatus.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                 <span className="text-xs text-purple-800 dark:text-purple-300 font-medium">
-                  {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
+                  {marketStatus.is_open ? 'Open' : 'Closed'}
                 </span>
               </div>
-              <div className="border-l border-purple-300/40 dark:border-purple-500/20 pl-3">
+              <div className="border-l border-purple-300/40 dark:border-purple-500/20 pl-2 sm:pl-3 hidden sm:block">
                 <div className="text-xs">
                   <span className="text-purple-700 dark:text-purple-400 font-medium">
                     {marketStatus.is_open ? 'Closes' : 'Opens'}:
@@ -240,13 +248,13 @@ export function Navigation() {
               onClick={toggleTheme}
               variant="ghost"
               size="sm"
-              className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+              className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-1.5 sm:p-2 transition-all duration-300 hover:scale-110"
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </Button>
           )}
@@ -258,9 +266,9 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-2 transition-all duration-300 hover:scale-110"
+                  className="text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-gold-300 hover:bg-purple-200/50 dark:hover:bg-purple-800/30 p-1.5 sm:p-2 transition-all duration-300 hover:scale-110"
                 >
-                  <User size={20} />
+                  <User size={isMobile ? 18 : 20} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 bg-white/95 dark:bg-purple-950/95 border-purple-200 dark:border-purple-500/30">
